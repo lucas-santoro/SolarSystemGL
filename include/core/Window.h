@@ -11,6 +11,8 @@ public:
     ~Window();
     void run();
 
+    GLFWwindow* getGLFWwindow();
+
 private:
     int width, height;
     std::string title;
