@@ -3,9 +3,12 @@
 #include "objects/Planet.h"
 #include "core/Camera.h"
 #include <glad/glad.h>
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 
-void processInput(Window &window, Camera &camera, float deltaTime);
-void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void processInput(Window& window, Camera& camera, float deltaTime);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = 400, lastY = 300;
@@ -22,6 +25,10 @@ int main()
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
     Planet earth(1.0f, 3);
 
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     while (!glfwWindowShouldClose(window.getGLFWwindow()))
     {
         float currentFrame = glfwGetTime();
@@ -31,9 +38,7 @@ int main()
         processInput(window, camera, deltaTime);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         shader.use();
-
 
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -43,19 +48,33 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("model", model);
 
-
         earth.render();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Solar System");
+        ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window.getGLFWwindow());
         glfwPollEvents();
     }
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     return 0;
 }
 
-void processInput(Window &window, Camera &camera, float deltaTime) 
+void processInput(Window& window, Camera& camera, float deltaTime)
 {
-    GLFWwindow *glfwWindow = window.getGLFWwindow();
+    GLFWwindow* glfwWindow = window.getGLFWwindow();
     if (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(glfwWindow, true);
 
@@ -69,7 +88,7 @@ void processInput(Window &window, Camera &camera, float deltaTime)
         camera.processKeyboard(GLFW_KEY_D, deltaTime);
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse) {
         lastX = xpos;
