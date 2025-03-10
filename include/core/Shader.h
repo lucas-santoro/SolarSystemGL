@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <glm/gtc/type_ptr.hpp>
+
 
 class Shader
 {
@@ -8,6 +10,7 @@ public:
     ~Shader();
     void use();
     unsigned int getID() const;
+    void setMat4(const std::string &name, const glm::mat4 &mat);
 
 private:
     unsigned int ID;
