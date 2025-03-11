@@ -56,6 +56,12 @@ int main()
 
         grid.draw();
 
+        double mouseX, mouseY;
+        glfwGetCursorPos(window.getGLFWwindow(), &mouseX, &mouseY);
+
+        glm::vec3 rayDirection = camera.getRayFromMouse(mouseX, mouseY, 800, 600, view, projection);
+        glm::vec3 rayOrigin = camera.getPosition();
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
