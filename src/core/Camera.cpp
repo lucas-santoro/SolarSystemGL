@@ -34,3 +34,21 @@ void Camera::processMouseMovement(float xoffset, float yoffset) {
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     front = glm::normalize(direction);
 }
+
+glm::vec3 Camera::getRayFromMouse(double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4 &view, const glm::mat4 &projection)
+{
+    float x = (2.0f * mouseX) / screenWidth - 1.0f;
+    float y = 1.0f - (2.0f * mouseY) / screenHeight;
+    glm::vec4 rayClip = glm::vec4(x, y, -1.0f, 1.0f);
+
+    glm::vec4 rayEye = glm::inverse(projection) * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+
+    glm::vec3 rayWorld = glm::vec3(glm::inverse(view) * rayEye);
+    return glm::normalize(rayWorld);
+}
+
+glm::vec3 Camera::getPosition()
+{
+	return position;
+}
