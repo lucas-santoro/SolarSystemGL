@@ -113,6 +113,16 @@ void Planet::setupMesh()
     glBindVertexArray(0);
 }
 
+bool Planet::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
+{
+    glm::vec3 oc = rayOrigin - position;
+    float a = glm::dot(rayDirection, rayDirection);
+    float b = 2.0f * glm::dot(oc, rayDirection);
+    float c = glm::dot(oc, oc) - (radius * radius);
+    float discriminant = (b * b) - (4 * a * c);
+    return discriminant >= 0;
+}
+
 void Planet::render()
 {
     glBindVertexArray(VAO);
