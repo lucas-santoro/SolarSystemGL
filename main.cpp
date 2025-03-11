@@ -1,11 +1,14 @@
-#include "core/Window.h"
-#include "core/Shader.h"
-#include "objects/Planet.h"
-#include "core/Camera.h"
 #include <glad/glad.h>
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
+
+#include "core/Window.h"
+#include "core/Shader.h"
+#include "objects/Planet.h"
+#include "core/Camera.h"
+#include "core/Grid.h"
+
 
 void processInput(Window& window, Camera& camera, float deltaTime);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -24,6 +27,7 @@ int main()
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
     Planet earth(1.0f, 3);
+	Grid grid(10.0f, 10, -1.0f);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
@@ -49,6 +53,8 @@ int main()
         shader.setMat4("model", model);
 
         earth.render();
+
+        grid.draw();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
