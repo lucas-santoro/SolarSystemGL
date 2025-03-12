@@ -9,11 +9,11 @@
 #include "core/Camera.h"
 #include "core/Grid.h"
 
-
 void processInput(Window& window, Camera& camera, float deltaTime);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+bool showPlanetWindow = false;
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
 float deltaTime = 0.0f;
@@ -27,7 +27,7 @@ int main()
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
     Planet earth(1.0f, 3);
-	Grid grid(10.0f, 10, -1.0f);
+    Grid grid(10.0f, 10, -1.0f);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
@@ -53,7 +53,6 @@ int main()
         shader.setMat4("model", model);
 
         earth.render();
-
         grid.draw();
 
         double mouseX, mouseY;
@@ -77,9 +76,22 @@ int main()
                 ImGui::Begin("##PlanetName", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
                 ImGui::Text("Earth");
                 ImGui::End();
+
+                if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                {
+                    showPlanetWindow = true;
+                }
             }
         }
 
+        if (showPlanetWindow)
+        {
+            ImGui::Begin("Planet Info", &showPlanetWindow);
+            ImGui::Text("Planet: Earth");
+            ImGui::Text("Radius: %.2f", earth.getRadius());
+            ImGui::Text("Position: (%.2f, %.2f, %.2f)", earth.getPosition().x, earth.getPosition().y, earth.getPosition().z);
+            ImGui::End();
+        }
 
         ImGui::Begin("Solar System");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
