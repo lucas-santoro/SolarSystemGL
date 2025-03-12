@@ -62,14 +62,24 @@ int main()
         glm::vec3 rayDirection = camera.getRayFromMouse(mouseX, mouseY, 800, 600, view, projection);
         glm::vec3 rayOrigin = camera.getPosition();
 
-        if (earth.intersectsRay(camera.getPosition(), rayDirection))
-        {
-            std::cout << "earth hover" << std::endl;
-        }
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        if (earth.intersectsRay(camera.getPosition(), rayDirection))
+        {
+            glm::vec3 planetScreenPos = earth.getPosition() + glm::vec3(0.0f, earth.getRadius() + 0.2f, 0.0f);
+            glm::vec2 screenPos = camera.worldToScreen(planetScreenPos, view, projection, 800, 600);
+
+            if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= 800 && screenPos.y <= 600)
+            {
+                ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
+                ImGui::Begin("##PlanetName", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Text("Earth");
+                ImGui::End();
+            }
+        }
+
 
         ImGui::Begin("Solar System");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
