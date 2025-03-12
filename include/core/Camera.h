@@ -19,6 +19,7 @@ public:
     glm::mat4 getViewMatrix() const;
     glm::vec3 getRayFromMouse(double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4 &view, const glm::mat4 &projection);
     glm::vec3 getPosition();
+    glm::vec2 worldToScreen(const glm::vec3& worldPos, const glm::mat4& view, const glm::mat4& projection, int screenWidth, int screenHeight);
 
     void processKeyboard(int key, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset);

@@ -52,3 +52,15 @@ glm::vec3 Camera::getPosition()
 {
 	return position;
 }
+
+glm::vec2 Camera::worldToScreen(const glm::vec3 &worldPos, const glm::mat4 &view, const glm::mat4 &projection, int screenWidth, int screenHeight)
+{
+    glm::vec4 clipSpacePos = projection * view * glm::vec4(worldPos, 1.0f);
+    if (clipSpacePos.w <= 0.0f) return glm::vec2(-1.0f, -1.0f);
+
+    glm::vec3 ndcSpacePos = glm::vec3(clipSpacePos) / clipSpacePos.w;
+    float x = (ndcSpacePos.x * 0.5f + 0.5f) * screenWidth;
+    float y = (1.0f - (ndcSpacePos.y * 0.5f + 0.5f)) * screenHeight;
+
+    return glm::vec2(x, y);
+}
