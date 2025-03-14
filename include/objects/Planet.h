@@ -5,14 +5,17 @@
 class Planet
 {
 public:
-    Planet(float radius, int subdivisions);
+    Planet(float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions = 3);
     ~Planet();
     void render();
 
     bool intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
 
     glm::vec3 getPosition() const { return position; }
-    float getRadius() const { return radius; }
+    glm::vec3 getVelocity() const { return velocity; }
+    float getRadius() const       { return radius; }
+    float getMass() const         { return mass; }
+    float getDensity() const      { return density; }
 
 private:
     unsigned int VAO, VBO, EBO;
@@ -28,4 +31,5 @@ private:
     void generateIcosahedron();
     void subdivide(int depth);
     void setupMesh();
+    void calculateRadius();
 };

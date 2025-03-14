@@ -26,7 +26,7 @@ int main()
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
-    Planet earth(1.0f, 3);
+    Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
     Grid grid(10.0f, 10, -1.0f);
 
     ImGui::CreateContext();

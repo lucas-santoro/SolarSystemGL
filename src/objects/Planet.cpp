@@ -1,10 +1,13 @@
+#define _USE_MATH_DEFINES
 #include "objects/Planet.h"
 #include <glad/glad.h>
 #include <cmath>
 #include <map>
 
-Planet::Planet(float radius, int subdivisions) : radius(radius)
+Planet::Planet(float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions)
+    : mass(mass), density(density), position(position), velocity(velocity)
 {
+    calculateRadius();
     generateIcosahedron();
     subdivide(subdivisions);
     setupMesh();
@@ -121,6 +124,12 @@ bool Planet::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirec
     float c = glm::dot(oc, oc) - (radius * radius);
     float discriminant = (b * b) - (4 * a * c);
     return discriminant >= 0;
+}
+
+void Planet::calculateRadius()
+{
+    const float scaleFactor = 1e-7f;
+    radius = std::cbrt((3.0f * mass) / (4.0f * M_PI * density)) * scaleFactor;
 }
 
 void Planet::render()
