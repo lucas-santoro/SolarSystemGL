@@ -21,6 +21,9 @@ private:
 
     glm::vec3 position;
     float radius;
+    glm::vec3 velocity;
+    float mass;
+    float density;
 
     void generateIcosahedron();
     void subdivide(int depth);
