@@ -88,10 +88,14 @@ int main()
         {
             ImGui::Begin("Planet Info", &showPlanetWindow);
             ImGui::Text("Planet: Earth");
-            ImGui::Text("Radius: %.2f", earth.getRadius());
+            ImGui::Text("Mass: %.3e kg", earth.getMass());
+            ImGui::Text("Density: %.2f kg/m³", earth.getDensity());
+            ImGui::Text("Radius: %.2f m", earth.getRadius() * 1e7f);
             ImGui::Text("Position: (%.2f, %.2f, %.2f)", earth.getPosition().x, earth.getPosition().y, earth.getPosition().z);
+            ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", earth.getVelocity().x, earth.getVelocity().y, earth.getVelocity().z);
             ImGui::End();
         }
+
 
         ImGui::Begin("Solar System");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
