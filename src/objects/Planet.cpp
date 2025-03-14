@@ -128,7 +128,7 @@ bool Planet::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirec
 
 void Planet::calculateRadius()
 {
-    const float scaleFactor = 1e-6f;
+    const float scaleFactor = 1e-7f;
     radius = std::cbrt((3.0f * mass) / (4.0f * M_PI * density)) * scaleFactor;
 }
 

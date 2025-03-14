@@ -18,7 +18,9 @@ void Camera::processKeyboard(int key, float deltaTime) {
     if (key == GLFW_KEY_D) position += glm::normalize(glm::cross(front, up)) * velocity;
 }
 
-void Camera::processMouseMovement(float xoffset, float yoffset) {
+void Camera::processMouseMovement(float xoffset, float yoffset) 
+{
+	//if (!isMouseMoving) return;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 

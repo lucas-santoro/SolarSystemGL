@@ -9,11 +9,14 @@
 #include "core/Camera.h"
 #include "core/Grid.h"
 
-void processInput(Window& window, Camera& camera, float deltaTime);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void processInput(Window &window, Camera &camera, float deltaTime);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool showPlanetWindow = false;
+bool isMouseMoving = false;
+bool isMouseRotating = false;
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
 float deltaTime = 0.0f;
@@ -23,7 +26,8 @@ int main()
 {
     Window window(800, 600, "SolarSystemGL");
     glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
-    glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
+    glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
     Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
@@ -65,6 +69,20 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        bool isMouseOverUI = ImGui::GetIO().WantCaptureMouse;
+
+        if (!isMouseOverUI)
+        {
+            if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+            {
+                isMouseMoving = true;
+            }
+            else if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
+            {
+                isMouseMoving = false;
+            }
+        }
+
         if (earth.intersectsRay(camera.getPosition(), rayDirection))
         {
             glm::vec3 planetScreenPos = earth.getPosition() + glm::vec3(0.0f, earth.getRadius() + 0.2f, 0.0f);
@@ -96,7 +114,6 @@ int main()
             ImGui::End();
         }
 
-
         ImGui::Begin("Solar System");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
         ImGui::End();
@@ -115,9 +132,9 @@ int main()
     return 0;
 }
 
-void processInput(Window& window, Camera& camera, float deltaTime)
+void processInput(Window &window, Camera &camera, float deltaTime)
 {
-    GLFWwindow* glfwWindow = window.getGLFWwindow();
+    GLFWwindow *glfwWindow = window.getGLFWwindow();
     if (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(glfwWindow, true);
 
@@ -131,9 +148,10 @@ void processInput(Window& window, Camera& camera, float deltaTime)
         camera.processKeyboard(GLFW_KEY_D, deltaTime);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-    if (firstMouse) {
+    if (firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -143,5 +161,17 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     float yoffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
-    camera.processMouseMovement(xoffset, yoffset);
+
+    if (isMouseMoving)
+    {
+        camera.processMouseMovement(xoffset, yoffset);
+    }
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    if (!ImGui::GetIO().WantCaptureMouse)
+    {
+        camera.processKeyboard(yoffset > 0 ? GLFW_KEY_W : GLFW_KEY_S, 0.1f);
+    }
 }
