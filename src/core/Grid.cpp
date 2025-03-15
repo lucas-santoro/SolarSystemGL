@@ -74,7 +74,7 @@ void Grid::setupGrid(float size, int divisions, float height)
     glBindVertexArray(0);
 }
 
-void Grid::applyGravityDistortion(const std::vector<Planet>& planets)
+void Grid::applyGravityDistortion(std::vector<std::shared_ptr<Planet>> &planets)
 {
     int divisions = (int)sqrt(originalPoints.size()) - 1;
     std::vector<glm::vec3> distortedPoints = originalPoints;
@@ -89,7 +89,7 @@ void Grid::applyGravityDistortion(const std::vector<Planet>& planets)
 
         for (const auto& planet : planets)
         {
-            glm::vec3 planetPos = planet.getPosition();
+            glm::vec3 planetPos = planet->getPosition();
             planetPos.y = 0.0f;
             float dx = point.x - planetPos.x;
             float dz = point.z - planetPos.z;
@@ -100,7 +100,7 @@ void Grid::applyGravityDistortion(const std::vector<Planet>& planets)
                 distanceSquared = 0.001f;
             }
 
-            float massScale = planet.getMass() / 5.97e24f;
+            float massScale = planet->getMass() / 5.97e24f;
             float distortion = maxDistortion * massScale / (1.0f + distanceSquared / (falloffRadius * falloffRadius));
             point.y -= distortion * visualScale;
         }

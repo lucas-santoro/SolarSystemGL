@@ -8,6 +8,7 @@
 #include "objects/Planet.h"
 #include "core/Camera.h"
 #include "core/Grid.h"
+#include <memory>
 
 void processInput(Window &window, Camera &camera, float deltaTime);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
@@ -31,8 +32,8 @@ int main()
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
     Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
-	std::vector<Planet> planets;
-	planets.emplace_back(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
+	std::vector<std::shared_ptr<Planet>> planets;
+    planets.push_back(std::make_shared<Planet>(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f)));
 
     Grid grid(100.0f, 10, 0.0f);
     if (!planets.empty()) {

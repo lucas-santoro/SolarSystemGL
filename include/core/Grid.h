@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "objects/Planet.h"
+#include <memory>
 
 class Grid {
 public:
@@ -10,7 +11,7 @@ public:
     ~Grid();
 
     void setupGrid(float size, int divisions, float height);
-    void applyGravityDistortion(const std::vector<Planet>& planets);
+    void applyGravityDistortion(std::vector<std::shared_ptr<Planet>>& planets);
     void draw() const;
 
 private:
