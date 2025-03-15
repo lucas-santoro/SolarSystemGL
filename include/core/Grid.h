@@ -1,20 +1,21 @@
 #pragma once
-#include <vector>
+#include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <GLFW/glfw3.h>
+#include <vector>
+#include "objects/Planet.h"
 
-class Grid
-{
+class Grid {
 public:
-    Grid(float size, int divisions, float height);
+    Grid(float size, int divisions, float height = 0.0f);
     ~Grid();
 
+    void setupGrid(float size, int divisions, float height);
+    void applyGravityDistortion(const std::vector<Planet>& planets);
     void draw() const;
 
 private:
     GLuint VAO, VBO;
     int lineCount;
-
-    void setupGrid(float size, int divisions, float height);
+    std::vector<glm::vec3> originalPoints;
 };
+

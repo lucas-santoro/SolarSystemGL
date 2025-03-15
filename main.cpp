@@ -30,8 +30,14 @@ int main()
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
-    Planet earth("Earth", 5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
-    Grid grid(10.0f, 10, -1.0f);
+    Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
+	std::vector<Planet> planets;
+	planets.emplace_back(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
+
+    Grid grid(100.0f, 10, 0.0f);
+    if (!planets.empty()) {
+        grid.applyGravityDistortion(planets);
+    }
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
@@ -118,7 +124,7 @@ int main()
             static glm::vec3 velocity = earth.getVelocity();
 
             ImGui::InputFloat("Mass (kg)", &mass, 0.0f, 0.0f, "%.3e");
-            ImGui::InputFloat("Density (kg/m³)", &density);
+            ImGui::InputFloat("Density (kg/mï¿½)", &density);
             ImGui::InputFloat("Radius (m)", &radius);
             ImGui::InputFloat3("Position", &position[0]);
             ImGui::InputFloat3("Velocity", &velocity[0]);
