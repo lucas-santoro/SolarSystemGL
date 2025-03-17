@@ -106,11 +106,32 @@ int main()
         {
             ImGui::Begin("Planet Info", &showPlanetWindow);
             ImGui::Text("Planet: Earth");
-            ImGui::Text("Mass: %.3e kg", earth.getMass());
-            ImGui::Text("Density: %.2f kg/m³", earth.getDensity());
-            ImGui::Text("Radius: %.2f m", earth.getRadius() * 1e7f);
-            ImGui::Text("Position: (%.2f, %.2f, %.2f)", earth.getPosition().x, earth.getPosition().y, earth.getPosition().z);
-            ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", earth.getVelocity().x, earth.getVelocity().y, earth.getVelocity().z);
+
+            static float mass = earth.getMass();
+            static float density = earth.getDensity();
+            static float radius = earth.getRadius() * 1e7f;
+            static glm::vec3 position = earth.getPosition();
+            static glm::vec3 velocity = earth.getVelocity();
+
+            ImGui::InputFloat("Mass (kg)", &mass, 0.0f, 0.0f, "%.3e");
+            ImGui::InputFloat("Density (kg/m³)", &density);
+            ImGui::InputFloat("Radius (m)", &radius);
+            ImGui::InputFloat3("Position", &position[0]);
+            ImGui::InputFloat3("Velocity", &velocity[0]);
+
+			//@todo: create a apply btn; add setters to planet class
+            // code example (it may require some changes)
+            // 
+            //if (ImGui::Button("Apply"))
+            //{
+            //    earth.setMass(mass);
+            //    earth.setDensity(density);
+            //    earth.setRadius(radius * 1e-7f);
+            //    earth.setPosition(position);
+            //    earth.setVelocity(velocity);
+            //}
+
+
             ImGui::End();
         }
 
