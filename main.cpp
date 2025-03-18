@@ -119,17 +119,16 @@ int main()
             ImGui::InputFloat3("Position", &position[0]);
             ImGui::InputFloat3("Velocity", &velocity[0]);
 
-			//@todo: create a apply btn; add setters to planet class
-            // code example (it may require some changes)
-            // 
-            //if (ImGui::Button("Apply"))
-            //{
-            //    earth.setMass(mass);
-            //    earth.setDensity(density);
-            //    earth.setRadius(radius * 1e-7f);
-            //    earth.setPosition(position);
-            //    earth.setVelocity(velocity);
-            //}
+            if (ImGui::Button("Reset"))
+            {
+                std::cout << "reset button clicked";
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button("Apply"))
+            {
+                std::cout << "apply button clicked";
+            }
 
 
             ImGui::End();
