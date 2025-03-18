@@ -105,8 +105,12 @@ int main()
         if (showPlanetWindow)
         {
             ImGui::Begin("Planet Info", &showPlanetWindow);
-            ImGui::Text("Planet: Earth");
 
+            static char nameBuffer[128];
+            strncpy_s(nameBuffer, sizeof(nameBuffer), earth.getName().c_str(), _TRUNCATE);
+            nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+
+            ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer));
             static float mass = earth.getMass();
             static float density = earth.getDensity();
             static float radius = earth.getRadius() * 1e7f;
