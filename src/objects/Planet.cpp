@@ -138,3 +138,24 @@ void Planet::render()
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+void Planet::setPosition(const glm::vec3 &newPosition)
+{ 
+    position = newPosition; 
+}
+void Planet::setVelocity(const glm::vec3 &newVelocity)
+{ 
+    velocity = newVelocity;
+}
+
+void Planet::setMass(float newMass)
+{
+    mass = newMass;
+    calculateRadius();
+}
+
+void Planet::setDensity(float newDensity) 
+{
+    density = newDensity;
+    calculateRadius();
+}

@@ -17,6 +17,11 @@ public:
     float getMass() const         { return mass; }
     float getDensity() const      { return density; }
 
+    void setPosition(const glm::vec3 &newPosition);
+    void setVelocity(const glm::vec3 &newVelocity);
+    void setMass(float newMass);
+    void setDensity(float newDensity);
+
 private:
     unsigned int VAO, VBO, EBO;
     std::vector<glm::vec3> vertices;
