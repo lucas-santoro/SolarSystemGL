@@ -30,7 +30,7 @@ int main()
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
-    Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
+    Planet earth("Earth", 5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
     Grid grid(10.0f, 10, -1.0f);
 
     ImGui::CreateContext();
@@ -105,12 +105,36 @@ int main()
         if (showPlanetWindow)
         {
             ImGui::Begin("Planet Info", &showPlanetWindow);
-            ImGui::Text("Planet: Earth");
-            ImGui::Text("Mass: %.3e kg", earth.getMass());
-            ImGui::Text("Density: %.2f kg/m³", earth.getDensity());
-            ImGui::Text("Radius: %.2f m", earth.getRadius() * 1e7f);
-            ImGui::Text("Position: (%.2f, %.2f, %.2f)", earth.getPosition().x, earth.getPosition().y, earth.getPosition().z);
-            ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", earth.getVelocity().x, earth.getVelocity().y, earth.getVelocity().z);
+
+            static char nameBuffer[128];
+            strncpy_s(nameBuffer, sizeof(nameBuffer), earth.getName().c_str(), _TRUNCATE);
+            nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+
+            ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer));
+            static float mass = earth.getMass();
+            static float density = earth.getDensity();
+            static float radius = earth.getRadius() * 1e7f;
+            static glm::vec3 position = earth.getPosition();
+            static glm::vec3 velocity = earth.getVelocity();
+
+            ImGui::InputFloat("Mass (kg)", &mass, 0.0f, 0.0f, "%.3e");
+            ImGui::InputFloat("Density (kg/m³)", &density);
+            ImGui::InputFloat("Radius (m)", &radius);
+            ImGui::InputFloat3("Position", &position[0]);
+            ImGui::InputFloat3("Velocity", &velocity[0]);
+
+            if (ImGui::Button("Reset"))
+            {
+                std::cout << "reset button clicked";
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button("Apply"))
+            {
+                std::cout << "apply button clicked";
+            }
+
+
             ImGui::End();
         }
 

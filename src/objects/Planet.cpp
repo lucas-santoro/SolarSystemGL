@@ -4,8 +4,8 @@
 #include <cmath>
 #include <map>
 
-Planet::Planet(float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions)
-    : mass(mass), density(density), position(position), velocity(velocity)
+Planet::Planet(const std::string& name, float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions)
+    : name(name), mass(mass), density(density), position(position), velocity(velocity)
 {
     calculateRadius();
     generateIcosahedron();
