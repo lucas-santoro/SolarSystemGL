@@ -10,9 +10,9 @@
 #include "core/Grid.h"
 #include <memory>
 
-void processInput(Window &window, Camera &camera, float deltaTime);
-void mouse_callback(GLFWwindow *window, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void processInput(Window& window, Camera& camera, float deltaTime);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool showPlanetWindow = false;
@@ -22,6 +22,7 @@ float lastX = 400, lastY = 300;
 bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+int selectedPlanetIndex = -1;
 
 int main()
 {
@@ -31,9 +32,9 @@ int main()
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
-    Planet earth(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f));
-	std::vector<std::shared_ptr<Planet>> planets;
-    planets.push_back(std::make_shared<Planet>(5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f)));
+
+    std::vector<std::shared_ptr<Planet>> planets;
+    planets.push_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f, glm::vec3(0.0f), glm::vec3(0.0f)));
 
     Grid grid(100.0f, 10, 0.0f);
     if (!planets.empty()) {
@@ -63,7 +64,9 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("model", model);
 
-        earth.render();
+        for (const auto& planet : planets) {
+            planet->render();
+        }
         grid.draw();
 
         double mouseX, mouseY;
@@ -90,42 +93,48 @@ int main()
             }
         }
 
-        if (earth.intersectsRay(camera.getPosition(), rayDirection))
+        for (size_t i = 0; i < planets.size(); i++)
         {
-            glm::vec3 planetScreenPos = earth.getPosition() + glm::vec3(0.0f, earth.getRadius() + 0.2f, 0.0f);
-            glm::vec2 screenPos = camera.worldToScreen(planetScreenPos, view, projection, 800, 600);
-
-            if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= 800 && screenPos.y <= 600)
+            if (planets[i]->intersectsRay(camera.getPosition(), rayDirection))
             {
-                ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
-                ImGui::Begin("##PlanetName", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-                ImGui::Text("Earth");
-                ImGui::End();
+                glm::vec3 planetScreenPos = planets[i]->getPosition() + glm::vec3(0.0f, planets[i]->getRadius() + 0.2f, 0.0f);
+                glm::vec2 screenPos = camera.worldToScreen(planetScreenPos, view, projection, 800, 600);
 
-                if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= 800 && screenPos.y <= 600)
                 {
-                    showPlanetWindow = true;
+                    ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
+                    ImGui::Begin("##PlanetName", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                    ImGui::Text("%s", planets[i]->getName().c_str());
+                    ImGui::End();
+
+                    if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                    {
+                        showPlanetWindow = true;
+                        selectedPlanetIndex = i;
+                    }
                 }
             }
         }
 
-        if (showPlanetWindow)
+        if (showPlanetWindow && selectedPlanetIndex >= 0 && selectedPlanetIndex < planets.size())
         {
+            auto& planet = planets[selectedPlanetIndex];
+
             ImGui::Begin("Planet Info", &showPlanetWindow);
 
             static char nameBuffer[128];
-            strncpy_s(nameBuffer, sizeof(nameBuffer), earth.getName().c_str(), _TRUNCATE);
+            strncpy_s(nameBuffer, sizeof(nameBuffer), planet->getName().c_str(), _TRUNCATE);
             nameBuffer[sizeof(nameBuffer) - 1] = '\0';
 
             ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer));
-            static float mass = earth.getMass();
-            static float density = earth.getDensity();
-            static float radius = earth.getRadius() * 1e7f;
-            static glm::vec3 position = earth.getPosition();
-            static glm::vec3 velocity = earth.getVelocity();
+            static float mass = planet->getMass();
+            static float density = planet->getDensity();
+            static float radius = planet->getRadius() * 1e7f;
+            static glm::vec3 position = planet->getPosition();
+            static glm::vec3 velocity = planet->getVelocity();
 
             ImGui::InputFloat("Mass (kg)", &mass, 0.0f, 0.0f, "%.3e");
-            ImGui::InputFloat("Density (kg/m�)", &density);
+            ImGui::InputFloat("Density (kg/m³)", &density);
             ImGui::InputFloat("Radius (m)", &radius);
             ImGui::InputFloat3("Position", &position[0]);
             ImGui::InputFloat3("Velocity", &velocity[0]);
@@ -141,12 +150,20 @@ int main()
                 std::cout << "apply button clicked";
             }
 
-
             ImGui::End();
         }
 
         ImGui::Begin("Solar System");
         ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
+
+        if (ImGui::Button("Add Planet"))
+        {
+            planets.push_back(std::make_shared<Planet>("New Planet", 1.0e24f, 3000.0f,
+                glm::vec3(planets.size() * 2.0f, 0.0f, 0.0f),
+                glm::vec3(0.0f)));
+            grid.applyGravityDistortion(planets);
+        }
+
         ImGui::End();
 
         ImGui::Render();
@@ -163,9 +180,9 @@ int main()
     return 0;
 }
 
-void processInput(Window &window, Camera &camera, float deltaTime)
+void processInput(Window& window, Camera& camera, float deltaTime)
 {
-    GLFWwindow *glfwWindow = window.getGLFWwindow();
+    GLFWwindow* glfwWindow = window.getGLFWwindow();
     if (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(glfwWindow, true);
 
@@ -179,7 +196,7 @@ void processInput(Window &window, Camera &camera, float deltaTime)
         camera.processKeyboard(GLFW_KEY_D, deltaTime);
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
     {
@@ -199,7 +216,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     }
 }
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     if (!ImGui::GetIO().WantCaptureMouse)
     {
