@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include "core/Shader.h"
 
 class Planet
 {
@@ -9,7 +10,7 @@ public:
     Planet(const std::string &name, float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions = 3);
     ~Planet();
 
-    void render();
+    void render(Shader &shader);
     bool intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
 
     std::string getName() const     { return name; }

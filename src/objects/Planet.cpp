@@ -132,12 +132,16 @@ void Planet::calculateRadius()
     radius = std::cbrt((3.0f * mass) / (4.0f * M_PI * density)) * scaleFactor;
 }
 
-void Planet::render()
+void Planet::render(Shader &shader)
 {
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+    shader.setMat4("model", model);
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
 
 void Planet::setPosition(const glm::vec3 &newPosition)
 { 
