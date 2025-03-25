@@ -79,6 +79,7 @@ int main()
         for (const auto& planet : planets) {
             planet->render(shader);
         }
+        shader.setMat4("model", glm::mat4(1.0f));
         grid.draw();
 
         double mouseX, mouseY;
