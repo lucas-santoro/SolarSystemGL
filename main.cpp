@@ -32,6 +32,7 @@ int main()
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
+	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
 
     std::vector<std::shared_ptr<Planet>> planets;
     float AU = 3.0f;
@@ -80,6 +81,11 @@ int main()
             planet->render(shader);
         }
         shader.setMat4("model", glm::mat4(1.0f));
+
+		gridShader.use();
+        gridShader.setMat4("view", view);
+        gridShader.setMat4("projection", projection);
+        gridShader.setMat4("model", glm::mat4(1.0f));
         grid.draw();
 
         double mouseX, mouseY;
