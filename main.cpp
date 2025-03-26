@@ -30,6 +30,7 @@ int main()
     glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glEnable(GL_DEPTH_TEST);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
@@ -49,7 +50,7 @@ int main()
     planets.push_back(std::make_shared<Planet>("Neptune", 1.024e26f, 1638.0f, glm::vec3(30.07f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
 
 
-    Grid grid(1000.0f, 100, 0.0f);
+    Grid grid(1000.0f, 300, 0.0f);
     if (!planets.empty()) {
         grid.applyGravityDistortion(planets);
     }
@@ -80,7 +81,6 @@ int main()
         for (const auto& planet : planets) {
             planet->render(shader);
         }
-        shader.setMat4("model", glm::mat4(1.0f));
 
 		gridShader.use();
         gridShader.setMat4("view", view);
