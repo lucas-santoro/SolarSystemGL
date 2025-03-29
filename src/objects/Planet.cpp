@@ -4,8 +4,8 @@
 #include <cmath>
 #include <map>
 
-Planet::Planet(const std::string& name, float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions)
-    : name(name), mass(mass), density(density), position(position), velocity(velocity)
+Planet::Planet(const std::string& name, float mass, float density, glm::vec3 position, glm::vec3 velocity, glm::vec3 color, int subdivisions)
+    : name(name), mass(mass), density(density), position(position), velocity(velocity), color(color)
 {
     calculateRadius();
     generateIcosahedron();
@@ -136,6 +136,7 @@ void Planet::render(Shader &shader)
 {
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
     shader.setMat4("model", model);
+    shader.setVec3("planetColor", color);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
