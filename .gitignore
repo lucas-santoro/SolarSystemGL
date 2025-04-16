@@ -1,0 +1,75 @@
+# Compiled object files
+*.o
+*.obj
+*.lo
+*.d
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.mod
+*.exp
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.opensdf
+*.sdf
+*.vc.db
+*.vscode/
+*.vs/
+
+# Qt Creator files
+*.pro.user
+*.qmake.stash
+*.qmake.cache
+
+# Other generated files
+*.moc
+*.qrc
+*.rcc
+*.ui
+
+# Logs
+*.log
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo
+*.tmp
+
+# Directories
+bin/
+build/
+Debug/
+Release/
