@@ -1,4 +1,4 @@
-#include "core/Camera.h"
+#include "Camera.h"
 #include <iostream>
 
 Camera::Camera(glm::vec3 startPosition)
