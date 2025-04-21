@@ -27,6 +27,10 @@ int selectedPlanetIndex = -1;
 int main()
 {
     Window window(800, 600, "SolarSystemGL");
+    glfwSetFramebufferSizeCallback(window.getGLFWwindow(), [](GLFWwindow*, int width, int height) 
+    {
+        glViewport(0, 0, width, height);
+    });
     glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -39,15 +43,15 @@ int main()
     float AU = 3.0f;
 
     //planets.push_back(std::make_shared<Planet>("Sun", 1.989e30f, 1408.0f, glm::vec3(0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f, glm::vec3(0.387f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Venus", 4.8675e24f, 5243.0f, glm::vec3(0.723f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f, glm::vec3(1.0f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Moon", 7.3477e22f, 3344.0f, glm::vec3(1.0f * AU + 0.00257f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Mars", 6.417e23f, 3933.0f, glm::vec3(1.524f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Jupiter", 1.898e27f, 1326.0f, glm::vec3(5.203f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Saturn", 5.683e26f, 687.0f, glm::vec3(9.537f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Uranus", 8.681e25f, 1271.0f, glm::vec3(19.191f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
-    planets.push_back(std::make_shared<Planet>("Neptune", 1.024e26f, 1638.0f, glm::vec3(30.07f * AU, 0.0f, 0.0f), glm::vec3(0.0f)));
+    planets.push_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f, glm::vec3(0.387f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f, 0.5f, 0.5f)));
+    planets.push_back(std::make_shared<Planet>("Venus", 4.8675e24f, 5243.0f, glm::vec3(0.723f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.95f, 0.85f, 0.55f)));
+    planets.push_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f, glm::vec3(1.0f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f, 0.4f, 1.0f)));
+    planets.push_back(std::make_shared<Planet>("Moon", 7.3477e22f, 3344.0f, glm::vec3(1.0f * AU + 0.00257f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.6f, 0.6f, 0.6f)));
+    planets.push_back(std::make_shared<Planet>("Mars", 6.417e23f, 3933.0f, glm::vec3(1.524f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.8f, 0.3f, 0.1f)));
+    planets.push_back(std::make_shared<Planet>("Jupiter", 1.898e27f, 1326.0f, glm::vec3(5.203f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.9f, 0.7f, 0.4f)));
+    planets.push_back(std::make_shared<Planet>("Saturn", 5.683e26f, 687.0f, glm::vec3(9.537f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.95f, 0.85f, 0.5f)));
+    planets.push_back(std::make_shared<Planet>("Uranus", 8.681e25f, 1271.0f, glm::vec3(19.191f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.6f, 0.85f, 0.9f)));
+    planets.push_back(std::make_shared<Planet>("Neptune", 1.024e26f, 1638.0f, glm::vec3(30.07f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.3f, 0.4f, 0.85f)));
 
 
     Grid grid(1000.0f, 300, 0.0f);
@@ -71,7 +75,10 @@ int main()
         shader.use();
 
         glm::mat4 view = camera.getViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        int width, height;
+        glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
+        float aspect = (float)width / std::max(height, 1);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
         glm::mat4 model = glm::mat4(1.0f);
 
         shader.setMat4("view", view);
@@ -91,7 +98,7 @@ int main()
         double mouseX, mouseY;
         glfwGetCursorPos(window.getGLFWwindow(), &mouseX, &mouseY);
 
-        glm::vec3 rayDirection = camera.getRayFromMouse(mouseX, mouseY, 800, 600, view, projection);
+        glm::vec3 rayDirection = camera.getRayFromMouse(mouseX, mouseY, width, height, view, projection);        
         glm::vec3 rayOrigin = camera.getPosition();
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -117,9 +124,9 @@ int main()
             if (planets[i]->intersectsRay(camera.getPosition(), rayDirection))
             {
                 glm::vec3 planetScreenPos = planets[i]->getPosition() + glm::vec3(0.0f, planets[i]->getRadius() + 0.2f, 0.0f);
-                glm::vec2 screenPos = camera.worldToScreen(planetScreenPos, view, projection, 800, 600);
+                glm::vec2 screenPos = camera.worldToScreen(planetScreenPos, view, projection, width, height);
 
-                if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= 800 && screenPos.y <= 600)
+                if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= width && screenPos.y <= height)
                 {
                     ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
                     ImGui::Begin("##PlanetName", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
@@ -177,9 +184,12 @@ int main()
 
         if (ImGui::Button("Add Planet"))
         {
-            planets.push_back(std::make_shared<Planet>("New Planet", 1.0e24f, 3000.0f,
+            planets.push_back(std::make_shared<Planet>(
+                "New Planet", 1.0e24f, 3000.0f,
                 glm::vec3(planets.size() * 2.0f, 0.0f, 0.0f),
-                glm::vec3(0.0f)));
+                glm::vec3(0.0f),
+                glm::vec3(1.0f, 1.0f, 1.0f)
+            ));
             grid.applyGravityDistortion(planets);
         }
 
