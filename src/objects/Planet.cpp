@@ -164,3 +164,8 @@ void Planet::setDensity(float newDensity)
     density = newDensity;
     calculateRadius();
 }
+
+void Planet::setName(const std::string &newName) 
+{
+    name = newName;
+}

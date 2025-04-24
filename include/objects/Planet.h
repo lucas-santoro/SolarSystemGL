@@ -24,6 +24,7 @@ public:
     void setVelocity(const glm::vec3 &newVelocity);
     void setMass(float newMass);
     void setDensity(float newDensity);
+    void setName(const std::string& newName);
 
 private:
     unsigned int VAO, VBO, EBO;
