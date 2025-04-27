@@ -116,3 +116,8 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Pla
 
     ImGui::End();
 }
+
+bool UIManager::isRightMousePressed(GLFWwindow *window) 
+{
+    return !ImGui::GetIO().WantCaptureMouse && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+}

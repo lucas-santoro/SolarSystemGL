@@ -13,7 +13,7 @@
 #include <memory>
 
 void processInput(Window& window, Camera& camera, float deltaTime);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -28,7 +28,7 @@ UIManager uiManager;
 int main()
 {
     Window window(800, 600, "SolarSystemGL");
-    glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
+    glfwSetCursorPosCallback(window.getGLFWwindow(), mouseCallback);
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glEnable(GL_DEPTH_TEST);
@@ -127,13 +127,10 @@ void processInput(Window& window, Camera& camera, float deltaTime)
         camera.processKeyboard(GLFW_KEY_D, deltaTime);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    static float lastX = xpos;
-    static float lastY = ypos;
-    static bool firstMouse = true;
-
-    if (firstMouse) {
+    if (firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -144,9 +141,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = xpos;
     lastY = ypos;
 
-    if (isMouseMoving)
+    if (uiManager.isRightMousePressed(window)) {
         camera.processMouseMovement(xoffset, yoffset);
+    }
 }
+
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {

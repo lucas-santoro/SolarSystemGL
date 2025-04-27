@@ -8,8 +8,9 @@
 
 class UIManager {
 public:
-    void render(Window& window, Camera& camera, float deltaTime,
+    void render(Window &window, Camera &camera, float deltaTime,
         std::vector<std::shared_ptr<Planet>>& planets, Grid& grid);
+    bool isRightMousePressed(GLFWwindow *window);
 
 private:
     int selectedPlanetIndex = -1;
@@ -25,8 +26,8 @@ private:
         glm::vec3 velocity;
     } editBuffer;
 
-    void renderPlanetPopup(Window& window, Camera& camera, const glm::mat4& view, const glm::mat4& projection,
-        const std::vector<std::shared_ptr<Planet>>& planets);
-    void renderPlanetInfo(std::shared_ptr<Planet>& planet);
-    void renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Planet>>& planets, Grid& grid);
+    void renderPlanetPopup(Window &window, Camera &camera, const glm::mat4 &view, const glm::mat4 &projection,
+        const std::vector<std::shared_ptr<Planet>> &planets);
+    void renderPlanetInfo(std::shared_ptr<Planet> &planet);
+    void renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Planet>> &planets, Grid &grid);
 };
