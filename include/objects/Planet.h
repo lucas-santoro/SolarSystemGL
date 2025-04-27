@@ -25,11 +25,14 @@ public:
     void setMass(float newMass);
     void setDensity(float newDensity);
 
+    void recalculateGeometry();
+
 private:
     unsigned int VAO, VBO, EBO;
 
     std::vector<glm::vec3> vertices;
     std::vector<unsigned int> indices;
+    int subdivisions;
 
     std::string name;
     glm::vec3 position;

@@ -5,7 +5,7 @@
 #include <map>
 
 Planet::Planet(const std::string& name, float mass, float density, glm::vec3 position, glm::vec3 velocity, glm::vec3 color, int subdivisions)
-    : name(name), mass(mass), density(density), position(position), velocity(velocity), color(color)
+	: name(name), mass(mass), density(density), position(position), velocity(velocity), color(color), subdivisions(subdivisions)
 {
     calculateRadius();
     generateIcosahedron();
@@ -131,6 +131,16 @@ void Planet::calculateRadius()
     const float scaleFactor = 1e-7f;
     radius = std::cbrt((3.0f * mass) / (4.0f * M_PI * density)) * scaleFactor;
 }
+
+void Planet::recalculateGeometry() 
+{
+    calculateRadius();
+    generateIcosahedron();
+    subdivide(subdivisions);
+    setupMesh();
+}
+
+
 
 void Planet::render(Shader &shader)
 {

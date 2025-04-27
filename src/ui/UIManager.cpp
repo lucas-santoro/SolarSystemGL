@@ -94,6 +94,7 @@ void UIManager::renderPlanetInfo(std::shared_ptr<Planet>& planet) {
         planet->setDensity(editBuffer.density);
         planet->setPosition(editBuffer.position);
         planet->setVelocity(editBuffer.velocity);
+        planet->recalculateGeometry();
     }
 
     ImGui::End();
