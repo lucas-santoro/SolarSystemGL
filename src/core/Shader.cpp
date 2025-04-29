@@ -95,3 +95,21 @@ void Shader::setVec3(const std::string &name, const glm::vec3 &value)
 {
     glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
 }
+
+void Shader::setVec3Array(const std::string &name, const std::vector<glm::vec3> &values) 
+{
+    int location = glGetUniformLocation(ID, name.c_str());
+    glUniform3fv(location, static_cast<GLsizei>(values.size()), glm::value_ptr(values[0]));
+}
+
+void Shader::setFloatArray(const std::string &name, const std::vector<float> &values) 
+{
+    int location = glGetUniformLocation(ID, name.c_str());
+    glUniform1fv(location, static_cast<GLsizei>(values.size()), values.data());
+}
+
+void Shader::setInt(const std::string &name, int value) 
+{
+    int location = glGetUniformLocation(ID, name.c_str());
+    glUniform1i(location, value);
+}
