@@ -51,9 +51,6 @@ int main()
 
 
     Grid grid(1000.0f, 300, 0.0f);
-    if (!planets.empty()) {
-        grid.applyGravityDistortion(planets);
-    }
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
@@ -86,7 +83,7 @@ int main()
         gridShader.setMat4("view", view);
         gridShader.setMat4("projection", projection);
         gridShader.setMat4("model", glm::mat4(1.0f));
-        grid.draw();
+        grid.draw(gridShader, planets);
 
         double mouseX, mouseY;
         glfwGetCursorPos(window.getGLFWwindow(), &mouseX, &mouseY);

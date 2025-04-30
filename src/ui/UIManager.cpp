@@ -112,7 +112,6 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Pla
             glm::vec3(0.0f),
             glm::vec3(1.0f, 1.0f, 1.0f)
         ));
-        grid.applyGravityDistortion(planets);
     }
 
     ImGui::End();
