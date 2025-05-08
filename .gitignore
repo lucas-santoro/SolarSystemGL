@@ -8,7 +8,6 @@
 *.dylib
 *.dll
 *.a
-*.lib
 *.exe
 *.out
 *.app
@@ -50,8 +49,4 @@ Debug/
 Release/
 x64/
 imgui.ini
-third_party/*
-!third_party/glad/
-!third_party/glad/glad.h
-!third_party/glad/glad.cincludes/
 include/
