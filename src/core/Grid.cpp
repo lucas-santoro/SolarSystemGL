@@ -74,76 +74,23 @@ void Grid::setupGrid(float size, int divisions, float height)
     glBindVertexArray(0);
 }
 
-void Grid::applyGravityDistortion(std::vector<std::shared_ptr<Planet>> &planets)
+void Grid::draw(Shader& shader, const std::vector<std::shared_ptr<Planet>>& planets) const 
 {
-    int divisions = (int)sqrt(originalPoints.size()) - 1;
-    std::vector<glm::vec3> distortedPoints = originalPoints;
-    const float visualScale = 0.8f;
-    const float maxDistortion = 2.0f;
-    const float falloffRadius = 2.0f;
+    shader.use();
 
-    for (size_t i = 0; i < distortedPoints.size(); i++)
-    {
-        glm::vec3& point = distortedPoints[i];
-        point.y = 0.0f;
+    int count = std::min((int)planets.size(), 10);
+    std::vector<glm::vec3> positions(count);
+    std::vector<float> masses(count);
 
-        for (const auto& planet : planets)
-        {
-            glm::vec3 planetPos = planet->getPosition();
-            planetPos.y = 0.0f;
-            float dx = point.x - planetPos.x;
-            float dz = point.z - planetPos.z;
-            float distanceSquared = dx * dx + dz * dz;
-
-            if (distanceSquared < 0.001f)
-            {
-                distanceSquared = 0.001f;
-            }
-
-            float massScale = planet->getMass() / 5.97e24f;
-            float distortion = maxDistortion * massScale / (1.0f + distanceSquared / (falloffRadius * falloffRadius));
-            point.y -= distortion * visualScale;
-        }
+    for (int i = 0; i < count; ++i) {
+        positions[i] = planets[i]->getPosition();
+        masses[i] = planets[i]->getMass() / 5.97e24f; // normalize as antes
     }
 
-    std::vector<GLfloat> updatedVertices;
+    shader.setInt("planetCount", count);
+    shader.setVec3Array("planetPositions", positions);
+    shader.setFloatArray("planetMasses", masses);
 
-    for (int i = 0; i <= divisions; i++)
-    {
-        for (int j = 0; j < divisions; j++)
-        {
-            int index = i * (divisions + 1) + j;
-            updatedVertices.push_back(distortedPoints[index].x);
-            updatedVertices.push_back(distortedPoints[index].y);
-            updatedVertices.push_back(distortedPoints[index].z);
-            updatedVertices.push_back(distortedPoints[index + 1].x);
-            updatedVertices.push_back(distortedPoints[index + 1].y);
-            updatedVertices.push_back(distortedPoints[index + 1].z);
-        }
-    }
-
-    for (int j = 0; j <= divisions; j++)
-    {
-        for (int i = 0; i < divisions; i++)
-        {
-            int index = i * (divisions + 1) + j;
-            int nextIndex = (i + 1) * (divisions + 1) + j;
-            updatedVertices.push_back(distortedPoints[index].x);
-            updatedVertices.push_back(distortedPoints[index].y);
-            updatedVertices.push_back(distortedPoints[index].z);
-            updatedVertices.push_back(distortedPoints[nextIndex].x);
-            updatedVertices.push_back(distortedPoints[nextIndex].y);
-            updatedVertices.push_back(distortedPoints[nextIndex].z);
-        }
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, updatedVertices.size() * sizeof(GLfloat), updatedVertices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void Grid::draw() const
-{
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINES, 0, lineCount);
     glBindVertexArray(0);

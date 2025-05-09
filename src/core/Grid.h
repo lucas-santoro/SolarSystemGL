@@ -11,8 +11,7 @@ public:
     ~Grid();
 
     void setupGrid(float size, int divisions, float height);
-    void applyGravityDistortion(std::vector<std::shared_ptr<Planet>>& planets);
-    void draw() const;
+    void draw(Shader &shader, const std::vector<std::shared_ptr<Planet>> &planets) const;
 
 private:
     GLuint VAO, VBO;
