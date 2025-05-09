@@ -74,7 +74,7 @@ int main()
         int width, height;
         glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
         glm::mat4 view = camera.getViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / std::max(height, 1), 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / std::max(height, 1), 0.01f, 1000.0f);
         glm::mat4 model = glm::mat4(1.0f);
 
         shader.setMat4("view", view);
