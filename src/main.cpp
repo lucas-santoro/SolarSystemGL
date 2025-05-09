@@ -36,6 +36,8 @@ int main()
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
