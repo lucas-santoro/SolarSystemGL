@@ -7,7 +7,7 @@
 class Planet
 {
 public:
-    Planet(const std::string &name, float mass, float density, glm::vec3 position, glm::vec3 velocity, int subdivisions = 3);
+    Planet(const std::string &name, float mass, float density, glm::vec3 position, glm::vec3 velocity, glm::vec3 color, int subdivisions = 3);
     ~Planet();
 
     void render(Shader &shader);
@@ -24,6 +24,7 @@ public:
     void setVelocity(const glm::vec3 &newVelocity);
     void setMass(float newMass);
     void setDensity(float newDensity);
+    void setName(const std::string& newName);
 
 private:
     unsigned int VAO, VBO, EBO;
@@ -33,8 +34,9 @@ private:
 
     std::string name;
     glm::vec3 position;
-    float radius;
     glm::vec3 velocity;
+    glm::vec3 color;
+    float radius;
     float mass;
     float density;
 
