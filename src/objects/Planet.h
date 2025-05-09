@@ -27,9 +27,6 @@ public:
     void setName(const std::string& newName);
 
     void recalculateGeometry();
-
-    void recalculateGeometry();
-
 private:
     unsigned int VAO, VBO, EBO;
 

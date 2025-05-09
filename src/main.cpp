@@ -8,7 +8,7 @@
 #include "objects/Planet.h"
 #include "core/Camera.h"
 #include "core/Grid.h"
-#include "src/ui/UIManager.h"
+#include "ui/UIManager.h"
 
 #include <memory>
 
@@ -28,6 +28,10 @@ UIManager uiManager;
 int main()
 {
     Window window(800, 600, "SolarSystemGL");
+    glfwSetFramebufferSizeCallback(window.getGLFWwindow(), [](GLFWwindow*, int width, int height)
+        {
+            glViewport(0, 0, width, height);
+        });
     glfwSetCursorPosCallback(window.getGLFWwindow(), mouseCallback);
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);

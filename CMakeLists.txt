@@ -13,7 +13,7 @@ endif()
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-set(SHADER_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/Debug/shaders")
+set(SHADER_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/shaders")
 
 message(STATUS "[Config] Project source directory: ${SRC_DIR}")
 message(STATUS "[Config] Third-party directory: ${THIRD_PARTY_DIR}")
@@ -22,6 +22,7 @@ include_directories(
     ${SRC_DIR}
     ${SRC_DIR}/core
     ${SRC_DIR}/objects
+    ${SRC_DIR}/ui
     ${THIRD_PARTY_DIR}
     ${THIRD_PARTY_DIR}/imgui
 )
