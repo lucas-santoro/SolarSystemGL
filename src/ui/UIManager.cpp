@@ -4,12 +4,14 @@
 
 void UIManager::render(Window& window, Camera& camera, float deltaTime,
     std::vector<std::shared_ptr<Planet>>& planets, Grid& grid) {
+
     int width, height;
     glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
     glm::mat4 view = camera.getViewMatrix();
     float aspect = (float)width / std::max(height, 1);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 
+    renderNavbar(planets);
     renderPlanetPopup(window, camera, view, projection, planets);
     renderMainPanel(deltaTime, planets, grid);
 
@@ -121,4 +123,37 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Pla
 bool UIManager::isRightMousePressed(GLFWwindow *window) 
 {
     return !ImGui::GetIO().WantCaptureMouse && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+}
+
+void UIManager::renderNavbar(std::vector<std::shared_ptr<Planet>> &planets) 
+{
+    if (ImGui::BeginMainMenuBar()) 
+    {
+        if (ImGui::BeginMenu("Planets")) 
+        {
+            for (size_t i = 0; i < planets.size(); ++i) 
+            {
+                if (ImGui::MenuItem(planets[i]->getName().c_str())) 
+                {
+                    selectedPlanetIndex = static_cast<int>(i);
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Camera")) 
+        {
+            ImGui::MenuItem("Reset View");
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Settings")) 
+        {
+            ImGui::MenuItem("Show Grid", nullptr, true);
+            ImGui::MenuItem("Show Orbits", nullptr, false);
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
 }
