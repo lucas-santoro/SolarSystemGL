@@ -28,6 +28,8 @@ public:
 
     void recalculateGeometry();
 
+    void recalculateGeometry();
+
 private:
     unsigned int VAO, VBO, EBO;
 

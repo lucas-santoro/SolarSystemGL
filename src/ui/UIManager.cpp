@@ -75,7 +75,7 @@ void UIManager::renderPlanetInfo(std::shared_ptr<Planet>& planet) {
 
     ImGui::InputText("Name", editBuffer.name, sizeof(editBuffer.name));
     ImGui::InputFloat("Mass (kg)", &editBuffer.mass, 0.0f, 0.0f, "%.3e");
-    ImGui::InputFloat("Density (kg/m³)", &editBuffer.density);
+    ImGui::InputFloat("Density (kg/mï¿½)", &editBuffer.density);
     ImGui::InputFloat3("Position", &editBuffer.position[0]);
     ImGui::InputFloat3("Velocity", &editBuffer.velocity[0]);
 
@@ -112,6 +112,7 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Pla
             glm::vec3(0.0f),
             glm::vec3(1.0f, 1.0f, 1.0f)
         ));
+        grid.applyGravityDistortion(planets);
     }
 
     ImGui::End();
