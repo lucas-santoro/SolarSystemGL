@@ -16,7 +16,7 @@ void processInput(Window& window, Camera& camera, float deltaTime);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 300.0f));
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
 bool isMouseMoving = false;
@@ -43,7 +43,7 @@ int main()
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
 
     std::vector<std::shared_ptr<Planet>> planets;
-    float AU = 30.0f;
+    float AU = 50.0f;
 
     planets.insert(planets.begin(), std::make_shared<Planet>(
         "Sun", 1.989e30f, 1408.0f,
