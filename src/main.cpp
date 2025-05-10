@@ -43,8 +43,13 @@ int main()
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
 
     std::vector<std::shared_ptr<Planet>> planets;
-    float AU = 13.0f;
+    float AU = 30.0f;
 
+    planets.insert(planets.begin(), std::make_shared<Planet>(
+        "Sun", 1.989e30f, 1408.0f,
+        glm::vec3(0.0f), glm::vec3(0.0f),
+        glm::vec3(1.0f, 0.9f, 0.3f)
+    ));
     planets.push_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f, glm::vec3(0.387f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f, 0.5f, 0.5f)));
     planets.push_back(std::make_shared<Planet>("Venus", 4.8675e24f, 5243.0f, glm::vec3(0.723f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.95f, 0.85f, 0.55f)));
     planets.push_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f, glm::vec3(1.0f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f, 0.4f, 1.0f)));

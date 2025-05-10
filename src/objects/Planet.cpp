@@ -144,7 +144,12 @@ void Planet::recalculateGeometry()
 
 void Planet::render(Shader &shader)
 {
+    float visualScale = 1.0f;
+    if (name == "Sun") visualScale = 0.1f;
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
+    model = glm::scale(model, glm::vec3(/*radius * */visualScale));
+
     shader.setMat4("model", model);
     shader.setVec3("planetColor", color);
 
