@@ -9,6 +9,7 @@
 #include "core/Camera.h"
 #include "core/Grid.h"
 #include "ui/UIManager.h"
+#include "core/Constants.h"
 
 #include <memory>
 
@@ -28,10 +29,7 @@ UIManager uiManager;
 int main()
 {
     Window window(800, 600, "SolarSystemGL");
-    glfwSetFramebufferSizeCallback(window.getGLFWwindow(), [](GLFWwindow*, int width, int height)
-        {
-            glViewport(0, 0, width, height);
-        });
+    glfwSetFramebufferSizeCallback(window.getGLFWwindow(), [](GLFWwindow*, int width, int height) { glViewport(0, 0, width, height); });
     glfwSetCursorPosCallback(window.getGLFWwindow(), mouseCallback);
     glfwSetScrollCallback(window.getGLFWwindow(), scroll_callback);
     glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -43,22 +41,51 @@ int main()
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
 
     std::vector<std::shared_ptr<Planet>> planets;
-    float AU = 50.0f;
 
-    planets.insert(planets.begin(), std::make_shared<Planet>(
+    constexpr double METERS_PER_WU = 1.0e9;
+    constexpr double AU = 1.495978707e11;
+    constexpr float  AU_WU = static_cast<float>(AU / METERS_PER_WU);
+
+    planets.emplace_back(std::make_shared<Planet>(
         "Sun", 1.989e30f, 1408.0f,
         glm::vec3(0.0f), glm::vec3(0.0f),
-        glm::vec3(1.0f, 0.9f, 0.3f)
-    ));
-    planets.push_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f, glm::vec3(0.387f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.5f, 0.5f, 0.5f)));
-    planets.push_back(std::make_shared<Planet>("Venus", 4.8675e24f, 5243.0f, glm::vec3(0.723f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.95f, 0.85f, 0.55f)));
-    planets.push_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f, glm::vec3(1.0f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.2f, 0.4f, 1.0f)));
-    planets.push_back(std::make_shared<Planet>("Moon", 7.3477e22f, 3344.0f, glm::vec3(1.08f * AU + 0.00257f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.6f, 0.6f, 0.6f)));
-    planets.push_back(std::make_shared<Planet>("Mars", 6.417e23f, 3933.0f, glm::vec3(1.524f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.8f, 0.3f, 0.1f)));
-    planets.push_back(std::make_shared<Planet>("Jupiter", 1.898e27f, 1326.0f, glm::vec3(5.203f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.9f, 0.7f, 0.4f)));
-    planets.push_back(std::make_shared<Planet>("Saturn", 5.683e26f, 687.0f, glm::vec3(9.537f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.95f, 0.85f, 0.5f)));
-    planets.push_back(std::make_shared<Planet>("Uranus", 8.681e25f, 1271.0f, glm::vec3(19.191f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.6f, 0.85f, 0.9f)));
-    planets.push_back(std::make_shared<Planet>("Neptune", 1.024e26f, 1638.0f, glm::vec3(30.07f * AU, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.3f, 0.4f, 0.85f)));
+        glm::vec3(1.0f, 0.9f, 0.3f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f,
+        glm::vec3(0.387f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.5f, 0.5f, 0.5f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Venus", 4.8675e24f, 5243.0f,
+        glm::vec3(0.723f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.95f, 0.85f, 0.55f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Earth", 5.972e24f, 5514.0f,
+        glm::vec3(1.0f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.2f, 0.4f, 1.0f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Moon", 7.3477e22f, 3344.0f,
+        glm::vec3((1.08f + 0.00257f) * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.6f, 0.6f, 0.6f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Mars", 6.417e23f, 3933.0f,
+        glm::vec3(1.524f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.8f, 0.3f, 0.1f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Jupiter", 1.898e27f, 1326.0f,
+        glm::vec3(5.203f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.9f, 0.7f, 0.4f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Saturn", 5.683e26f, 687.0f,
+        glm::vec3(9.537f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.95f, 0.85f, 0.5f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Uranus", 8.681e25f, 1271.0f,
+        glm::vec3(19.191f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.6f, 0.85f, 0.9f)));
+
+    planets.emplace_back(std::make_shared<Planet>("Neptune", 1.024e26f, 1638.0f,
+        glm::vec3(30.07f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
+        glm::vec3(0.3f, 0.4f, 0.85f)));
 
 
     Grid grid(1000.0f, 300, 0.0f);
