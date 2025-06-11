@@ -118,13 +118,18 @@ void Planet::setupMesh()
 
 bool Planet::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
 {
-    glm::vec3 oc = rayOrigin - position;
-    float a = glm::dot(rayDirection, rayDirection);
-    float b = 2.0f * glm::dot(oc, rayDirection);
-    float c = glm::dot(oc, oc) - (radius * radius);
-    float discriminant = (b * b) - (4 * a * c);
-    return discriminant >= 0;
+    glm::vec3 vectorOriginToCenter = rayOrigin - position;
+
+    float directionLengthSquared = glm::dot(rayDirection, rayDirection);
+    float twiceProjection = 2.0f * glm::dot(vectorOriginToCenter, rayDirection);
+    float centerDistanceSquared = glm::dot(vectorOriginToCenter, vectorOriginToCenter) - radius * radius;
+
+    float discriminant = twiceProjection * twiceProjection -
+        4.0f * directionLengthSquared * centerDistanceSquared;
+
+    return discriminant >= 0.0f;
 }
+
 
 void Planet::calculateRadius()
 {
@@ -139,8 +144,6 @@ void Planet::recalculateGeometry()
     subdivide(subdivisions);
     setupMesh();
 }
-
-
 
 void Planet::render(Shader &shader)
 {
@@ -157,7 +160,6 @@ void Planet::render(Shader &shader)
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
-
 
 void Planet::setPosition(const glm::vec3 &newPosition)
 { 
