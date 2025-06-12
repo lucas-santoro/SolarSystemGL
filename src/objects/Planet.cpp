@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <cmath>
 #include <map>
+#include <iostream>
 
 Planet::Planet(const std::string& name, float mass, float density, glm::vec3 position, glm::vec3 velocity, glm::vec3 color, int subdivisions)
 	: name(name), mass(mass), density(density), position(position), velocity(velocity), color(color), subdivisions(subdivisions)
@@ -116,19 +117,27 @@ void Planet::setupMesh()
     glBindVertexArray(0);
 }
 
-bool Planet::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
+bool Planet::intersectsRay(const glm::vec3 &rayOrigin,
+    const glm::vec3 &rayDirection) const
 {
-    glm::vec3 vectorOriginToCenter = rayOrigin - position;
+    float baseRadius = getRadius();
+    float pickRadius = baseRadius < MIN_PICK_RADIUS
+        ? MIN_PICK_RADIUS
+        : baseRadius;
 
-    float directionLengthSquared = glm::dot(rayDirection, rayDirection);
-    float twiceProjection = 2.0f * glm::dot(vectorOriginToCenter, rayDirection);
-    float centerDistanceSquared = glm::dot(vectorOriginToCenter, vectorOriginToCenter) - radius * radius;
+    glm::vec3 originToCtr = rayOrigin - position;
 
-    float discriminant = twiceProjection * twiceProjection -
-        4.0f * directionLengthSquared * centerDistanceSquared;
+    float dirLenSq = glm::dot(rayDirection, rayDirection);
+    float twiceProj = 2.0f * glm::dot(originToCtr, rayDirection);
+    float centerDistSq = glm::dot(originToCtr, originToCtr) -
+        pickRadius * pickRadius;
+
+    float discriminant = twiceProj * twiceProj -
+        4.0f * dirLenSq * centerDistSq;
 
     return discriminant >= 0.0f;
 }
+
 
 
 void Planet::calculateRadius()

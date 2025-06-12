@@ -29,6 +29,7 @@ public:
     void recalculateGeometry();
 private:
     unsigned int VAO, VBO, EBO;
+    static constexpr float MIN_PICK_RADIUS = 4.0f;
 
     std::vector<glm::vec3> vertices;
     std::vector<unsigned int> indices;

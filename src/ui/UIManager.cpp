@@ -31,46 +31,67 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
     }
 }
 
-void UIManager::renderPlanetPopup(Window& window, Camera& camera, const glm::mat4& view, const glm::mat4& projection,
-    const std::vector<std::shared_ptr<Planet>>& planets) {
+void UIManager::renderPlanetPopup(Window& window,
+    Camera& camera,
+    const glm::mat4& view,
+    const glm::mat4& projection,
+    const std::vector<std::shared_ptr<Planet>>& planets)
+{
     double mouseX, mouseY;
     glfwGetCursorPos(window.getGLFWwindow(), &mouseX, &mouseY);
 
     int width, height;
     glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
+
     glm::vec3 rayDir = camera.getRayFromMouse(mouseX, mouseY, width, height, view, projection);
-    glm::vec3 rayOrigin = camera.getPosition();
+    glm::vec3 rayOrig = camera.getPosition();
 
-    bool isMouseOverUI = ImGui::GetIO().WantCaptureMouse;
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
 
-    if (!isMouseOverUI) {
-        if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-            isMouseMoving = true;
-        else if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
-            isMouseMoving = false;
-    }
+    int   hovered = -1;
+    float minDist2 = std::numeric_limits<float>::max();
 
-    for (size_t i = 0; i < planets.size(); i++) {
-        if (planets[i]->intersectsRay(rayOrigin, rayDir)) {
-            glm::vec3 screenWorldPos = planets[i]->getPosition() + glm::vec3(0.0f, planets[i]->getRadius() + 0.2f, 0.0f);
-            glm::vec2 screenPos = camera.worldToScreen(screenWorldPos, view, projection, width, height);
-
-            if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= width && screenPos.y <= height) {
-                ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
-                ImGui::Begin("##PlanetName", nullptr,
-                    ImGuiWindowFlags_NoBackground |
-                    ImGuiWindowFlags_NoTitleBar |
-                    ImGuiWindowFlags_NoResize);
-                ImGui::Text("%s", planets[i]->getName().c_str());
-                ImGui::End();
-
-                if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-                    selectedPlanetIndex = static_cast<int>(i);
-                }
+    for (size_t i = 0; i < planets.size(); ++i)
+    {
+        if (planets[i]->intersectsRay(rayOrig, rayDir))
+        {
+            glm::vec3 diff = planets[i]->getPosition() - rayOrig;
+            float dist2 = glm::dot(diff, diff);
+            if (dist2 < minDist2)
+            {
+                minDist2 = dist2;
+                hovered = static_cast<int>(i);
             }
         }
     }
+
+    if (hovered != -1)
+    {
+        glm::vec3 worldAbove = planets[hovered]->getPosition() +
+            glm::vec3(0.0f, planets[hovered]->getRadius(), 0.0f);
+
+        glm::vec2 screenPos = camera.worldToScreen(worldAbove, view, projection, width, height);
+
+        if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= width && screenPos.y <= height)
+        {
+            ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
+            ImGui::Begin("##planet_label",
+                nullptr,
+                ImGuiWindowFlags_NoBackground |
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_AlwaysAutoResize);
+
+            ImGui::Text("%s", planets[hovered]->getName().c_str());
+            ImGui::End();
+
+            if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                selectedPlanetIndex = hovered;
+        }
+    }
 }
+
 
 void UIManager::renderPlanetInfo(std::shared_ptr<Planet>& planet) {
     ImGui::Begin("Planet Info");
