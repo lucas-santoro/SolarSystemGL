@@ -47,50 +47,54 @@ void UIManager::renderPlanetPopup(Window& window,
     glm::vec3 rayOrig = camera.getPosition();
 
     if (ImGui::GetIO().WantCaptureMouse)
+    {
+        hoveredIndex = -1;
         return;
+    }
 
-    int   hovered = -1;
+    hoveredIndex = -1;
     float minDist2 = std::numeric_limits<float>::max();
 
     for (size_t i = 0; i < planets.size(); ++i)
     {
         if (planets[i]->intersectsRay(rayOrig, rayDir))
         {
-            glm::vec3 diff = planets[i]->getPosition() - rayOrig;
-            float dist2 = glm::dot(diff, diff);
-            if (dist2 < minDist2)
+            glm::vec3 d = planets[i]->getPosition() - rayOrig;
+            float     d2 = glm::dot(d, d);
+
+            if (d2 < minDist2)
             {
-                minDist2 = dist2;
-                hovered = static_cast<int>(i);
+                minDist2 = d2;
+                hoveredIndex = static_cast<int>(i);
             }
         }
     }
 
-    if (hovered != -1)
-    {
-        glm::vec3 worldAbove = planets[hovered]->getPosition() +
-            glm::vec3(0.0f, planets[hovered]->getRadius(), 0.0f);
+    if (hoveredIndex == -1)
+        return;
 
-        glm::vec2 screenPos = camera.worldToScreen(worldAbove, view, projection, width, height);
+    glm::vec3 worldAbove = planets[hoveredIndex]->getPosition() +
+        glm::vec3(0.0f, planets[hoveredIndex]->getRadius(), 0.0f);
 
-        if (screenPos.x >= 0 && screenPos.y >= 0 && screenPos.x <= width && screenPos.y <= height)
-        {
-            ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
-            ImGui::Begin("##planet_label",
-                nullptr,
-                ImGuiWindowFlags_NoBackground |
-                ImGuiWindowFlags_NoTitleBar |
-                ImGuiWindowFlags_NoResize |
-                ImGuiWindowFlags_AlwaysAutoResize);
+    glm::vec2 screenPos = camera.worldToScreen(worldAbove, view, projection, width, height);
+    if (screenPos.x < 0 || screenPos.y < 0 || screenPos.x > width || screenPos.y > height)
+        return;
 
-            ImGui::Text("%s", planets[hovered]->getName().c_str());
-            ImGui::End();
+    ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y));
+    ImGui::Begin("##planet_label",
+        nullptr,
+        ImGuiWindowFlags_NoBackground |
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_AlwaysAutoResize);
 
-            if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-                selectedPlanetIndex = hovered;
-        }
-    }
+    ImGui::Text("%s", planets[hoveredIndex]->getName().c_str());
+    ImGui::End();
+
+    if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        selectedPlanetIndex = hoveredIndex;
 }
+
 
 
 void UIManager::renderPlanetInfo(std::shared_ptr<Planet>& planet) {

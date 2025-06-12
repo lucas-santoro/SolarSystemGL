@@ -11,9 +11,11 @@ public:
     void render(Window &window, Camera &camera, float deltaTime,
         std::vector<std::shared_ptr<Planet>>& planets, Grid& grid);
     bool isRightMousePressed(GLFWwindow *window);
+    bool isHovered(size_t i) const { return static_cast<int>(i) == hoveredIndex; }
 
 private:
     int selectedPlanetIndex = -1;
+    int hoveredIndex = -1;
     int lastSelectedIndex = -1;
     bool isMouseMoving = false;
 

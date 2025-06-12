@@ -138,8 +138,6 @@ bool Planet::intersectsRay(const glm::vec3 &rayOrigin,
     return discriminant >= 0.0f;
 }
 
-
-
 void Planet::calculateRadius()
 {
     const float scaleFactor = 1e-7f;
@@ -154,21 +152,41 @@ void Planet::recalculateGeometry()
     setupMesh();
 }
 
-void Planet::render(Shader &shader)
+void Planet::render(Shader &shader, bool highlight)
 {
-    float visualScale = 1.0f;
-    if (name == "Sun") visualScale = 0.4f;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    float visualScale = (name == "Sun") ? 0.4f : 1.0f;
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-    model = glm::scale(model, glm::vec3(/*radius * */visualScale));
-
+    model = glm::scale(model, glm::vec3(visualScale));
     shader.setMat4("model", model);
     shader.setVec3("planetColor", color);
 
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+
+    if (highlight)
+    {
+        float pickRadius = std::max(radius, MIN_PICK_RADIUS) * visualScale;
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        glm::mat4 hb = glm::translate(glm::mat4(1.0f), position);
+        hb = glm::scale(hb, glm::vec3(pickRadius));
+        shader.setMat4("model", hb);
+        shader.setVec3("planetColor", glm::vec3(1.0f, 1.0f, 0.0f));
+
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
     glBindVertexArray(0);
 }
+
+
+
 
 void Planet::setPosition(const glm::vec3 &newPosition)
 { 

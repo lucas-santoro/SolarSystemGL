@@ -82,9 +82,9 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("model", model);
 
-        for (const auto& planet : planets) {
-            planet->render(shader);
-        }
+        for (size_t i = 0; i < planets.size(); ++i)
+            planets[i]->render(shader, uiManager.isHovered(i));
+
 
         gridShader.use();
         gridShader.setMat4("view", view);
