@@ -10,6 +10,7 @@
 #include "core/Grid.h"
 #include "ui/UIManager.h"
 #include "core/Constants.h"
+#include "physics/BodyState.h"
 
 #include <memory>
 
@@ -41,6 +42,7 @@ int main()
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
 
     std::vector<std::shared_ptr<Planet>> planets;
+    std::vector<BodyState> bodies;
 
     constexpr double METERS_PER_WU = 1.0e9;
     constexpr double AU = 1.495978707e11;
@@ -54,6 +56,18 @@ int main()
     planets.emplace_back(std::make_shared<Planet>("Mercury", 3.3011e23f, 5427.0f,
         glm::vec3(0.387f * AU_WU, 0.0f, 0.0f), glm::vec3(0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f)));
+
+    bodies.push_back({
+    glm::dvec3(0.0),
+    glm::dvec3(0.0),
+    1.989e30
+        });
+
+
+    bodies.push_back({
+        glm::dvec3(0.387 * AU, 0.0, 0.0),
+        glm::dvec3(0.0, 0.0, 47'900.0),    
+        3.3011e23 });
 
     Grid grid(1000.0f, 300, 0.0f);
 
@@ -81,6 +95,18 @@ int main()
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
         shader.setMat4("model", model);
+
+        constexpr double TIME_SCALE = 36000.0;
+        double dtSim = static_cast<double>(deltaTime) * TIME_SCALE;
+
+        for (auto& b : bodies)
+            b.pos_m += b.vel_m * dtSim;
+
+        for (size_t i = 0; i < planets.size(); ++i)
+        {
+            glm::vec3 renderPos = glm::vec3(bodies[i].pos_m / METERS_PER_WU);
+            planets[i]->setPosition(renderPos);
+        }
 
         for (size_t i = 0; i < planets.size(); ++i)
             planets[i]->render(shader, uiManager.isHovered(i));
