@@ -91,8 +91,12 @@ void UIManager::renderPlanetPopup(Window& window,
     ImGui::Text("%s", planets[hoveredIndex]->getName().c_str());
     ImGui::End();
 
-    if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         selectedPlanetIndex = hoveredIndex;
+        float distance = planets[hoveredIndex]->getRadius() * 40.0f;
+        camera.startSmoothMove(planets[hoveredIndex]->getPosition(), distance);
+    }
+        
 }
 
 

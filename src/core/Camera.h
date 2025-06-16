@@ -23,4 +23,12 @@ public:
 
     void processKeyboard(int key, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset);
+
+    void startSmoothMove(const glm::vec3 &destination, float distance = 60.0f);
+    void update(float dt);
+
+private:
+    bool  isTravelling = false;
+    glm::vec3 targetPos;
+    float travelSpeed = 3000.0f;
 };

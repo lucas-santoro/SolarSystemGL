@@ -66,3 +66,29 @@ glm::vec2 Camera::worldToScreen(const glm::vec3 &worldPos, const glm::mat4 &view
 
     return glm::vec2(x, y);
 }
+
+void Camera::startSmoothMove(const glm::vec3& destination, float distance)
+{
+    targetPos = destination - front * distance;
+    isTravelling = true;
+}
+
+void Camera::update(float dt)
+{
+    if (!isTravelling) return;
+
+    glm::vec3 diff = targetPos - position;
+    float     dist = glm::length(diff);
+
+    if (dist < 0.1f)
+    {
+        position = targetPos;
+        isTravelling = false;
+        return;
+    }
+
+    glm::vec3 step = glm::normalize(diff) * travelSpeed * dt;
+    if (glm::length(step) > dist) step = diff;
+
+    position += step;
+}
