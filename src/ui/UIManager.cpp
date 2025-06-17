@@ -99,8 +99,6 @@ void UIManager::renderPlanetPopup(Window& window,
         
 }
 
-
-
 void UIManager::renderPlanetInfo(std::shared_ptr<Planet>& planet) {
     ImGui::Begin("Planet Info");
 

@@ -11,7 +11,7 @@
 #include "ui/UIManager.h"
 #include "core/Constants.h"
 #include "physics/BodyState.h"
-
+#include "physics/PhysicsSystem.h"
 #include <memory>
 
 void processInput(Window& window, Camera& camera, float deltaTime);
@@ -40,6 +40,8 @@ int main()
 
     Shader shader("shaders/VertexShader.glsl", "shaders/FragmentShader.glsl");
 	Shader gridShader("shaders/GridVertexShader.glsl", "shaders/GridFragmentShader.glsl");
+    PhysicsSystem physics;
+
 
     std::vector<std::shared_ptr<Planet>> planets;
     std::vector<BodyState> bodies;
@@ -139,33 +141,7 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("model", model);
 
-        constexpr double TIME_SCALE = 360000.0;
-        double dtSim = static_cast<double>(deltaTime) * TIME_SCALE;
-        constexpr double G = 6.67430e-11;
-        constexpr double SOFTEN = 1e3;
-         
-        for (size_t i = 0; i < bodies.size(); ++i)
-        {
-            glm::dvec3 acc_m = glm::dvec3(0.0);
-
-            for (size_t j = 0; j < bodies.size(); ++j)
-            {
-                if (i == j) continue;
-
-                glm::dvec3 r = bodies[j].pos_m - bodies[i].pos_m;
-                double dist2 = glm::dot(r, r) + SOFTEN;
-                double invDist = 1.0 / sqrt(dist2);
-                acc_m += (G * bodies[j].mass_kg * invDist * invDist) * r * invDist;
-            }
-
-            bodies[i].vel_m += acc_m * dtSim;
-        }
-
-        for (auto& b : bodies)
-        {
-            b.pos_m += b.vel_m * dtSim;
-        }
-
+        physics.update(bodies, deltaTime);
 
         for (size_t i = 0; i < planets.size(); ++i)
         {
