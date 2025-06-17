@@ -19,6 +19,7 @@ public:
     float getRadius() const         { return radius; }
     float getMass() const           { return mass; }
     float getDensity() const        { return density; }
+    glm::vec3 getColor() const      { return color; }
     float getPickRadius() const     { return std::max(radius, MIN_PICK_RADIUS); }
 
     void setPosition(const glm::vec3 &newPosition);
