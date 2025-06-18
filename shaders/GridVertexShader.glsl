@@ -16,7 +16,8 @@ void main() {
     for (int i = 0; i < planetCount; ++i) {
         vec2 delta = distortedPos.xz - planetPositions[i].xz;
         float dist2 = max(dot(delta, delta), 0.001);
-        float distortion = 0.8 * planetMasses[i] / (1.0 + dist2 / (2.0 * 2.0));
+        float distortion = 0.008 * planetMasses[i] / (1.0 + dist2 / (2.0 * 2.0));
+        distortion = clamp(distortion, 0.0, 38.0);
         distortedPos.y -= distortion;
     }
 
