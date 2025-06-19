@@ -55,7 +55,7 @@ foreach(source ${SOURCES})
     message(STATUS "  - ${source}")
 endforeach()
 
-add_executable(SolarSystemGL ${SOURCES} "src/core/Constants.h" "src/physics/BodyState.h"  "src/physics/PhysicsSystem.cpp" "src/physics/PhysicsSystem.h")
+add_executable(SolarSystemGL ${SOURCES})
 
 target_link_libraries(SolarSystemGL
     ${THIRD_PARTY_DIR}/glfw/lib-vc2022/glfw3.lib
