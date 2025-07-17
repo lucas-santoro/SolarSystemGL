@@ -13,14 +13,15 @@ public:
     void render(Shader &shader, bool highlight = false);
     bool intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
 
-    std::string getName() const     { return name; }
-    glm::vec3 getPosition() const   { return position; }
-    glm::vec3 getVelocity() const   { return velocity; }
-    float getRadius() const         { return radius; }
-    float getMass() const           { return mass; }
-    float getDensity() const        { return density; }
-    glm::vec3 getColor() const      { return color; }
-    float getPickRadius() const     { return std::max(radius, MIN_PICK_RADIUS); }
+    std::string getName() const             { return name; }
+    glm::vec3 getPosition() const           { return position; }
+    const glm::vec3* getPositionPtr() const { return &position; }
+    glm::vec3 getVelocity() const           { return velocity; }
+    float getRadius() const                 { return radius; }
+    float getMass() const                   { return mass; }
+    float getDensity() const                { return density; }
+    glm::vec3 getColor() const              { return color; }
+    float getPickRadius() const             { return std::max(radius, MIN_PICK_RADIUS); }
 
     void setPosition(const glm::vec3 &newPosition);
     void setVelocity(const glm::vec3 &newVelocity);

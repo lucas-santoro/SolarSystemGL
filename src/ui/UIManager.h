@@ -30,7 +30,7 @@ private:
 
     void renderPlanetPopup(Window &window, Camera &camera, const glm::mat4 &view, const glm::mat4 &projection,
         const std::vector<std::shared_ptr<Planet>> &planets);
-    void renderPlanetInfo(std::shared_ptr<Planet> &planet);
+    void renderPlanetInfo(std::shared_ptr<Planet> &planet, Camera &camera);
     void renderMainPanel(float deltaTime, std::vector<std::shared_ptr<Planet>> &planets, Grid &grid);
     void renderNavbar(std::vector<std::shared_ptr<Planet>> &planets);
 };
