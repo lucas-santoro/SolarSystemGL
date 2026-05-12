@@ -33,6 +33,7 @@ include_directories(
 # reconfigure).
 set(PROJECT_SOURCES
     ${SRC_DIR}/main.cpp
+    ${SRC_DIR}/core/Application.cpp
     ${SRC_DIR}/core/Camera.cpp
     ${SRC_DIR}/core/Grid.cpp
     ${SRC_DIR}/core/SaveLoad.cpp

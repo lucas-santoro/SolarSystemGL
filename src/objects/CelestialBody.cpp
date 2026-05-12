@@ -26,6 +26,15 @@ bool CelestialBody::intersectsRay(const glm::vec3& rayOrigin,
     return discriminant >= 0.0f;
 }
 
+float CelestialBody::focusDistance() const
+{
+    // Tuned so even tiny inner planets are framed comfortably without
+    // zooming the camera inside larger bodies.
+    constexpr float kMinimumFocusDistance = 50.0f;
+    constexpr float kBodyRadiusMultiplier = 4.0f;
+    return std::max(kMinimumFocusDistance, radius * displayScale * kBodyRadiusMultiplier);
+}
+
 void CelestialBody::recalculateGeometry()
 {
     constexpr float scaleFactor = 1e-7f;

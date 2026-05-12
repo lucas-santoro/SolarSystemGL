@@ -1,38 +1,93 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <string>
 #include <deque>
 #include "objects/PlanetMesh.h"
 #include "core/Shader.h"
 
+/**
+ * @file CelestialBody.h
+ * @brief One simulated body: physics state + visual identity + render mesh.
+ */
+
+/**
+ * @brief A single celestial body — the canonical owner of one entity's state.
+ *
+ * Kept as a `struct` with public fields by intent: this is a *data carrier*
+ * for the physics, render, and UI layers, all of which read and write the
+ * same memory. The behavior methods (#renderPosition, #intersectsRay,
+ * #focusDistance, #recalculateGeometry, #render) provide encapsulated
+ * operations on top of that data.
+ *
+ * Implicitly non-copyable because it contains a non-copyable PlanetMesh, and
+ * therefore implicitly movable — which is exactly what `std::vector` needs
+ * for "Add Planet" / reallocation to work without leaking GL handles.
+ */
 struct CelestialBody
 {
-    // physics state (authoritative, double precision)
+    /** @brief Position in meters (world coordinates). Source of truth for physics. */
     glm::dvec3 pos_m{ 0.0 };
+
+    /** @brief Velocity in meters per second. */
     glm::dvec3 vel_m{ 0.0 };
-    double     mass_kg = 0.0;
 
-    // identity
+    /** @brief Mass in kilograms. `double` because the Sun is ~2 × 10^30 kg. */
+    double mass_kg = 0.0;
+
+    /** @brief Display name used in menus, hover labels, and Planet Info. */
     std::string name;
-    glm::vec3   color{ 1.0f };
 
-    // visual derived state
-    float       density      = 1000.0f;
-    float       radius       = 1.0f;
-    float       emissive     = 0.0f;   // 0.0 = lit body, 1.0 = self-illuminated star
-    float       displayScale = 1.0f;   // visual-only model-matrix multiplier; e.g. Sun = 0.4
-    bool        hasRings     = false;  // procedural ring disk rendered around this body
-    PlanetMesh  mesh{ 3 };
+    /** @brief Diffuse base color in linear RGB, components in `[0, 1]`. */
+    glm::vec3 color{ 1.0f };
 
-    // orbit trail — last N rendered positions, oldest at front
+    /** @brief Density in kg/m^3 — drives @ref radius via #recalculateGeometry. */
+    float density = 1000.0f;
+
+    /** @brief World-unit display radius, derived from mass + density. Do not set directly. */
+    float radius = 1.0f;
+
+    /** @brief 1.0 = star (skips lighting, gets a halo); 0.0 = lit body. */
+    float emissive = 0.0f;
+
+    /** @brief Visual-only model-matrix multiplier (e.g. Sun = 0.4 so it doesn't engulf orbits). */
+    float displayScale = 1.0f;
+
+    /** @brief When `true`, a procedural ring disk is rendered around this body. */
+    bool hasRings = false;
+
+    /** @brief GL state for this body's subdivided icosahedron mesh. */
+    PlanetMesh mesh{ 3 };
+
+    /** @brief Orbit history — last N render-space positions, oldest at front. */
     std::deque<glm::vec3> trailPoints;
 
-    // queries
+    /** @return The body's position in world units (meters / METERS_PER_WU). */
     glm::vec3 renderPosition() const;
-    bool      intersectsRay(const glm::vec3& rayOrigin,
-                            const glm::vec3& rayDirection) const;
 
-    // mutation
+    /**
+     * @brief Ray-sphere intersection test for picking.
+     * @param rayOrigin    Origin of the ray in world units.
+     * @param rayDirection Normalized ray direction.
+     * @return             `true` if the ray hits a 18-WU-minimum bounding sphere centered on the body.
+     */
+    bool intersectsRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) const;
+
+    /**
+     * @brief Recommended orbit-camera distance from this body.
+     *
+     * Tuned so even tiny inner planets are framed comfortably without zooming
+     * the camera inside larger bodies.
+     */
+    float focusDistance() const;
+
+    /** @brief Recompute @ref radius from mass + density, then rebuild the GPU mesh. */
     void recalculateGeometry();
+
+    /**
+     * @brief Issue the draw call for this body.
+     * @param shader    Bound body shader receiving `model`, `planetColor`, `emissive`.
+     * @param highlight `true` to scale the body slightly larger (hover feedback).
+     */
     void render(Shader& shader, bool highlight) const;
 };

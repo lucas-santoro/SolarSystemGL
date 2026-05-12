@@ -102,7 +102,7 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
         selectedPlanetIndex = hoveredIndex;
         auto& selected = bodies[hoveredIndex];
 
-        float distance = std::max(50.0f, selected.radius * 4.0f);
+        const float distance = selected.focusDistance();
 
         if (camera.getMode() == CameraMode::ORBITAL) {
             camera.setOrbitalTarget(hoveredIndex, distance);
@@ -161,8 +161,7 @@ void UIManager::renderPlanetInfo(CelestialBody& body, Camera& camera)
     ImGui::SameLine();
     if (ImGui::RadioButton("Orbital", currentMode == static_cast<int>(CameraMode::ORBITAL))) {
         camera.setMode(CameraMode::ORBITAL);
-        float distance = std::max(50.0f, body.radius * 4.0f);
-        camera.setOrbitalTarget(selectedPlanetIndex, distance);
+        camera.setOrbitalTarget(selectedPlanetIndex, body.focusDistance());
     }
 
     ImGui::End();
