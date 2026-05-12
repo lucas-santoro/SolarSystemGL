@@ -41,25 +41,6 @@ bool Window::init()
     return true;
 }
 
-void Window::processInput()
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
-void Window::run()
-{
-    while (!glfwWindowShouldClose(window))
-    {
-        processInput();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-}
-
 GLFWwindow* Window::getGLFWwindow()
 {
     return window;

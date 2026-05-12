@@ -1,0 +1,95 @@
+# SolarSystemGL preset: default Solar System (9 bodies)
+# Distances in meters; AU = 1.495978707e11 m
+version = 1
+timeScale = 864000
+
+[body]
+name = Sun
+pos_m = 0 0 0
+vel_m = 0 0 0
+mass_kg = 1.989e30
+color = 1.0 0.9 0.3
+density = 1408
+emissive = 1.0
+displayScale = 0.4
+
+[body]
+name = Mercury
+pos_m = 5.789436796e10 0 0
+vel_m = 0 0 47900
+mass_kg = 3.3011e23
+color = 0.5 0.5 0.5
+density = 5427
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Venus
+pos_m = 1.081592405e11 0 0
+vel_m = 0 0 35000
+mass_kg = 4.8675e24
+color = 0.95 0.85 0.55
+density = 5243
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Earth
+pos_m = 1.495978707e11 0 0
+vel_m = 0 0 29780
+mass_kg = 5.972e24
+color = 0.2 0.4 1.0
+density = 5514
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Mars
+pos_m = 2.280871549e11 0 0
+vel_m = 0 0 24100
+mass_kg = 6.4171e23
+color = 0.8 0.3 0.1
+density = 3933
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Jupiter
+pos_m = 7.783577126e11 0 0
+vel_m = 0 0 13070
+mass_kg = 1.898e27
+color = 0.9 0.7 0.4
+density = 1326
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Saturn
+pos_m = 1.426880935e12 0 0
+vel_m = 0 0 9680
+mass_kg = 5.6834e26
+color = 0.95 0.85 0.5
+density = 687
+emissive = 0
+displayScale = 1.0
+hasRings = 1
+
+[body]
+name = Uranus
+pos_m = 2.870757710e12 0 0
+vel_m = 0 0 6800
+mass_kg = 8.681e25
+color = 0.6 0.85 0.9
+density = 1271
+emissive = 0
+displayScale = 1.0
+
+[body]
+name = Neptune
+pos_m = 4.498378271e12 0 0
+vel_m = 0 0 5430
+mass_kg = 1.024e26
+color = 0.3 0.4 0.85
+density = 1638
+emissive = 0
+displayScale = 1.0
