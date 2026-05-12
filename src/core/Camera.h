@@ -27,8 +27,11 @@ public:
     glm::vec2 worldToScreen(const glm::vec3 &worldPos, const glm::mat4 &view, const glm::mat4 &projection, int screenWidth, int screenHeight);
     CameraMode getMode() const;
     void setMode(CameraMode newMode);
-    const glm::vec3* getOrbitalTarget() const;
-    void setOrbitalTarget(const glm::vec3 *targetPosition, float initialDistance);
+
+    int  getOrbitalTargetIndex() const;
+    void setOrbitalTarget(int index, float initialDistance);
+    void setOrbitalTargetPos(const glm::vec3& pos);
+    void shiftOrbitalIndexOnRemove(int removedIdx);  // call when bodies vector shrinks
     void processMouseScroll(float yoffset);
 
     void processKeyboard(int key, float deltaTime);
@@ -36,13 +39,15 @@ public:
 
     void startSmoothMove(const glm::vec3 &destination, float distance = 60.0f);
     void update(float dt);
+    void reset();   // back to startup pose, FREE mode
 
 private:
-    bool  isTravelling = false;
+    bool      isTravelling = false;
     glm::vec3 targetPos;
-    float travelSpeed = 3000.0f;
+    float     travelSpeed = 3000.0f;
 
     CameraMode mode = CameraMode::FREE;
-    const glm::vec3* orbitalTarget = nullptr;
-    float orbitalDistance = 100.0f;
+    int        orbitalTargetIndex = -1;
+    glm::vec3  orbitalTargetPos{ 0.0f };
+    float      orbitalDistance = 100.0f;
 };

@@ -3,25 +3,25 @@
 
 Camera::Camera(glm::vec3 startPosition)
     : position(startPosition), front(glm::vec3(0.0f, 0.0f, -1.0f)), up(glm::vec3(0.0f, 1.0f, 0.0f)),
-    yaw(-90.0f), pitch(0.0f), speed(80.0f), sensitivity(0.1f) {
+      yaw(-90.0f), pitch(0.0f), speed(80.0f), sensitivity(0.1f) {
 }
 
 glm::mat4 Camera::getViewMatrix() {
-    if (mode == CameraMode::ORBITAL && orbitalTarget != nullptr) {
-        float camX = orbitalTarget->x + orbitalDistance * cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-        float camY = orbitalTarget->y + orbitalDistance * sin(glm::radians(pitch));
-        float camZ = orbitalTarget->z + orbitalDistance * cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    if (mode == CameraMode::ORBITAL && orbitalTargetIndex >= 0) {
+        float camX = orbitalTargetPos.x + orbitalDistance * cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+        float camY = orbitalTargetPos.y + orbitalDistance * sin(glm::radians(pitch));
+        float camZ = orbitalTargetPos.z + orbitalDistance * cos(glm::radians(pitch)) * sin(glm::radians(yaw));
 
         this->position = glm::vec3(camX, camY, camZ);
 
-        return glm::lookAt(this->position, *orbitalTarget, this->up);
+        return glm::lookAt(this->position, orbitalTargetPos, this->up);
     }
 
     return glm::lookAt(position, position + front, up);
 }
 
 void Camera::processKeyboard(int key, float deltaTime) {
-    if (mode == CameraMode::FREE) 
+    if (mode == CameraMode::FREE)
     {
         float velocity = speed * deltaTime;
         if (key == GLFW_KEY_W) position += front * velocity;
@@ -31,18 +31,18 @@ void Camera::processKeyboard(int key, float deltaTime) {
     }
 }
 
-void Camera::processMouseMovement(float xoffset, float yoffset) 
+void Camera::processMouseMovement(float xoffset, float yoffset)
 {
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    yaw += xoffset;
+    yaw   += xoffset;
     pitch += yoffset;
 
-    if (pitch > 89.0f) pitch = 89.0f;
+    if (pitch > 89.0f)  pitch = 89.0f;
     if (pitch < -89.0f) pitch = -89.0f;
 
-    if (mode == CameraMode::FREE) 
+    if (mode == CameraMode::FREE)
     {
         glm::vec3 direction;
         direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -52,7 +52,7 @@ void Camera::processMouseMovement(float xoffset, float yoffset)
     }
 }
 
-void Camera::processMouseScroll(float yoffset) 
+void Camera::processMouseScroll(float yoffset)
 {
     if (mode == CameraMode::ORBITAL) {
         orbitalDistance -= yoffset * (orbitalDistance * 0.1f);
@@ -64,32 +64,51 @@ void Camera::processMouseScroll(float yoffset)
     }
 }
 
-void Camera::setMode(CameraMode newMode) 
+void Camera::setMode(CameraMode newMode)
 {
     mode = newMode;
     isTravelling = false;
 
-    if (mode == CameraMode::FREE) 
+    if (mode == CameraMode::FREE)
     {
-        orbitalTarget = nullptr; 
+        orbitalTargetIndex = -1;
     }
 }
 
-CameraMode Camera::getMode() const 
+CameraMode Camera::getMode() const
 {
     return mode;
 }
 
-void Camera::setOrbitalTarget(const glm::vec3* targetPosition, float initialDistance) 
+void Camera::setOrbitalTarget(int index, float initialDistance)
 {
-    orbitalTarget = targetPosition;
-    orbitalDistance = initialDistance;
+    orbitalTargetIndex = index;
+    orbitalDistance    = initialDistance;
+}
+
+void Camera::setOrbitalTargetPos(const glm::vec3& pos)
+{
+    orbitalTargetPos = pos;
+}
+
+int Camera::getOrbitalTargetIndex() const
+{
+    return orbitalTargetIndex;
+}
+
+void Camera::shiftOrbitalIndexOnRemove(int removedIdx)
+{
+    if (orbitalTargetIndex == removedIdx) {
+        setMode(CameraMode::FREE);    // also clears orbitalTargetIndex
+    } else if (orbitalTargetIndex > removedIdx) {
+        orbitalTargetIndex--;
+    }
 }
 
 glm::vec3 Camera::getRayFromMouse(double mouseX, double mouseY, int screenWidth, int screenHeight, const glm::mat4 &view, const glm::mat4 &projection)
 {
-    float x = (2.0f * mouseX) / screenWidth - 1.0f;
-    float y = 1.0f - (2.0f * mouseY) / screenHeight;
+    float x = (2.0f * static_cast<float>(mouseX)) / screenWidth - 1.0f;
+    float y = 1.0f - (2.0f * static_cast<float>(mouseY)) / screenHeight;
     glm::vec4 rayClip = glm::vec4(x, y, -1.0f, 1.0f);
 
     glm::vec4 rayEye = glm::inverse(projection) * rayClip;
@@ -101,7 +120,7 @@ glm::vec3 Camera::getRayFromMouse(double mouseX, double mouseY, int screenWidth,
 
 glm::vec3 Camera::getPosition()
 {
-	return position;
+    return position;
 }
 
 glm::vec2 Camera::worldToScreen(const glm::vec3 &worldPos, const glm::mat4 &view, const glm::mat4 &projection, int screenWidth, int screenHeight)
@@ -122,6 +141,17 @@ void Camera::startSmoothMove(const glm::vec3& destination, float distance)
     isTravelling = true;
 }
 
+void Camera::reset()
+{
+    position = glm::vec3(0.0f, 0.0f, 300.0f);
+    front    = glm::vec3(0.0f, 0.0f, -1.0f);
+    up       = glm::vec3(0.0f, 1.0f, 0.0f);
+    yaw      = -90.0f;
+    pitch    = 0.0f;
+    isTravelling = false;
+    setMode(CameraMode::FREE);
+}
+
 void Camera::update(float dt)
 {
     if (!isTravelling) return;
@@ -140,8 +170,4 @@ void Camera::update(float dt)
     if (glm::length(step) > dist) step = diff;
 
     position += step;
-}
-
-const glm::vec3 *Camera::getOrbitalTarget() const {
-    return orbitalTarget;
 }

@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include "core/Grid.h"
 #include <algorithm>
+#include <utility>
 
 Grid::Grid(float size, int divisions, float height)
 {
@@ -9,60 +10,80 @@ Grid::Grid(float size, int divisions, float height)
 
 Grid::~Grid()
 {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    if (VAO) glDeleteVertexArrays(1, &VAO);
+    if (VBO) glDeleteBuffers(1, &VBO);
 }
 
-void Grid::setupGrid(float size, int divisions, float height)
+Grid::Grid(Grid&& other) noexcept
+    : VAO(other.VAO), VBO(other.VBO), lineCount(other.lineCount)
 {
-    int actualDivisions = divisions * 2;
-    std::vector<GLfloat> vertices;
-    float step = size / actualDivisions;
-    float half = size / 2.0f;
-    std::vector<glm::vec3> gridPoints;
+    other.VAO = 0;
+    other.VBO = 0;
+}
 
+Grid& Grid::operator=(Grid&& other) noexcept
+{
+    if (this != &other)
+    {
+        if (VAO) glDeleteVertexArrays(1, &VAO);
+        if (VBO) glDeleteBuffers(1, &VBO);
+        VAO = other.VAO;
+        VBO = other.VBO;
+        lineCount = other.lineCount;
+        other.VAO = 0;
+        other.VBO = 0;
+    }
+    return *this;
+}
+
+void Grid::setupGrid(float size, int divisions, float /*height*/)
+{
+    const int actualDivisions = divisions * 2;
+    const float step = size / actualDivisions;
+    const float half = size / 2.0f;
+
+    std::vector<glm::vec3> gridPoints;
+    gridPoints.reserve(static_cast<size_t>(actualDivisions + 1) * (actualDivisions + 1));
     for (int i = 0; i <= actualDivisions; i++)
     {
         for (int j = 0; j <= actualDivisions; j++)
         {
-            float x = -half + j * step;
-            float z = -half + i * step;
-            gridPoints.push_back(glm::vec3(x, 0.0f, z));
+            const float x = -half + j * step;
+            const float z = -half + i * step;
+            gridPoints.emplace_back(x, 0.0f, z);
         }
     }
 
-    originalPoints = gridPoints;
+    std::vector<GLfloat> vertices;
+    vertices.reserve(gridPoints.size() * 6);
 
+    // horizontal lines
     for (int i = 0; i <= actualDivisions; i++)
     {
         for (int j = 0; j < actualDivisions; j++)
         {
-            int index = i * (actualDivisions + 1) + j;
-            vertices.push_back(gridPoints[index].x);
-            vertices.push_back(gridPoints[index].y);
-            vertices.push_back(gridPoints[index].z);
-            vertices.push_back(gridPoints[index + 1].x);
-            vertices.push_back(gridPoints[index + 1].y);
-            vertices.push_back(gridPoints[index + 1].z);
+            const int idx = i * (actualDivisions + 1) + j;
+            const auto& a = gridPoints[idx];
+            const auto& b = gridPoints[idx + 1];
+            vertices.insert(vertices.end(), { a.x, a.y, a.z, b.x, b.y, b.z });
         }
     }
 
+    // vertical lines
     for (int j = 0; j <= actualDivisions; j++)
     {
         for (int i = 0; i < actualDivisions; i++)
         {
-            int index = i * (actualDivisions + 1) + j;
-            int nextIndex = (i + 1) * (actualDivisions + 1) + j;
-            vertices.push_back(gridPoints[index].x);
-            vertices.push_back(gridPoints[index].y);
-            vertices.push_back(gridPoints[index].z);
-            vertices.push_back(gridPoints[nextIndex].x);
-            vertices.push_back(gridPoints[nextIndex].y);
-            vertices.push_back(gridPoints[nextIndex].z);
+            const int idx     = i       * (actualDivisions + 1) + j;
+            const int nextIdx = (i + 1) * (actualDivisions + 1) + j;
+            const auto& a = gridPoints[idx];
+            const auto& b = gridPoints[nextIdx];
+            vertices.insert(vertices.end(), { a.x, a.y, a.z, b.x, b.y, b.z });
         }
     }
 
-    lineCount = (int)vertices.size() / 3;
+    lineCount = static_cast<int>(vertices.size()) / 3;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
@@ -74,17 +95,18 @@ void Grid::setupGrid(float size, int divisions, float height)
     glBindVertexArray(0);
 }
 
-void Grid::draw(Shader& shader, const std::vector<std::shared_ptr<Planet>>& planets) const 
+void Grid::draw(Shader& shader, const std::vector<CelestialBody>& bodies) const
 {
     shader.use();
 
-    int count = std::min((int)planets.size(), 10);
+    const int count = std::min(static_cast<int>(bodies.size()), 10);
     std::vector<glm::vec3> positions(count);
-    std::vector<float> masses(count);
+    std::vector<float>     masses(count);
 
-    for (int i = 0; i < count; ++i) {
-        positions[i] = planets[i]->getPosition();
-        masses[i] = planets[i]->getMass() / 5.97e24f; // normalize as antes
+    for (int i = 0; i < count; ++i)
+    {
+        positions[i] = bodies[i].renderPosition();
+        masses[i]    = static_cast<float>(bodies[i].mass_kg / 5.97e24);
     }
 
     shader.setInt("planetCount", count);

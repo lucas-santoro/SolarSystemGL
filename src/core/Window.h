@@ -9,7 +9,6 @@ class Window
 public:
     Window(int width, int height, const std::string &title);
     ~Window();
-    void run();
 
     GLFWwindow* getGLFWwindow();
 
@@ -19,5 +18,4 @@ private:
     GLFWwindow *window;
 
     bool init();
-    void processInput();
 };

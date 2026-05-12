@@ -1,0 +1,42 @@
+---
+# SolarSystemGL coding style.
+# Apply incrementally with format-on-save; do not bulk-reformat the codebase.
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Layout
+IndentWidth:                4
+TabWidth:                   4
+UseTab:                     Never
+ColumnLimit:                110
+ContinuationIndentWidth:    4
+NamespaceIndentation:       None
+
+# Braces
+BreakBeforeBraces:          Allman
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+Cpp11BracedListStyle:       true
+
+# Pointer / reference style (matches the newer code in src/core, src/ui, src/main.cpp)
+PointerAlignment:           Left
+ReferenceAlignment:         Left
+
+# Includes — keep the manual ordering: std, third-party, project. Don't re-sort.
+SortIncludes:               false
+
+# Spaces
+SpaceAfterCStyleCast:       true
+SpaceBeforeParens:          ControlStatements
+
+# Misc
+AccessModifierOffset:       -4
+FixNamespaceComments:       true
+AlignTrailingComments:      true
+AlignConsecutiveAssignments:
+  Enabled:                  true
+  AcrossEmptyLines:         false
+  AcrossComments:           false
+AlignConsecutiveDeclarations:
+  Enabled:                  false

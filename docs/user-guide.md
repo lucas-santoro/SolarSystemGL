@@ -1,342 +1,93 @@
-# User Guide
-
-Complete guide for using SolarSystemGL, covering installation, controls, features, and troubleshooting.
-
-## 🚀 Getting Started
-
-### System Requirements
-
-**Minimum Requirements:**
-- Windows 10 or later
-- DirectX 11 compatible graphics card
-- 2GB RAM
-- 500MB free disk space
-- Visual Studio 2019 or later (for building)
-
-**Recommended Requirements:**
-- Windows 11
-- Dedicated graphics card with OpenGL 3.3+ support
-- 4GB RAM
-- Intel Core i5 or AMD Ryzen 5 processor
-- Visual Studio 2022
-
-### Installation
-
-1. **Download the Project**
-   ```bash
-   git clone https://github.com/yourusername/SolarSystemGL.git
-   cd SolarSystemGL
-   ```
-
-2. **Build the Application**
-   ```bash
-   mkdir build
-   cd build
-   cmake .. -G "Visual Studio 17 2022" -A x64
-   cmake --build . --config Release
-   ```
-
-3. **Run the Simulation**
-   ```bash
-   ./Release/SolarSystemGL.exe
-   ```
-
-## 🎮 Controls and Navigation
-
-### Camera Controls
-
-#### Keyboard Navigation
-- **W**: Move camera forward
-- **S**: Move camera backward
-- **A**: Move camera left (strafe)
-- **D**: Move camera right (strafe)
-- **ESC**: Exit application
-
-#### Mouse Controls
-- **Left Click**: Select planet (when clicking on planet)
-- **Right Click + Drag**: Rotate camera view
-- **Scroll Wheel**: Zoom in/out
-- **Hover**: Display planet name labels
-
-### Camera Movement Tips
-- Use **WASD** for basic movement around the solar system
-- **Right-click and drag** to look around - this is essential for navigation
-- **Scroll wheel** provides quick zoom for different viewing distances
-- **Click on planets** to automatically focus the camera on them
-
-## 🌟 Main Features
-
-### 1. Planet Selection and Information
-
-**How to Select Planets:**
-1. Click directly on any planet in the 3D view
-2. Use the "Planets" menu in the top menu bar
-3. Selected planets are highlighted and the camera focuses on them
-
-**Planet Information Panel:**
-When a planet is selected, the "Planet Info" panel appears showing:
-- **Name**: Editable planet name
-- **Mass**: Mass in kilograms (scientific notation)
-- **Density**: Density in kg/m³
-- **Position**: X, Y, Z coordinates in world units
-- **Velocity**: Velocity vector components
-
-**Editing Planet Properties:**
-1. Select a planet
-2. Modify values in the Planet Info panel
-3. Click **"Apply"** to confirm changes
-4. Click **"Reset"** to revert to original values
-
-### 2. Physics Simulation
-
-**Real-Time Simulation:**
-- All planets move according to Newtonian gravity
-- Time is accelerated: 1 second real time = 10 days simulation time
-- Orbital mechanics are accurately simulated
-
-**Observable Phenomena:**
-- Planetary orbits around the Sun
-- Gravitational interactions between planets
-- Orbital periods matching real astronomical data
-
-### 3. Interactive Grid System
+# User guide
 
-**Spacetime Visualization:**
-- White grid represents space
-- Grid deforms near massive objects (planets)
-- Demonstrates gravitational field effects
-- Grid distortion is proportional to planet mass
+A short tour. Build instructions are in [`build.md`](build.md).
 
-**Grid Properties:**
-- Size: 10,000 world units
-- Resolution: 200×200 grid lines
-- Semi-transparent white appearance
+## First launch
 
-### 4. User Interface Elements
+You should see the Sun, the eight planets, and a faint white grid below them, slightly depressed near each body. The grid distortion scales with mass — Jupiter and Saturn dimple it visibly; Mercury barely at all.
 
-#### Main Menu Bar
-- **Planets**: Quick access to all planets
-- **Camera**: Camera controls and settings
-- **Settings**: Display options and preferences
+If you see a white sphere and a white grid only, your shaders didn't load. Run from a terminal to see `stderr` and check `build.md` → Common issues.
 
-#### Solar System Panel
-- **FPS Counter**: Shows current frame rate
-- **Add Planet**: Creates new custom planets
-- Performance monitoring
+## Camera
 
-#### Planet Labels
-- Appear when hovering over planets
-- Show planet names
-- Automatically positioned above planets
+| Input | Free mode | Orbital mode |
+|---|---|---|
+| `W` / `S` | Move forward / back | — |
+| `A` / `D` | Strafe left / right | — |
+| Right-click + drag | Look around | Orbit the target |
+| Scroll up / down | Increase / decrease movement speed | Zoom in / out |
+| Click on a planet | Smooth-fly toward it | Re-target (snap) |
 
-## 🔧 Advanced Features
+There are two modes:
+- **Free** — fly with WASD, look with right-drag. Scroll changes speed.
+- **Orbital** — locked to a planet, you orbit it. Scroll zooms.
 
-### Adding Custom Planets
+Switch modes from the radio buttons inside Planet Info, or via hotkeys (see below).
 
-1. Click **"Add Planet"** in the Solar System panel
-2. A new planet appears with default properties:
-   - Name: "New Planet"
-   - Mass: 1×10²⁴ kg
-   - Density: 3000 kg/m³
-   - Position: Offset from existing planets
+## Hotkeys
 
-3. Select the new planet and edit its properties
-4. Apply changes to see the effect on the simulation
+Edge-detected: one press = one action. Suppressed while a text field has keyboard focus (so typing into Mass / Position / Name doesn't fire shortcuts).
 
-### Camera Focus System
+| Key | Action |
+|---|---|
+| `Space` | Toggle pause |
+| `R` | Reset camera (back to startup pose, FREE mode) |
+| `F` | Smooth-focus the camera on the selected body |
+| `1` | Switch camera to FREE mode |
+| `2` | Switch camera to ORBITAL mode (requires a selected body) |
+| `Esc` | If a body is selected → close Planet Info (deselect). Otherwise → close app. |
+| `W` `A` `S` `D` | Held-key movement (FREE mode only) |
 
-**Automatic Focus:**
-- Click any planet to smoothly move camera to it
-- Camera positions at optimal viewing distance
-- Maintains planet in center of view
+## Panels
 
-**Manual Focus:**
-- Use keyboard controls for free movement
-- Right-click drag for precise viewing angles
-- Scroll wheel for distance adjustment
+### Planets menu (top bar)
+Click "Planets" → pick a name → the body becomes the current selection. The Planet Info panel opens for editing.
 
-### Performance Optimization
+### Planet Info
+Edit any body's properties. **Edits do not apply until you click "Apply Changes"**. While you're typing, the simulation continues to run normally.
 
-**Frame Rate Management:**
-- Target: 60 FPS
-- Monitor FPS in Solar System panel
-- Performance depends on planet count and graphics hardware
+| Field | Unit |
+|---|---|
+| Name | string |
+| Mass | kg (scientific notation, e.g. `5.97e24`) |
+| Density | kg / m³ |
+| Position | World Units (1 WU = 10⁹ m) |
+| Velocity | km / s |
 
-**Graphics Settings:**
-- Grid can be toggled in Settings menu
-- Planet detail level is fixed (subdivision level 3)
+Apply triggers a full geometry rebuild (mass / density change radius, which changes the mesh).
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Application Won't Start
-**Symptoms:** Application crashes immediately or fails to launch
+### Solar System panel
+- **FPS** — smoothed (EMA) display.
+- **Paused** — checkbox to freeze physics. Render keeps running; you can still orbit.
+- **Time scale** — logarithmic slider, 1× to 5 × 10⁶×. At 1× one real second simulates one second; at the default ~864 000× one real second simulates 10 days.
+- **Add Planet** — spawns a ~10²⁴ kg grey body at 1.5 AU with a tangent circular velocity. Each successive add lands at a different angle on the same orbit. The new body is auto-selected, so the Planet Info panel jumps to it.
 
-**Solutions:**
-1. **Check Graphics Drivers:**
-   - Update to latest graphics drivers
-   - Ensure OpenGL 3.3+ support
+## Worked examples
 
-2. **Verify Build:**
-   - Rebuild in Release mode
-   - Check for missing DLL files
-   - Ensure shaders folder is copied to build directory
+### Crash Earth into the Sun
+1. Planets → Earth → Planet Info opens.
+2. Set Velocity to `0, 0, 0` km/s. Apply.
+3. Earth detaches from its orbit and falls inward. It will swing around the Sun on a nearly degenerate hyperbolic trajectory (the softening parameter prevents an actual singularity).
 
-3. **System Compatibility:**
-   - Confirm Windows 10+ compatibility
-   - Check DirectX installation
+### Watch Jupiter wreck the inner system
+1. Planets → Jupiter → Planet Info.
+2. Set Mass to `1e29` (~50× current). Apply.
+3. Inner planets get perturbed within a few seconds of real time. Mercury frequently ejects.
 
-#### Low Frame Rate
-**Symptoms:** FPS below 30, choppy animation
+### Time-lapse one Earth year in 10 seconds
+1. Time scale slider to ~3.15 × 10⁶ (one Earth year ≈ π × 10⁷ s, divided by 10 s of real time).
+2. Watch Earth complete one full lap around the Sun.
 
-**Solutions:**
-1. **Graphics Settings:**
-   - Update graphics drivers
-   - Close other applications
-   - Check GPU temperature
-
-2. **System Performance:**
-   - Ensure application has graphics hardware acceleration
-   - Check CPU usage
-   - Verify adequate RAM
-
-3. **Application Settings:**
-   - Reduce number of custom planets
-   - Monitor system resources
-
-#### Planets Not Moving
-**Symptoms:** Planets appear static, no orbital motion
-
-**Solutions:**
-1. **Check Time Scale:**
-   - Simulation uses accelerated time
-   - Observable motion may take several seconds
-
-2. **Physics Simulation:**
-   - Verify physics system is active
-   - Check for simulation errors in console
-
-#### Controls Not Responding
-**Symptoms:** Camera doesn't move, mouse input ignored
-
-**Solutions:**
-1. **Focus Issues:**
-   - Click on 3D view area to ensure focus
-   - Check if ImGui panels are capturing input
-
-2. **Input System:**
-   - Verify GLFW input callbacks
-   - Check for conflicting applications
-
-#### Visual Artifacts
-**Symptoms:** Flickering, strange graphics, distorted rendering
-
-**Solutions:**
-1. **Graphics Issues:**
-   - Update graphics drivers
-   - Check OpenGL error messages
-   - Verify shader compilation
-
-2. **Hardware Problems:**
-   - Check GPU temperature
-   - Test with different graphics settings
-   - Verify graphics card compatibility
-
-### Performance Tuning
-
-#### Optimal Settings
-- **Planet Count:** 9-12 planets for best performance
-- **Grid Resolution:** Default 200×200 is optimal
-- **Camera Distance:** Stay within reasonable zoom limits
-
-#### System Resources
-- **RAM Usage:** ~50-100MB typical
-- **CPU Usage:** ~10-20% on modern systems
-- **GPU Usage:** Depends on graphics card
-
-### Debug Information
-
-#### Console Output
-The application outputs debug information to console:
-- OpenGL version and renderer
-- Shader compilation status
-- Frame timing information
-- Error messages
-
-#### Log Files
-Check for log files in the application directory:
-- Build logs from CMake
-- Runtime error logs
-- Performance profiling data
-
-## 📊 Understanding the Simulation
-
-### Scale and Units
-
-**Distance Scale:**
-- 1 World Unit = 1 billion meters (1 Gm)
-- 1 Astronomical Unit (AU) ≈ 149.6 World Units
-- Earth-Sun distance = 1 AU = 149.6 million km
-
-**Time Scale:**
-- 1 real second = 10 simulation days
-- 1 real minute ≈ 200 simulation days
-- Mercury orbit (88 days) completes in ~26 seconds
-
-**Mass Scale:**
-- All masses use real astronomical values
-- Sun: 1.989×10³⁰ kg
-- Earth: 5.972×10²⁴ kg
-
-### Physics Accuracy
-
-**What's Accurate:**
-- Gravitational forces between all planets
-- Orbital mechanics and periods
-- Relative planet sizes and masses
-- N-body gravitational interactions
-
-**What's Simplified:**
-- Circular initial orbits (real orbits are elliptical)
-- No moons or asteroids
-- No relativistic effects
-- Simplified atmospheric effects
-
-### Educational Value
-
-**Learning Objectives:**
-- Understand gravitational forces
-- Observe orbital mechanics
-- Explore scale of solar system
-- Learn physics simulation concepts
-
-**Experiments to Try:**
-1. **Planet Removal:** Remove Jupiter and observe effect on other planets
-2. **Mass Changes:** Increase Earth's mass and see orbital changes
-3. **New Planets:** Add planets between existing orbits
-4. **Binary Systems:** Create two-star systems
-
-## 🎯 Best Practices
-
-### Efficient Usage
-- Start with default solar system
-- Make small changes to observe effects
-- Use planet selection for detailed examination
-- Monitor performance with FPS counter
-
-### Exploration Tips
-- Begin with overview of entire system
-- Focus on individual planets for detail
-- Observe grid distortion near massive objects
-- Experiment with custom planet properties
-
-### Educational Applications
-- Demonstrate gravitational concepts
-- Show scale relationships in space
-- Illustrate orbital mechanics
-- Explore N-body dynamics
-
----
-
-**This user guide provides comprehensive information for effectively using and understanding SolarSystemGL.** 
+### Add a few asteroids
+1. Click Add Planet several times.
+2. Each new body lands at a different angle on the 1.5 AU orbit. They interact gravitationally with each other and with the gas giants.
+
+## Troubleshooting
+
+**Add Planet button does nothing visible** — Check the Planets menu, the new body is named "New Planet" and should appear. Default mass (~10²⁴ kg) and visual radius (~0.4 WU) mean it's a small grey dot at 1.5 AU. The auto-select should snap the Planet Info panel to it; if not, click it from the menu.
+
+**Orbits look wrong after editing mass** — Velocity Verlet integrates from the *current* state. If you change mass, the body's orbital velocity is unchanged but the gravitational force on it changes. The orbit will evolve from there.
+
+**Sliders fight with each other** — Time scale and Paused are independent. Paused stops physics regardless of time scale. Time scale only matters when not paused.
+
+**FPS drops** — At default 9 bodies it shouldn't. If it does and you've added many more bodies, the N² physics is the culprit (P2 has Barnes-Hut listed).

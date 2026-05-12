@@ -1,0 +1,26 @@
+# SolarSystemGL preset: equal-mass binary star system.
+# Two solar-mass stars at +/- 1e10 m, orbiting their common barycenter at ~40.85 km/s.
+# Orbital period ~17 days; at default timeScale (864 000x) one orbit takes ~1.7 s of real time.
+# Total momentum is exactly zero by construction (symmetric).
+version = 1
+timeScale = 864000
+
+[body]
+name = Alpha
+pos_m = -1e10 0 0
+vel_m = 0 0 40850
+mass_kg = 1.989e30
+color = 1.0 0.9 0.3
+density = 1408
+emissive = 1.0
+displayScale = 0.5
+
+[body]
+name = Beta
+pos_m = 1e10 0 0
+vel_m = 0 0 -40850
+mass_kg = 1.989e30
+color = 1.0 0.5 0.3
+density = 1408
+emissive = 1.0
+displayScale = 0.5

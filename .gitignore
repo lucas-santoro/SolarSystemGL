@@ -45,6 +45,7 @@ Makefile
 *.tmp
 bin/
 build/
+build-*/
 Debug/
 Release/
 x64/
