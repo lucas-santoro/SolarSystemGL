@@ -105,7 +105,7 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
         const float distance = selected.focusDistance();
 
         if (camera.getMode() == CameraMode::ORBITAL) {
-            camera.setOrbitalTarget(hoveredIndex, distance);
+            camera.flyToOrbital(hoveredIndex, selected.renderPosition(), distance);
         }
         else {
             camera.startSmoothMove(selected.renderPosition(), distance);
@@ -160,8 +160,7 @@ void UIManager::renderPlanetInfo(CelestialBody& body, Camera& camera)
     }
     ImGui::SameLine();
     if (ImGui::RadioButton("Orbital", currentMode == static_cast<int>(CameraMode::ORBITAL))) {
-        camera.setMode(CameraMode::ORBITAL);
-        camera.setOrbitalTarget(selectedPlanetIndex, body.focusDistance());
+        camera.flyToOrbital(selectedPlanetIndex, body.renderPosition(), body.focusDistance());
     }
 
     ImGui::End();

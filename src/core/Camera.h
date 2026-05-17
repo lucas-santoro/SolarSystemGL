@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
+#include <optional>
+
 /**
  * @file Camera.h
  * @brief Two-mode (FREE / ORBITAL) 3D camera with smooth-move and picking helpers.
@@ -105,6 +107,21 @@ public:
     /// Start a smooth interpolation toward @p destination keeping a given offset distance.
     void startSmoothMove(const glm::vec3& destination, float distance = 60.0f);
 
+    /**
+     * @brief Smoothly fly to an orbital pose around @p targetPos and switch to ORBITAL on arrival.
+     *
+     * Derives yaw/pitch from the current camera→target direction, computes the
+     * final orbital position at @p distance away, then drives a smooth move
+     * (FREE mode during the flight, ORBITAL committed on arrival). Use this
+     * instead of `setMode(ORBITAL) + setOrbitalTarget(...)` to avoid the snap
+     * caused by the orbital branch immediately rewriting `position_`.
+     *
+     * @param targetIndex Index of the target body (cached for hover/remove tracking).
+     * @param targetPos   World-space position of the target body.
+     * @param distance    Orbital radius the camera should settle at.
+     */
+    void flyToOrbital(int targetIndex, const glm::vec3& targetPos, float distance);
+
     /// Advance any active smooth movement by @p dt seconds.
     void update(float dt);
 
@@ -127,8 +144,9 @@ private:
     float     travelSpeed_  = 3000.0f;
 
     // Mode + orbital state.
-    CameraMode mode_                = CameraMode::FREE;
-    int        orbitalTargetIndex_  = -1;
-    glm::vec3  orbitalTargetPos_{ 0.0f };
-    float      orbitalDistance_     = 100.0f;
+    CameraMode                mode_                = CameraMode::FREE;
+    int                       orbitalTargetIndex_  = -1;
+    glm::vec3                 orbitalTargetPos_{ 0.0f };
+    float                     orbitalDistance_     = 100.0f;
+    std::optional<CameraMode> pendingMode_;  ///< Mode to apply when an in-flight smooth move arrives.
 };

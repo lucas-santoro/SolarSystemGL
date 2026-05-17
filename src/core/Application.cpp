@@ -392,8 +392,9 @@ void Application::handleHotkeys()
             const int selected = uiManager_.getSelectedPlanetIndex();
             if (selected >= 0 && selected < static_cast<int>(bodies_.size()))
             {
-                camera_.setMode(CameraMode::ORBITAL);
-                camera_.setOrbitalTarget(selected, bodies_[selected].focusDistance());
+                camera_.flyToOrbital(selected,
+                                     bodies_[selected].renderPosition(),
+                                     bodies_[selected].focusDistance());
             }
         }
     }
