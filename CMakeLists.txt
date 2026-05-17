@@ -42,6 +42,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/objects/CelestialBody.cpp
     ${SRC_DIR}/objects/PlanetMesh.cpp
     ${SRC_DIR}/physics/PhysicsSystem.cpp
+    ${SRC_DIR}/ui/StartMenu.cpp
     ${SRC_DIR}/ui/Toast.cpp
     ${SRC_DIR}/ui/UIManager.cpp
 )

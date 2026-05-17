@@ -109,8 +109,8 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     createAuxiliaryBuffers();
-    loadDefaultBodies();
-    shiftToBarycenterFrame();
+    // Bodies are deferred to startSimulation() — the menu screen runs first
+    // and only loads the default solar system when the user clicks Start.
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
@@ -148,6 +148,12 @@ void Application::tick()
     const float currentFrameTime = static_cast<float>(glfwGetTime());
     const float deltaTime        = currentFrameTime - previousFrameTime_;
     previousFrameTime_ = currentFrameTime;
+
+    if (appState_ == AppState::Menu)
+    {
+        renderMenuFrame(deltaTime);
+        return;
+    }
 
     refreshOrbitalCameraTarget();
     camera_.update(deltaTime);
@@ -199,6 +205,83 @@ void Application::tick()
 
     glfwSwapBuffers(glfwWindow);
     glfwPollEvents();
+}
+
+//----------------------------------------------------------------------------
+// Menu state
+//----------------------------------------------------------------------------
+
+void Application::renderMenuFrame(float deltaTime)
+{
+    menuTime_ += deltaTime;
+
+    GLFWwindow* glfwWindow = window_.getGLFWwindow();
+
+    int framebufferWidth = 0, framebufferHeight = 0;
+    glfwGetFramebufferSize(glfwWindow, &framebufferWidth, &framebufferHeight);
+    const float aspectRatio = static_cast<float>(framebufferWidth)
+                            / static_cast<float>(std::max(framebufferHeight, 1));
+
+    // Slow camera orbit around the origin for a cinematic skybox.
+    constexpr float kMenuOrbitRadius      = 300.0f;
+    constexpr float kMenuOrbitHeight      = 60.0f;
+    constexpr float kMenuOrbitAngularRate = 0.05f;
+    const float angle = menuTime_ * kMenuOrbitAngularRate;
+    const glm::vec3 menuCameraPosition(kMenuOrbitRadius * std::cos(angle),
+                                       kMenuOrbitHeight,
+                                       kMenuOrbitRadius * std::sin(angle));
+
+    const glm::mat4 view       = glm::lookAt(menuCameraPosition,
+                                             glm::vec3(0.0f),
+                                             glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4 projection = glm::perspective(glm::radians(kProjectionFovDegrees),
+                                                  aspectRatio,
+                                                  kProjectionNearPlane,
+                                                  kProjectionFarPlane);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderSky(view, projection);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    const StartMenuAction action = startMenu_.render(framebufferWidth, framebufferHeight);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(glfwWindow);
+    glfwPollEvents();
+
+    switch (action)
+    {
+        case StartMenuAction::Start:    startSimulation(); break;
+        case StartMenuAction::Quit:     glfwSetWindowShouldClose(glfwWindow, true); break;
+        case StartMenuAction::Load:     /* Wired in Task 12. */ break;
+        case StartMenuAction::Settings: /* Wired in Task 11. */ break;
+        case StartMenuAction::None:     break;
+    }
+}
+
+void Application::startSimulation()
+{
+    bodies_.clear();
+    loadDefaultBodies();
+    shiftToBarycenterFrame();
+    camera_.reset();
+    appState_ = AppState::Running;
+    previousFrameTime_ = static_cast<float>(glfwGetTime());
+}
+
+void Application::returnToMenu()
+{
+    bodies_.clear();
+    uiManager_.clearSelection();
+    camera_.reset();
+    appState_ = AppState::Menu;
+    menuTime_ = 0.0f;
+    previousFrameTime_ = static_cast<float>(glfwGetTime());
 }
 
 //----------------------------------------------------------------------------

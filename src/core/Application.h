@@ -9,6 +9,7 @@
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
 #include "physics/PhysicsSystem.h"
+#include "ui/StartMenu.h"
 #include "ui/UIManager.h"
 
 /**
@@ -16,6 +17,18 @@
  * @brief Top-level application object: owns the window, GL resources, simulation
  *        state, and the main loop.
  */
+
+/**
+ * @brief Discrete lifecycle phase of the application.
+ *
+ * The main loop branches on this enum so the menu screen and the running
+ * simulation can share the window/GL context but render independently.
+ */
+enum class AppState
+{
+    Menu,    ///< Pre-simulation: rotating skybox + StartMenu modal.
+    Running  ///< Simulation is active: physics, bodies, full HUD.
+};
 
 /**
  * @brief Owns the entire SolarSystemGL application lifecycle.
@@ -77,6 +90,15 @@ private:
     /// One iteration of the main loop.
     void tick();
 
+    /// Draw the menu screen for one frame (skybox rotation + StartMenu modal).
+    void renderMenuFrame(float deltaTime);
+
+    /// Build the default solar system and transition to AppState::Running.
+    void startSimulation();
+
+    /// Tear down the running simulation and transition back to AppState::Menu.
+    void returnToMenu();
+
     /// Refresh @ref camera_'s cached orbital target position from the current
     /// body the camera is tracking by index.
     void refreshOrbitalCameraTarget();
@@ -128,8 +150,13 @@ private:
     Shader        ringShader_;
     PhysicsSystem physics_;
     UIManager     uiManager_;
+    StartMenu     startMenu_;
     Grid          grid_;
     std::vector<CelestialBody> bodies_;
+
+    // Lifecycle state.
+    AppState appState_  = AppState::Menu;
+    float    menuTime_  = 0.0f;
 
     // Auxiliary GL resources directly owned by Application.
     GLuint  trailVAO_         = 0;
