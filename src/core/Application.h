@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "core/Camera.h"
+#include "core/Framebuffer.h"
 #include "core/Grid.h"
 #include "core/Shader.h"
 #include "core/Window.h"
@@ -132,11 +133,17 @@ private:
     /// Per-body orbit-history line strips with alpha fade.
     void renderTrails(const glm::mat4& view, const glm::mat4& projection);
 
-    /// Additive billboarded halos for any body with `emissive >= 0.5`.
-    void renderHalos(const glm::mat4& view, const glm::mat4& projection);
-
     /// Reuses the trail shader to draw the path predictor's cached line strip.
     void renderPathPrediction(const glm::mat4& view, const glm::mat4& projection);
+
+    /// Render emissive bodies into the bloom ping FBO and run ping-pong
+    /// Gaussian blurs. Leaves the final blurred image in @p outBlurredTexture.
+    void renderBloomPasses(const glm::mat4& view, const glm::mat4& projection,
+                           GLuint& outBlurredTexture);
+
+    /// Fullscreen quad pass: composite `sceneFbo_.colorTexture()` with the
+    /// blurred bloom result onto the default framebuffer.
+    void renderComposite(GLuint blurredBloomTexture, int viewportWidth, int viewportHeight);
 
     /// GLFW cursor-position callback — dispatches to the Application instance
     /// stored in the window's user-pointer.
@@ -154,6 +161,9 @@ private:
     /// state so the user can confirm the quit; lets it through in Menu.
     static void windowCloseCallback(GLFWwindow* window);
 
+    /// GLFW framebuffer-size callback — resizes the viewport and all owned FBOs.
+    static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+
     /// Draw any active confirm modals (Return to Menu? / Quit application?).
     /// Must be invoked between ImGui::NewFrame and ImGui::Render.
     void renderConfirmModals();
@@ -162,15 +172,19 @@ private:
     static Application* fromWindow(GLFWwindow* window);
 
     // Construction order matters: Window first (creates the GL context),
-    // then GL-owning resources (Shaders, Grid), then non-GL state.
+    // then GL-owning resources (Shaders, Grid, Framebuffers), then non-GL state.
     Window        window_;
     Camera        camera_;
     Shader        bodyShader_;
     Shader        gridShader_;
     Shader        trailShader_;
-    Shader        haloShader_;
     Shader        skyShader_;
     Shader        ringShader_;
+    Shader        bloomBlurShader_;
+    Shader        bloomCompositeShader_;
+    Framebuffer   sceneFbo_;
+    Framebuffer   bloomPingFbo_;
+    Framebuffer   bloomPongFbo_;
     PhysicsSystem physics_;
     PathPredictor pathPredictor_;
     UIManager       uiManager_;
@@ -193,13 +207,13 @@ private:
     bool     openQuitPopup_             = false;  ///< Pending "Quit application?" modal open request.
 
     // Auxiliary GL resources directly owned by Application.
-    GLuint  trailVAO_         = 0;
-    GLuint  trailVBO_         = 0;
-    GLuint  haloVAO_          = 0;
-    GLuint  haloVBO_          = 0;
-    GLuint  ringVAO_          = 0;
-    GLuint  ringVBO_          = 0;
-    GLsizei ringVertexCount_  = 0;
+    GLuint  trailVAO_            = 0;
+    GLuint  trailVBO_            = 0;
+    GLuint  ringVAO_             = 0;
+    GLuint  ringVBO_             = 0;
+    GLuint  fullscreenQuadVAO_   = 0;  ///< Shared by the sky pass and the bloom fullscreen passes.
+    GLuint  fullscreenQuadVBO_   = 0;
+    GLsizei ringVertexCount_     = 0;
 
     // Mouse-input state, shared between the GLFW callbacks and the main loop.
     float lastMouseX_       = 400.0f;

@@ -27,9 +27,6 @@ constexpr float  kRingInnerRadius    = 1.0f;
 constexpr float  kRingOuterRadius    = 1.5f;
 constexpr float  kRingScaleMultiplier = 1.5f;
 
-// Star halo billboarding.
-constexpr float  kHaloSizeMultiplier = 3.0f;
-
 // Camera and projection defaults.
 const     glm::vec3 kInitialCameraPosition{ 0.0f, 0.0f, 300.0f };
 constexpr float  kProjectionNearPlane     = 0.01f;
@@ -122,6 +119,16 @@ void Application::windowCloseCallback(GLFWwindow* window)
     }
 }
 
+void Application::framebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+    Application* app = fromWindow(window);
+    if (app == nullptr) return;
+    app->sceneFbo_.resize(width, height);
+    app->bloomPingFbo_.resize(width / 2, height / 2);
+    app->bloomPongFbo_.resize(width / 2, height / 2);
+}
+
 //----------------------------------------------------------------------------
 // Construction / destruction
 //----------------------------------------------------------------------------
@@ -129,12 +136,16 @@ void Application::windowCloseCallback(GLFWwindow* window)
 Application::Application(int windowWidth, int windowHeight, const char* title)
     : window_(windowWidth, windowHeight, title)
     , camera_(kInitialCameraPosition)
-    , bodyShader_ (embedded_shaders::VertexShader,      embedded_shaders::FragmentShader)
-    , gridShader_ (embedded_shaders::GridVertexShader,  embedded_shaders::GridFragmentShader)
-    , trailShader_(embedded_shaders::TrailVertexShader, embedded_shaders::TrailFragmentShader)
-    , haloShader_ (embedded_shaders::HaloVertexShader,  embedded_shaders::HaloFragmentShader)
-    , skyShader_  (embedded_shaders::SkyVertexShader,   embedded_shaders::SkyFragmentShader)
-    , ringShader_ (embedded_shaders::RingVertexShader,  embedded_shaders::RingFragmentShader)
+    , bodyShader_           (embedded_shaders::VertexShader,           embedded_shaders::FragmentShader)
+    , gridShader_           (embedded_shaders::GridVertexShader,       embedded_shaders::GridFragmentShader)
+    , trailShader_          (embedded_shaders::TrailVertexShader,      embedded_shaders::TrailFragmentShader)
+    , skyShader_            (embedded_shaders::SkyVertexShader,        embedded_shaders::SkyFragmentShader)
+    , ringShader_           (embedded_shaders::RingVertexShader,       embedded_shaders::RingFragmentShader)
+    , bloomBlurShader_      (embedded_shaders::FullscreenQuadVertexShader, embedded_shaders::BloomBlurFragmentShader)
+    , bloomCompositeShader_ (embedded_shaders::FullscreenQuadVertexShader, embedded_shaders::BloomCompositeFragmentShader)
+    , sceneFbo_             (windowWidth,     windowHeight,     true)
+    , bloomPingFbo_         (windowWidth / 2, windowHeight / 2, false)
+    , bloomPongFbo_         (windowWidth / 2, windowHeight / 2, false)
     , physics_()
     , uiManager_()
     , grid_(10000.0f, 200, 0.0f)
@@ -143,13 +154,23 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
 
     GLFWwindow* glfwWindow = window_.getGLFWwindow();
     glfwSetWindowUserPointer(glfwWindow, this);
-    glfwSetFramebufferSizeCallback(glfwWindow,
-        [](GLFWwindow*, int w, int h) { glViewport(0, 0, w, h); });
-    glfwSetCursorPosCallback(glfwWindow,   mouseCallback);
-    glfwSetScrollCallback(glfwWindow,      scrollCallback);
-    glfwSetWindowFocusCallback(glfwWindow, windowFocusCallback);
-    glfwSetWindowCloseCallback(glfwWindow, windowCloseCallback);
+    glfwSetFramebufferSizeCallback(glfwWindow, framebufferSizeCallback);
+    glfwSetCursorPosCallback(glfwWindow,       mouseCallback);
+    glfwSetScrollCallback(glfwWindow,          scrollCallback);
+    glfwSetWindowFocusCallback(glfwWindow,     windowFocusCallback);
+    glfwSetWindowCloseCallback(glfwWindow,     windowCloseCallback);
     glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    // HiDPI: the constructor's windowWidth/Height are window units; the actual
+    // pixel framebuffer may differ. Resize FBOs to match the framebuffer.
+    int initialFbWidth = 0, initialFbHeight = 0;
+    glfwGetFramebufferSize(glfwWindow, &initialFbWidth, &initialFbHeight);
+    if (initialFbWidth != windowWidth || initialFbHeight != windowHeight)
+    {
+        sceneFbo_.resize(initialFbWidth, initialFbHeight);
+        bloomPingFbo_.resize(initialFbWidth / 2, initialFbHeight / 2);
+        bloomPongFbo_.resize(initialFbWidth / 2, initialFbHeight / 2);
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -246,8 +267,6 @@ void Application::tick()
         framesSinceLastPrediction_ = kPredictionRefreshFrames;  // force refresh on re-enable
     }
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     int framebufferWidth = 0, framebufferHeight = 0;
     glfwGetFramebufferSize(glfwWindow, &framebufferWidth, &framebufferHeight);
     const float aspectRatio = static_cast<float>(framebufferWidth)
@@ -258,6 +277,12 @@ void Application::tick()
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
 
+    // ---- Scene pass: render the full 3D world into sceneFbo_ -----------
+    sceneFbo_.bind();
+    glViewport(0, 0, sceneFbo_.width(), sceneFbo_.height());
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     renderSky(view, projection);
     renderBodies(view, projection);
     renderGrid(view, projection);
@@ -265,7 +290,24 @@ void Application::tick()
 
     if (uiManager_.showTrails)         renderTrails(view, projection);
     if (uiManager_.showPathPrediction) renderPathPrediction(view, projection);
-    if (uiManager_.showBloom)          renderHalos(view, projection);
+
+    // ---- Bloom passes: bright-pass emissive bodies, then ping-pong blur -
+    GLuint blurredBloomTexture = 0;
+    if (uiManager_.showBloom)
+    {
+        renderBloomPasses(view, projection, blurredBloomTexture);
+    }
+    else
+    {
+        bloomPingFbo_.bind();
+        glViewport(0, 0, bloomPingFbo_.width(), bloomPingFbo_.height());
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        blurredBloomTexture = bloomPingFbo_.colorTexture();
+    }
+
+    // ---- Composite: scene + bloom into the default framebuffer ---------
+    renderComposite(blurredBloomTexture, framebufferWidth, framebufferHeight);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -348,6 +390,10 @@ void Application::renderMenuFrame(float deltaTime)
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
 
+    // The menu draws directly to the default framebuffer — no offscreen FBO
+    // bounce, no bloom. Bind explicitly so we never inherit a stale binding.
+    Framebuffer::bindDefault();
+    glViewport(0, 0, framebufferWidth, framebufferHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     renderSky(view, projection);
 
@@ -575,17 +621,18 @@ void Application::createAuxiliaryBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Static fullscreen unit quad: used by both the halo billboard and the sky.
+    // Static fullscreen unit quad — shared by the sky pass and every
+    // fullscreen-quad bloom pass (bright-pass / blur / composite).
     const float fullscreenQuadVertices[] = {
         -1.0f, -1.0f,
          1.0f, -1.0f,
         -1.0f,  1.0f,
          1.0f,  1.0f,
     };
-    glGenVertexArrays(1, &haloVAO_);
-    glGenBuffers(1, &haloVBO_);
-    glBindVertexArray(haloVAO_);
-    glBindBuffer(GL_ARRAY_BUFFER, haloVBO_);
+    glGenVertexArrays(1, &fullscreenQuadVAO_);
+    glGenBuffers(1, &fullscreenQuadVBO_);
+    glBindVertexArray(fullscreenQuadVAO_);
+    glBindBuffer(GL_ARRAY_BUFFER, fullscreenQuadVBO_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(fullscreenQuadVertices), fullscreenQuadVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
@@ -622,13 +669,13 @@ void Application::createAuxiliaryBuffers()
 
 void Application::destroyAuxiliaryBuffers()
 {
-    if (trailVAO_) glDeleteVertexArrays(1, &trailVAO_);
-    if (trailVBO_) glDeleteBuffers(1, &trailVBO_);
-    if (haloVAO_)  glDeleteVertexArrays(1, &haloVAO_);
-    if (haloVBO_)  glDeleteBuffers(1, &haloVBO_);
-    if (ringVAO_)  glDeleteVertexArrays(1, &ringVAO_);
-    if (ringVBO_)  glDeleteBuffers(1, &ringVBO_);
-    trailVAO_ = trailVBO_ = haloVAO_ = haloVBO_ = ringVAO_ = ringVBO_ = 0;
+    if (trailVAO_)          glDeleteVertexArrays(1, &trailVAO_);
+    if (trailVBO_)          glDeleteBuffers(1, &trailVBO_);
+    if (fullscreenQuadVAO_) glDeleteVertexArrays(1, &fullscreenQuadVAO_);
+    if (fullscreenQuadVBO_) glDeleteBuffers(1, &fullscreenQuadVBO_);
+    if (ringVAO_)           glDeleteVertexArrays(1, &ringVAO_);
+    if (ringVBO_)           glDeleteBuffers(1, &ringVBO_);
+    trailVAO_ = trailVBO_ = fullscreenQuadVAO_ = fullscreenQuadVBO_ = ringVAO_ = ringVBO_ = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -747,7 +794,7 @@ void Application::renderSky(const glm::mat4& view, const glm::mat4& projection)
     skyShader_.setMat4("invView", glm::inverse(view));
     skyShader_.setMat4("invProj", glm::inverse(projection));
     glDisable(GL_DEPTH_TEST);
-    glBindVertexArray(haloVAO_);   // re-use the fullscreen quad
+    glBindVertexArray(fullscreenQuadVAO_);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glEnable(GL_DEPTH_TEST);
 }
@@ -868,27 +915,79 @@ void Application::renderPathPrediction(const glm::mat4& view, const glm::mat4& p
     glBindVertexArray(0);
 }
 
-void Application::renderHalos(const glm::mat4& view, const glm::mat4& projection)
+void Application::renderBloomPasses(const glm::mat4& view, const glm::mat4& projection,
+                                    GLuint& outBlurredTexture)
 {
-    haloShader_.use();
-    haloShader_.setMat4("view",       view);
-    haloShader_.setMat4("projection", projection);
+    // ---- Bright pass: render emissive bodies into bloomPingFbo_ ----------
+    bloomPingFbo_.bind();
+    glViewport(0, 0, bloomPingFbo_.width(), bloomPingFbo_.height());
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindVertexArray(haloVAO_);
-    glBlendFunc(GL_ONE, GL_ONE);   // additive
-    glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    bodyShader_.use();
+    bodyShader_.setMat4("view",       view);
+    bodyShader_.setMat4("projection", projection);
+    bodyShader_.setMat4("model",      glm::mat4(1.0f));
+    bodyShader_.setVec3("lightPos",   glm::vec3(0.0f));  // unused in emissive branch
+    bodyShader_.setVec3("viewPos",    camera_.getPosition());
 
     for (const auto& body : bodies_)
     {
         if (body.emissive < 0.5f) continue;
-        const float displayRadius = body.radius * body.displayScale;
-        haloShader_.setVec3 ("center", body.renderPosition());
-        haloShader_.setFloat("size",   displayRadius * kHaloSizeMultiplier);
-        haloShader_.setVec3 ("color",  body.color);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        body.render(bodyShader_, false);
     }
 
-    glDepthMask(GL_TRUE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // restore default
+    // ---- Ping-pong Gaussian blur ----------------------------------------
+    constexpr int kBlurPasses = 10;
+    bloomBlurShader_.use();
+    bloomBlurShader_.setInt("source", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(fullscreenQuadVAO_);
+
+    Framebuffer* readFb  = &bloomPingFbo_;
+    Framebuffer* writeFb = &bloomPongFbo_;
+    bool         horizontal = true;
+
+    for (int pass = 0; pass < kBlurPasses; ++pass)
+    {
+        writeFb->bind();
+        glViewport(0, 0, writeFb->width(), writeFb->height());
+        bloomBlurShader_.setInt("horizontal", horizontal ? 1 : 0);
+        glBindTexture(GL_TEXTURE_2D, readFb->colorTexture());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        std::swap(readFb, writeFb);
+        horizontal = !horizontal;
+    }
+
+    outBlurredTexture = readFb->colorTexture();
+
     glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void Application::renderComposite(GLuint blurredBloomTexture, int viewportWidth, int viewportHeight)
+{
+    Framebuffer::bindDefault();
+    glViewport(0, 0, viewportWidth, viewportHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glDisable(GL_DEPTH_TEST);
+    bloomCompositeShader_.use();
+    bloomCompositeShader_.setInt  ("scene",          0);
+    bloomCompositeShader_.setInt  ("bloom",          1);
+    bloomCompositeShader_.setFloat("bloomIntensity", uiManager_.showBloom ? 1.5f : 0.0f);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sceneFbo_.colorTexture());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, blurredBloomTexture);
+    glActiveTexture(GL_TEXTURE0);   // restore unit 0
+
+    glBindVertexArray(fullscreenQuadVAO_);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
 }

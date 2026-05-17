@@ -38,27 +38,29 @@ set(SHADER_SOURCES
     "${SHADER_DIR}/GridFragmentShader.glsl"
     "${SHADER_DIR}/TrailVertexShader.glsl"
     "${SHADER_DIR}/TrailFragmentShader.glsl"
-    "${SHADER_DIR}/HaloVertexShader.glsl"
-    "${SHADER_DIR}/HaloFragmentShader.glsl"
     "${SHADER_DIR}/SkyVertexShader.glsl"
     "${SHADER_DIR}/SkyFragmentShader.glsl"
     "${SHADER_DIR}/RingVertexShader.glsl"
     "${SHADER_DIR}/RingFragmentShader.glsl"
+    "${SHADER_DIR}/FullscreenQuadVertexShader.glsl"
+    "${SHADER_DIR}/BloomBlurFragmentShader.glsl"
+    "${SHADER_DIR}/BloomCompositeFragmentShader.glsl"
 )
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${SHADER_SOURCES})
 
-file(READ "${SHADER_DIR}/VertexShader.glsl"        VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/FragmentShader.glsl"      FRAGMENT_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/GridVertexShader.glsl"    GRID_VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/GridFragmentShader.glsl"  GRID_FRAGMENT_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/TrailVertexShader.glsl"   TRAIL_VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/TrailFragmentShader.glsl" TRAIL_FRAGMENT_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/HaloVertexShader.glsl"    HALO_VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/HaloFragmentShader.glsl"  HALO_FRAGMENT_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/SkyVertexShader.glsl"     SKY_VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/SkyFragmentShader.glsl"   SKY_FRAGMENT_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/RingVertexShader.glsl"    RING_VERTEX_SHADER_SOURCE)
-file(READ "${SHADER_DIR}/RingFragmentShader.glsl"  RING_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/VertexShader.glsl"                  VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/FragmentShader.glsl"                FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/GridVertexShader.glsl"              GRID_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/GridFragmentShader.glsl"            GRID_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/TrailVertexShader.glsl"             TRAIL_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/TrailFragmentShader.glsl"           TRAIL_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/SkyVertexShader.glsl"               SKY_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/SkyFragmentShader.glsl"             SKY_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/RingVertexShader.glsl"              RING_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/RingFragmentShader.glsl"            RING_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/FullscreenQuadVertexShader.glsl"    FULLSCREEN_QUAD_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/BloomBlurFragmentShader.glsl"       BLOOM_BLUR_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/BloomCompositeFragmentShader.glsl"  BLOOM_COMPOSITE_FRAGMENT_SHADER_SOURCE)
 
 configure_file(
     "${SRC_DIR}/core/EmbeddedShaders.h.in"
@@ -76,6 +78,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/main.cpp
     ${SRC_DIR}/core/Application.cpp
     ${SRC_DIR}/core/Camera.cpp
+    ${SRC_DIR}/core/Framebuffer.cpp
     ${SRC_DIR}/core/Grid.cpp
     ${SRC_DIR}/core/SaveLoad.cpp
     ${SRC_DIR}/core/Screenshot.cpp
