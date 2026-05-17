@@ -9,6 +9,10 @@
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
 #include "physics/PhysicsSystem.h"
+#include "ui/AddPlanetModal.h"
+#include "ui/SaveLoadModal.h"
+#include "ui/SettingsModal.h"
+#include "ui/StartMenu.h"
 #include "ui/UIManager.h"
 
 /**
@@ -16,6 +20,18 @@
  * @brief Top-level application object: owns the window, GL resources, simulation
  *        state, and the main loop.
  */
+
+/**
+ * @brief Discrete lifecycle phase of the application.
+ *
+ * The main loop branches on this enum so the menu screen and the running
+ * simulation can share the window/GL context but render independently.
+ */
+enum class AppState
+{
+    Menu,    ///< Pre-simulation: rotating skybox + StartMenu modal.
+    Running  ///< Simulation is active: physics, bodies, full HUD.
+};
 
 /**
  * @brief Owns the entire SolarSystemGL application lifecycle.
@@ -77,6 +93,15 @@ private:
     /// One iteration of the main loop.
     void tick();
 
+    /// Draw the menu screen for one frame (skybox rotation + StartMenu modal).
+    void renderMenuFrame(float deltaTime);
+
+    /// Build the default solar system and transition to AppState::Running.
+    void startSimulation();
+
+    /// Tear down the running simulation and transition back to AppState::Menu.
+    void returnToMenu();
+
     /// Refresh @ref camera_'s cached orbital target position from the current
     /// body the camera is tracking by index.
     void refreshOrbitalCameraTarget();
@@ -113,6 +138,19 @@ private:
     /// GLFW scroll callback — dispatches to the Application instance.
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+    /// GLFW window-focus callback — auto-pauses the simulation while the
+    /// window is in the background. Resumes only if the auto-pause put it
+    /// there (manual pauses are not undone).
+    static void windowFocusCallback(GLFWwindow* window, int focused);
+
+    /// GLFW window-close callback — intercepts the close event in Running
+    /// state so the user can confirm the quit; lets it through in Menu.
+    static void windowCloseCallback(GLFWwindow* window);
+
+    /// Draw any active confirm modals (Return to Menu? / Quit application?).
+    /// Must be invoked between ImGui::NewFrame and ImGui::Render.
+    void renderConfirmModals();
+
     /// Retrieve the Application instance attached to the GLFW window.
     static Application* fromWindow(GLFWwindow* window);
 
@@ -127,9 +165,24 @@ private:
     Shader        skyShader_;
     Shader        ringShader_;
     PhysicsSystem physics_;
-    UIManager     uiManager_;
-    Grid          grid_;
+    UIManager       uiManager_;
+    StartMenu       startMenu_;
+    SettingsModal   settingsModal_;
+    SaveLoadModal   saveLoadModal_;
+    AddPlanetModal  addPlanetModal_;
+    Grid            grid_;
     std::vector<CelestialBody> bodies_;
+
+    // User-tunable rendering settings (bound to the Settings modal).
+    float fieldOfView_ = 45.0f;
+    float guiScale_    = 1.0f;
+
+    // Lifecycle state.
+    AppState appState_                  = AppState::Menu;
+    float    menuTime_                  = 0.0f;
+    bool     wasAutoPaused_             = false;  ///< Set when the window-focus callback auto-pauses physics.
+    bool     openReturnToMenuPopup_     = false;  ///< Pending "Return to Menu?" modal open request.
+    bool     openQuitPopup_             = false;  ///< Pending "Quit application?" modal open request.
 
     // Auxiliary GL resources directly owned by Application.
     GLuint  trailVAO_         = 0;

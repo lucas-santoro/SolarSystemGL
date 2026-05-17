@@ -26,7 +26,6 @@ constexpr float  kHaloSizeMultiplier = 3.0f;
 
 // Camera and projection defaults.
 const     glm::vec3 kInitialCameraPosition{ 0.0f, 0.0f, 300.0f };
-constexpr float  kProjectionFovDegrees    = 45.0f;
 constexpr float  kProjectionNearPlane     = 0.01f;
 constexpr float  kProjectionFarPlane      = 10000.0f;
 
@@ -77,6 +76,41 @@ void Application::scrollCallback(GLFWwindow* window, double /*xoffset*/, double 
     app->camera_.processKeyboard(yoffset > 0 ? GLFW_KEY_W : GLFW_KEY_S, 0.1f);
 }
 
+void Application::windowFocusCallback(GLFWwindow* window, int focused)
+{
+    Application* app = fromWindow(window);
+    if (app == nullptr) return;
+
+    if (focused == GLFW_FALSE)
+    {
+        // Only auto-pause if the simulation is actively running and isn't
+        // already paused (so manual pauses don't get clobbered on resume).
+        if (app->appState_ == AppState::Running && !app->physics_.paused)
+        {
+            app->physics_.paused = true;
+            app->wasAutoPaused_  = true;
+        }
+    }
+    else if (app->wasAutoPaused_)
+    {
+        app->physics_.paused = false;
+        app->wasAutoPaused_  = false;
+    }
+}
+
+void Application::windowCloseCallback(GLFWwindow* window)
+{
+    Application* app = fromWindow(window);
+    if (app == nullptr) return;
+
+    if (app->appState_ == AppState::Running)
+    {
+        // Defer the close until the user confirms.
+        glfwSetWindowShouldClose(window, GLFW_FALSE);
+        app->openQuitPopup_ = true;
+    }
+}
+
 //----------------------------------------------------------------------------
 // Construction / destruction
 //----------------------------------------------------------------------------
@@ -100,8 +134,10 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow,
         [](GLFWwindow*, int w, int h) { glViewport(0, 0, w, h); });
-    glfwSetCursorPosCallback(glfwWindow, mouseCallback);
-    glfwSetScrollCallback(glfwWindow,    scrollCallback);
+    glfwSetCursorPosCallback(glfwWindow,   mouseCallback);
+    glfwSetScrollCallback(glfwWindow,      scrollCallback);
+    glfwSetWindowFocusCallback(glfwWindow, windowFocusCallback);
+    glfwSetWindowCloseCallback(glfwWindow, windowCloseCallback);
     glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     glEnable(GL_DEPTH_TEST);
@@ -109,8 +145,8 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     createAuxiliaryBuffers();
-    loadDefaultBodies();
-    shiftToBarycenterFrame();
+    // Bodies are deferred to startSimulation() — the menu screen runs first
+    // and only loads the default solar system when the user clicks Start.
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
@@ -149,6 +185,12 @@ void Application::tick()
     const float deltaTime        = currentFrameTime - previousFrameTime_;
     previousFrameTime_ = currentFrameTime;
 
+    if (appState_ == AppState::Menu)
+    {
+        renderMenuFrame(deltaTime);
+        return;
+    }
+
     refreshOrbitalCameraTarget();
     camera_.update(deltaTime);
 
@@ -167,7 +209,7 @@ void Application::tick()
     const float aspectRatio = static_cast<float>(framebufferWidth)
                             / static_cast<float>(std::max(framebufferHeight, 1));
     const glm::mat4 view       = camera_.getViewMatrix();
-    const glm::mat4 projection = glm::perspective(glm::radians(kProjectionFovDegrees),
+    const glm::mat4 projection = glm::perspective(glm::radians(fieldOfView_),
                                                   aspectRatio,
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
@@ -188,6 +230,37 @@ void Application::tick()
     ImGui::NewFrame();
     uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_);
 
+    if (uiManager_.menuRequested)
+    {
+        openReturnToMenuPopup_ = true;
+        uiManager_.menuRequested = false;
+    }
+    if (uiManager_.settingsRequested)
+    {
+        settingsModal_.requestOpen();
+        uiManager_.settingsRequested = false;
+    }
+    if (uiManager_.saveRequested)
+    {
+        saveLoadModal_.requestOpenSave();
+        uiManager_.saveRequested = false;
+    }
+    if (uiManager_.loadRequested)
+    {
+        saveLoadModal_.requestOpenLoad();
+        uiManager_.loadRequested = false;
+    }
+    if (uiManager_.addPlanetRequested)
+    {
+        addPlanetModal_.requestOpen();
+        uiManager_.addPlanetRequested = false;
+    }
+
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+    saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
+    addPlanetModal_.render(bodies_, uiManager_);
+    renderConfirmModals();
+
     if (uiManager_.vsyncDirty)
     {
         glfwSwapInterval(uiManager_.vsync ? 1 : 0);
@@ -199,6 +272,148 @@ void Application::tick()
 
     glfwSwapBuffers(glfwWindow);
     glfwPollEvents();
+}
+
+//----------------------------------------------------------------------------
+// Menu state
+//----------------------------------------------------------------------------
+
+void Application::renderMenuFrame(float deltaTime)
+{
+    menuTime_ += deltaTime;
+
+    GLFWwindow* glfwWindow = window_.getGLFWwindow();
+
+    int framebufferWidth = 0, framebufferHeight = 0;
+    glfwGetFramebufferSize(glfwWindow, &framebufferWidth, &framebufferHeight);
+    const float aspectRatio = static_cast<float>(framebufferWidth)
+                            / static_cast<float>(std::max(framebufferHeight, 1));
+
+    // Slow camera orbit around the origin for a cinematic skybox.
+    constexpr float kMenuOrbitRadius      = 300.0f;
+    constexpr float kMenuOrbitHeight      = 60.0f;
+    constexpr float kMenuOrbitAngularRate = 0.05f;
+    const float angle = menuTime_ * kMenuOrbitAngularRate;
+    const glm::vec3 menuCameraPosition(kMenuOrbitRadius * std::cos(angle),
+                                       kMenuOrbitHeight,
+                                       kMenuOrbitRadius * std::sin(angle));
+
+    const glm::mat4 view       = glm::lookAt(menuCameraPosition,
+                                             glm::vec3(0.0f),
+                                             glm::vec3(0.0f, 1.0f, 0.0f));
+    const glm::mat4 projection = glm::perspective(glm::radians(fieldOfView_),
+                                                  aspectRatio,
+                                                  kProjectionNearPlane,
+                                                  kProjectionFarPlane);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderSky(view, projection);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    const StartMenuAction action = startMenu_.render(framebufferWidth, framebufferHeight);
+
+    if (action == StartMenuAction::Settings)
+    {
+        settingsModal_.requestOpen();
+    }
+
+    // Settings is the only modal we render from the menu — it doesn't depend
+    // on the simulation state, only on settings_ + camera_ + uiManager_.
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(glfwWindow);
+    glfwPollEvents();
+
+    switch (action)
+    {
+        case StartMenuAction::Start:    startSimulation(); break;
+        case StartMenuAction::Quit:     glfwSetWindowShouldClose(glfwWindow, true); break;
+        case StartMenuAction::Load:     /* Not yet wired from the menu. */ break;
+        case StartMenuAction::Settings: /* Handled above. */                break;
+        case StartMenuAction::None:     break;
+    }
+}
+
+void Application::startSimulation()
+{
+    bodies_.clear();
+    loadDefaultBodies();
+    shiftToBarycenterFrame();
+    camera_.reset();
+    appState_ = AppState::Running;
+    previousFrameTime_ = static_cast<float>(glfwGetTime());
+}
+
+void Application::returnToMenu()
+{
+    bodies_.clear();
+    uiManager_.clearSelection();
+    camera_.reset();
+    appState_ = AppState::Menu;
+    menuTime_ = 0.0f;
+    previousFrameTime_ = static_cast<float>(glfwGetTime());
+}
+
+void Application::renderConfirmModals()
+{
+    constexpr const char* kReturnPopupId = "Return to Menu?";
+    constexpr const char* kQuitPopupId   = "Quit Application?";
+
+    if (openReturnToMenuPopup_)
+    {
+        ImGui::OpenPopup(kReturnPopupId);
+        openReturnToMenuPopup_ = false;
+    }
+    if (openQuitPopup_)
+    {
+        ImGui::OpenPopup(kQuitPopupId);
+        openQuitPopup_ = false;
+    }
+
+    const ImVec2 viewportCenter = ImGui::GetMainViewport()->GetCenter();
+    constexpr ImVec2 kButtonSize(120.0f, 0.0f);
+
+    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(kReturnPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("Discard the current simulation and return to the main menu?");
+        ImGui::Spacing();
+        if (ImGui::Button("Yes", kButtonSize))
+        {
+            returnToMenu();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", kButtonSize))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(kQuitPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("Quit SolarSystemGL?");
+        ImGui::Spacing();
+        if (ImGui::Button("Quit", kButtonSize))
+        {
+            glfwSetWindowShouldClose(window_.getGLFWwindow(), GLFW_TRUE);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", kButtonSize))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -375,14 +590,15 @@ void Application::handleHotkeys()
 
         if (escDown && !wasEscPressed_)
         {
-            // Two-stage Esc: close info panel first, only close the app if nothing is selected.
+            // Two-stage Esc: close info panel first, only prompt to leave the
+            // simulation if nothing is selected.
             if (uiManager_.getSelectedPlanetIndex() >= 0)
             {
                 uiManager_.clearSelection();
             }
             else
             {
-                glfwSetWindowShouldClose(glfwWindow, true);
+                openReturnToMenuPopup_ = true;
             }
         }
 
@@ -392,8 +608,9 @@ void Application::handleHotkeys()
             const int selected = uiManager_.getSelectedPlanetIndex();
             if (selected >= 0 && selected < static_cast<int>(bodies_.size()))
             {
-                camera_.setMode(CameraMode::ORBITAL);
-                camera_.setOrbitalTarget(selected, bodies_[selected].focusDistance());
+                camera_.flyToOrbital(selected,
+                                     bodies_[selected].renderPosition(),
+                                     bodies_[selected].focusDistance());
             }
         }
     }

@@ -41,8 +41,19 @@ void Camera::processMouseMovement(float xoffset, float yoffset)
     xoffset *= sensitivity_;
     yoffset *= sensitivity_;
 
-    yaw_   += xoffset;
-    pitch_ += yoffset;
+    // ORBITAL inverts axes so dragging the mouse "pulls" the body toward
+    // the cursor (Maya/Blender convention), whereas FREE follows the
+    // FPS-style "drag right = look right".
+    if (mode_ == CameraMode::ORBITAL)
+    {
+        yaw_   -= xoffset;
+        pitch_ -= yoffset;
+    }
+    else
+    {
+        yaw_   += xoffset;
+        pitch_ += yoffset;
+    }
 
     constexpr float kMaxPitch = 89.0f;
     if (pitch_ >  kMaxPitch) pitch_ =  kMaxPitch;
@@ -155,9 +166,49 @@ void Camera::startSmoothMove(const glm::vec3& destination, float distance)
     isTravelling_ = true;
 }
 
+void Camera::flyToOrbital(int targetIndex, const glm::vec3& targetPos, float distance)
+{
+    orbitalTargetIndex_ = targetIndex;
+    orbitalTargetPos_   = targetPos;
+    orbitalDistance_    = distance;
+
+    // Derive yaw/pitch from the current camera→target direction so the
+    // post-arrival orbital view aligns with the camera's current vantage point.
+    const glm::vec3 toCam = glm::normalize(position_ - targetPos);
+    yaw_   = glm::degrees(std::atan2(toCam.z, toCam.x));
+    pitch_ = glm::degrees(std::asin(toCam.y));
+
+    constexpr float kMaxPitch = 89.0f;
+    if (pitch_ >  kMaxPitch) pitch_ =  kMaxPitch;
+    if (pitch_ < -kMaxPitch) pitch_ = -kMaxPitch;
+
+    const float yawRad   = glm::radians(yaw_);
+    const float pitchRad = glm::radians(pitch_);
+    const float cosPitch = std::cos(pitchRad);
+    targetPos_ = targetPos + glm::vec3(
+        distance * cosPitch * std::cos(yawRad),
+        distance * std::sin(pitchRad),
+        distance * cosPitch * std::sin(yawRad));
+
+    // Stay in FREE during the flight so getViewMatrix doesn't immediately
+    // snap position_ via the spherical formula; commit ORBITAL on arrival.
+    mode_         = CameraMode::FREE;
+    pendingMode_  = CameraMode::ORBITAL;
+    isTravelling_ = true;
+}
+
 void Camera::update(float dt)
 {
     if (!isTravelling_) return;
+
+    // While flying toward an orbital pose, aim the camera at the target so the
+    // mode flip on arrival doesn't introduce a view snap.
+    if (pendingMode_.has_value() && *pendingMode_ == CameraMode::ORBITAL)
+    {
+        const glm::vec3 toTarget = orbitalTargetPos_ - position_;
+        const float     distance = glm::length(toTarget);
+        if (distance > 0.001f) front_ = toTarget / distance;
+    }
 
     const glm::vec3 diff = targetPos_ - position_;
     const float     dist = glm::length(diff);
@@ -167,6 +218,11 @@ void Camera::update(float dt)
     {
         position_     = targetPos_;
         isTravelling_ = false;
+        if (pendingMode_.has_value())
+        {
+            mode_ = *pendingMode_;
+            pendingMode_.reset();
+        }
         return;
     }
 
