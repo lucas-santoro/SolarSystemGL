@@ -135,6 +135,19 @@ private:
     /// GLFW scroll callback — dispatches to the Application instance.
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+    /// GLFW window-focus callback — auto-pauses the simulation while the
+    /// window is in the background. Resumes only if the auto-pause put it
+    /// there (manual pauses are not undone).
+    static void windowFocusCallback(GLFWwindow* window, int focused);
+
+    /// GLFW window-close callback — intercepts the close event in Running
+    /// state so the user can confirm the quit; lets it through in Menu.
+    static void windowCloseCallback(GLFWwindow* window);
+
+    /// Draw any active confirm modals (Return to Menu? / Quit application?).
+    /// Must be invoked between ImGui::NewFrame and ImGui::Render.
+    void renderConfirmModals();
+
     /// Retrieve the Application instance attached to the GLFW window.
     static Application* fromWindow(GLFWwindow* window);
 
@@ -155,8 +168,11 @@ private:
     std::vector<CelestialBody> bodies_;
 
     // Lifecycle state.
-    AppState appState_  = AppState::Menu;
-    float    menuTime_  = 0.0f;
+    AppState appState_                  = AppState::Menu;
+    float    menuTime_                  = 0.0f;
+    bool     wasAutoPaused_             = false;  ///< Set when the window-focus callback auto-pauses physics.
+    bool     openReturnToMenuPopup_     = false;  ///< Pending "Return to Menu?" modal open request.
+    bool     openQuitPopup_             = false;  ///< Pending "Quit application?" modal open request.
 
     // Auxiliary GL resources directly owned by Application.
     GLuint  trailVAO_         = 0;

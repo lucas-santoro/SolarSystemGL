@@ -77,6 +77,41 @@ void Application::scrollCallback(GLFWwindow* window, double /*xoffset*/, double 
     app->camera_.processKeyboard(yoffset > 0 ? GLFW_KEY_W : GLFW_KEY_S, 0.1f);
 }
 
+void Application::windowFocusCallback(GLFWwindow* window, int focused)
+{
+    Application* app = fromWindow(window);
+    if (app == nullptr) return;
+
+    if (focused == GLFW_FALSE)
+    {
+        // Only auto-pause if the simulation is actively running and isn't
+        // already paused (so manual pauses don't get clobbered on resume).
+        if (app->appState_ == AppState::Running && !app->physics_.paused)
+        {
+            app->physics_.paused = true;
+            app->wasAutoPaused_  = true;
+        }
+    }
+    else if (app->wasAutoPaused_)
+    {
+        app->physics_.paused = false;
+        app->wasAutoPaused_  = false;
+    }
+}
+
+void Application::windowCloseCallback(GLFWwindow* window)
+{
+    Application* app = fromWindow(window);
+    if (app == nullptr) return;
+
+    if (app->appState_ == AppState::Running)
+    {
+        // Defer the close until the user confirms.
+        glfwSetWindowShouldClose(window, GLFW_FALSE);
+        app->openQuitPopup_ = true;
+    }
+}
+
 //----------------------------------------------------------------------------
 // Construction / destruction
 //----------------------------------------------------------------------------
@@ -100,8 +135,10 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow,
         [](GLFWwindow*, int w, int h) { glViewport(0, 0, w, h); });
-    glfwSetCursorPosCallback(glfwWindow, mouseCallback);
-    glfwSetScrollCallback(glfwWindow,    scrollCallback);
+    glfwSetCursorPosCallback(glfwWindow,   mouseCallback);
+    glfwSetScrollCallback(glfwWindow,      scrollCallback);
+    glfwSetWindowFocusCallback(glfwWindow, windowFocusCallback);
+    glfwSetWindowCloseCallback(glfwWindow, windowCloseCallback);
     glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     glEnable(GL_DEPTH_TEST);
@@ -193,6 +230,7 @@ void Application::tick()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_);
+    renderConfirmModals();
 
     if (uiManager_.vsyncDirty)
     {
@@ -282,6 +320,62 @@ void Application::returnToMenu()
     appState_ = AppState::Menu;
     menuTime_ = 0.0f;
     previousFrameTime_ = static_cast<float>(glfwGetTime());
+}
+
+void Application::renderConfirmModals()
+{
+    constexpr const char* kReturnPopupId = "Return to Menu?";
+    constexpr const char* kQuitPopupId   = "Quit Application?";
+
+    if (openReturnToMenuPopup_)
+    {
+        ImGui::OpenPopup(kReturnPopupId);
+        openReturnToMenuPopup_ = false;
+    }
+    if (openQuitPopup_)
+    {
+        ImGui::OpenPopup(kQuitPopupId);
+        openQuitPopup_ = false;
+    }
+
+    const ImVec2 viewportCenter = ImGui::GetMainViewport()->GetCenter();
+    constexpr ImVec2 kButtonSize(120.0f, 0.0f);
+
+    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(kReturnPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("Discard the current simulation and return to the main menu?");
+        ImGui::Spacing();
+        if (ImGui::Button("Yes", kButtonSize))
+        {
+            returnToMenu();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", kButtonSize))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(kQuitPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("Quit SolarSystemGL?");
+        ImGui::Spacing();
+        if (ImGui::Button("Quit", kButtonSize))
+        {
+            glfwSetWindowShouldClose(window_.getGLFWwindow(), GLFW_TRUE);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", kButtonSize))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -458,14 +552,15 @@ void Application::handleHotkeys()
 
         if (escDown && !wasEscPressed_)
         {
-            // Two-stage Esc: close info panel first, only close the app if nothing is selected.
+            // Two-stage Esc: close info panel first, only prompt to leave the
+            // simulation if nothing is selected.
             if (uiManager_.getSelectedPlanetIndex() >= 0)
             {
                 uiManager_.clearSelection();
             }
             else
             {
-                glfwSetWindowShouldClose(glfwWindow, true);
+                openReturnToMenuPopup_ = true;
             }
         }
 
