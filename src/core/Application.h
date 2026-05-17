@@ -8,6 +8,7 @@
 #include "core/Shader.h"
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
+#include "physics/PathPredictor.h"
 #include "physics/PhysicsSystem.h"
 #include "ui/AddPlanetModal.h"
 #include "ui/SaveLoadModal.h"
@@ -134,6 +135,9 @@ private:
     /// Additive billboarded halos for any body with `emissive >= 0.5`.
     void renderHalos(const glm::mat4& view, const glm::mat4& projection);
 
+    /// Reuses the trail shader to draw the path predictor's cached line strip.
+    void renderPathPrediction(const glm::mat4& view, const glm::mat4& projection);
+
     /// GLFW cursor-position callback — dispatches to the Application instance
     /// stored in the window's user-pointer.
     static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -168,6 +172,7 @@ private:
     Shader        skyShader_;
     Shader        ringShader_;
     PhysicsSystem physics_;
+    PathPredictor pathPredictor_;
     UIManager       uiManager_;
     StartMenu       startMenu_;
     SettingsModal   settingsModal_;
@@ -212,4 +217,7 @@ private:
 
     // Real-time tracking for delta-time computation.
     float previousFrameTime_ = 0.0f;
+
+    // Path-prediction throttle: only recompute every N frames.
+    int   framesSinceLastPrediction_ = 0;
 };

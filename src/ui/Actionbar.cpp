@@ -204,6 +204,9 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager)
     ImGui::Checkbox("Trails",      &uiManager.showTrails);
     ImGui::SetItemTooltip("Render orbit trails as line strips");
     ImGui::SameLine();
+    ImGui::Checkbox("Prediction",  &uiManager.showPathPrediction);
+    ImGui::SetItemTooltip("Project the selected body's future orbit as a dashed line");
+    ImGui::SameLine();
     ImGui::Checkbox("Bloom",       &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
     ImGui::SameLine();

@@ -88,6 +88,9 @@ public:
     /** @brief Render-toggle for emissive halos (fake bloom). */
     bool showBloom = true;
 
+    /** @brief Render-toggle for the selected body's predicted future trajectory. */
+    bool showPathPrediction = false;
+
     /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
     bool showDiagnostics = false;
 

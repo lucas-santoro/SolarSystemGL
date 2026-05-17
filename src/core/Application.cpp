@@ -38,6 +38,11 @@ constexpr float  kProjectionFarPlane      = 10000.0f;
 // Scratch-vector reserve (prevents reallocations during typical "Add Planet" sessions).
 constexpr size_t kBodiesReserveCapacity = 16;
 
+// Path prediction tuning.
+constexpr int    kPredictionSampleCount    = 500;
+constexpr int    kPredictionRefreshFrames  = 30;   // Recompute roughly twice per second.
+const     glm::vec3 kPredictionColor{ 0.55f, 0.95f, 1.0f };
+
 // Visual ring color.
 const     glm::vec3 kSaturnRingColor{ 0.90f, 0.85f, 0.70f };
 } // namespace
@@ -215,6 +220,32 @@ void Application::tick()
     refreshOrbitalCameraTarget();
     camera_.update(deltaTime);
 
+    // Refresh the path prediction (throttled) so the dashed line stays in
+    // sync with the live simulation without paying its O(N² × samples)
+    // cost on every frame.
+    const int  predSelected = uiManager_.getSelectedPlanetIndex();
+    const bool predValid    = uiManager_.showPathPrediction
+                              && predSelected >= 0
+                              && predSelected < static_cast<int>(bodies_.size());
+    if (predValid)
+    {
+        if (framesSinceLastPrediction_ >= kPredictionRefreshFrames)
+        {
+            const double horizon = PathPredictor::estimateOrbitalPeriod(bodies_, predSelected);
+            pathPredictor_.recompute(bodies_, predSelected, horizon, kPredictionSampleCount);
+            framesSinceLastPrediction_ = 0;
+        }
+        else
+        {
+            ++framesSinceLastPrediction_;
+        }
+    }
+    else
+    {
+        pathPredictor_.clear();
+        framesSinceLastPrediction_ = kPredictionRefreshFrames;  // force refresh on re-enable
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     int framebufferWidth = 0, framebufferHeight = 0;
@@ -232,8 +263,9 @@ void Application::tick()
     renderGrid(view, projection);
     renderRings(view, projection);
 
-    if (uiManager_.showTrails) renderTrails(view, projection);
-    if (uiManager_.showBloom)  renderHalos(view, projection);
+    if (uiManager_.showTrails)         renderTrails(view, projection);
+    if (uiManager_.showPathPrediction) renderPathPrediction(view, projection);
+    if (uiManager_.showBloom)          renderHalos(view, projection);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -357,6 +389,8 @@ void Application::startSimulation()
     shiftToBarycenterFrame();
     camera_.reset();
     physics_.reset();
+    pathPredictor_.clear();
+    framesSinceLastPrediction_ = kPredictionRefreshFrames;
     appState_ = AppState::Running;
     previousFrameTime_ = static_cast<float>(glfwGetTime());
 }
@@ -367,6 +401,7 @@ void Application::returnToMenu()
     uiManager_.clearSelection();
     camera_.reset();
     physics_.reset();
+    pathPredictor_.clear();
     appState_ = AppState::Menu;
     menuTime_ = 0.0f;
     previousFrameTime_ = static_cast<float>(glfwGetTime());
@@ -798,6 +833,37 @@ void Application::renderTrails(const glm::mat4& view, const glm::mat4& projectio
         trailShader_.setInt ("pointCount", static_cast<int>(trailUploadBuffer.size()));
         glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(trailUploadBuffer.size()));
     }
+    glDepthMask(GL_TRUE);
+    glBindVertexArray(0);
+}
+
+void Application::renderPathPrediction(const glm::mat4& view, const glm::mat4& projection)
+{
+    const auto& path = pathPredictor_.getPath();
+    if (path.size() < 2) return;
+
+    // Reverse so the line fades bright-near-body, dim-toward-horizon
+    // (the trail shader's vT goes 0→1 across vertex index, with higher
+    // alpha at vT=1).
+    std::vector<glm::vec3> uploadBuffer(path.rbegin(), path.rend());
+
+    trailShader_.use();
+    trailShader_.setMat4("view",       view);
+    trailShader_.setMat4("projection", projection);
+    trailShader_.setVec3("trailColor", kPredictionColor);
+    trailShader_.setInt ("pointCount", static_cast<int>(uploadBuffer.size()));
+
+    glBindVertexArray(trailVAO_);
+    glBindBuffer(GL_ARRAY_BUFFER, trailVBO_);
+    glBufferData(GL_ARRAY_BUFFER,
+                 uploadBuffer.size() * sizeof(glm::vec3),
+                 uploadBuffer.data(),
+                 GL_DYNAMIC_DRAW);
+
+    glDepthMask(GL_FALSE);
+    glLineWidth(2.0f);   // visually distinct from the 1px-wide trails
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(uploadBuffer.size()));
+    glLineWidth(1.0f);
     glDepthMask(GL_TRUE);
     glBindVertexArray(0);
 }
