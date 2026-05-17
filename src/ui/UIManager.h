@@ -7,6 +7,7 @@
 #include "core/Camera.h"
 #include "core/Grid.h"
 #include "physics/PhysicsSystem.h"
+#include "ui/Actionbar.h"
 #include "ui/Toast.h"
 
 /**
@@ -66,6 +67,12 @@ public:
         hoveredIndex        = -1;
     }
 
+    /** @brief Programmatically select the body at index @p i (or clear with -1). */
+    void setSelected(int i) { selectedPlanetIndex = i; }
+
+    /** @brief Push a toast notification onto the in-game notification stack. */
+    ToastQueue& toasts() { return toasts_; }
+
     /** @brief VSync state — toggled by the main-panel checkbox. */
     bool vsync = true;
 
@@ -80,6 +87,21 @@ public:
 
     /** @brief Render-toggle for emissive halos (fake bloom). */
     bool showBloom = true;
+
+    /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
+    bool showDiagnostics = false;
+
+    /** @brief Output flag set when the actionbar's "Menu" button is pressed; host loop reads and clears. */
+    bool menuRequested = false;
+
+    /** @brief Output flag set when the actionbar's "Settings" button is pressed. */
+    bool settingsRequested = false;
+
+    /** @brief Output flag set when the actionbar's "Save" button is pressed. */
+    bool saveRequested = false;
+
+    /** @brief Output flag set when the actionbar's "Load" button is pressed. */
+    bool loadRequested = false;
 
 private:
     int   selectedPlanetIndex = -1;
@@ -114,11 +136,13 @@ private:
         glm::vec3 velocity;
     } editBuffer;
 
+    Actionbar actionbar_;
+
     void renderPlanetPopup(Window& window, Camera& camera,
                            const glm::mat4& view, const glm::mat4& projection,
                            std::vector<CelestialBody>& bodies);
-    void renderPlanetInfo(CelestialBody& body, Camera& camera);
-    void renderMainPanel(float deltaTime, std::vector<CelestialBody>& bodies,
-                         Grid& grid, PhysicsSystem& physics, Camera& camera);
-    void renderNavbar(const std::vector<CelestialBody>& bodies);
+    void renderPlanetInfo(CelestialBody& body);
+    void renderMainPanel(std::vector<CelestialBody>& bodies,
+                         PhysicsSystem& physics, Camera& camera);
+    void renderDiagnostics(const std::vector<CelestialBody>& bodies);
 };

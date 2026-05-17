@@ -8,7 +8,7 @@
 #include <limits>
 
 void UIManager::render(Window& window, Camera& camera, float deltaTime,
-                       std::vector<CelestialBody>& bodies, Grid& grid, PhysicsSystem& physics)
+                       std::vector<CelestialBody>& bodies, Grid& /*grid*/, PhysicsSystem& physics)
 {
     int width, height;
     glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
@@ -16,9 +16,9 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
     float aspect = static_cast<float>(width) / static_cast<float>(std::max(height, 1));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 20000.0f);
 
-    renderNavbar(bodies);
+    actionbar_.renderTopBar(window, camera, physics, bodies, *this, deltaTime);
     renderPlanetPopup(window, camera, view, projection, bodies);
-    renderMainPanel(deltaTime, bodies, grid, physics, camera);
+    renderMainPanel(bodies, physics, camera);
 
     if (selectedPlanetIndex >= 0 && selectedPlanetIndex < static_cast<int>(bodies.size()))
     {
@@ -34,8 +34,12 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
             lastSelectedIndex = selectedPlanetIndex;
         }
 
-        renderPlanetInfo(body, camera);
+        renderPlanetInfo(body);
     }
+
+    if (showDiagnostics) renderDiagnostics(bodies);
+
+    actionbar_.renderBottomBar(window, *this);
 
     // Deferred removal — set inside renderPlanetInfo; processed here so we don't
     // mutate the bodies vector while the panel still holds a reference to it.
@@ -118,7 +122,7 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
     }
 }
 
-void UIManager::renderPlanetInfo(CelestialBody& body, Camera& camera)
+void UIManager::renderPlanetInfo(CelestialBody& body)
 {
     ImGui::Begin("Planet Info");
 
@@ -149,104 +153,14 @@ void UIManager::renderPlanetInfo(CelestialBody& body, Camera& camera)
         pendingRemove = true;
     }
 
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    ImGui::Text("Camera Mode");
-    int currentMode = static_cast<int>(camera.getMode());
-
-    if (camera.getMode() == CameraMode::ORBITAL
-        && camera.getOrbitalTargetIndex() != selectedPlanetIndex) {
-        currentMode = static_cast<int>(CameraMode::FREE);
-    }
-
-    if (ImGui::RadioButton("Free", currentMode == static_cast<int>(CameraMode::FREE))) {
-        camera.setMode(CameraMode::FREE);
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Orbital", currentMode == static_cast<int>(CameraMode::ORBITAL))) {
-        camera.flyToOrbital(selectedPlanetIndex, body.renderPosition(), body.focusDistance());
-    }
-
     ImGui::End();
 }
 
-void UIManager::renderMainPanel(float deltaTime, std::vector<CelestialBody>& bodies,
-                                Grid& /*grid*/, PhysicsSystem& physics, Camera& camera)
+void UIManager::renderMainPanel(std::vector<CelestialBody>& bodies,
+                                PhysicsSystem& physics, Camera& camera)
 {
     ImGui::Begin("Solar System");
 
-    const float instantFps = 1.0f / std::max(deltaTime, 1e-6f);
-    smoothedFps = smoothedFps * 0.9f + instantFps * 0.1f;
-    ImGui::Text("FPS: %.1f", smoothedFps);
-    if (ImGui::Checkbox("VSync", &vsync)) {
-        vsyncDirty = true;
-    }
-
-    ImGui::Separator();
-    ImGui::Checkbox("Trails", &showTrails);
-    ImGui::SameLine();
-    ImGui::Checkbox("Bloom",  &showBloom);
-
-    ImGui::Separator();
-    ImGui::Checkbox("Paused", &physics.paused);
-    ImGui::SliderFloat("Time scale", &physics.timeScale,
-                       1.0f, 5.0e6f, "%.0fx", ImGuiSliderFlags_Logarithmic);
-    if (ImGui::SmallButton("1x"))    physics.timeScale = 1.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1k x"))  physics.timeScale = 1000.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("100k x")) physics.timeScale = 100000.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1M x"))  physics.timeScale = 1.0e6f;
-
-    ImGui::Separator();
-    if (ImGui::Button("Reset Camera")) {
-        camera.reset();
-    }
-
-    if (ImGui::CollapsingHeader("Diagnostics")) {
-        double KE = 0.0, PE = 0.0;
-        glm::dvec3 p_total(0.0);
-        glm::dvec3 L_total(0.0);
-        for (size_t i = 0; i < bodies.size(); ++i) {
-            const auto& bi = bodies[i];
-            p_total += bi.vel_m * bi.mass_kg;
-            L_total += bi.mass_kg * glm::cross(bi.pos_m, bi.vel_m);
-            KE      += 0.5 * bi.mass_kg * glm::dot(bi.vel_m, bi.vel_m);
-            for (size_t j = i + 1; j < bodies.size(); ++j) {
-                const auto& bj   = bodies[j];
-                const glm::dvec3 r = bj.pos_m - bi.pos_m;
-                const double dist = std::sqrt(glm::dot(r, r) + PhysicsSystem::SOFTEN);
-                PE -= PhysicsSystem::G * bi.mass_kg * bj.mass_kg / dist;
-            }
-        }
-        const double E    = KE + PE;
-        const double pmag = glm::length(p_total);
-        const double Lmag = glm::length(L_total);
-
-        if (!diagBaselineSet) {
-            diagBaselineE    = E;
-            diagBaselinePmag = pmag;
-            diagBaselineLmag = Lmag;
-            diagBaselineSet  = true;
-        }
-
-        ImGui::Text("KE      %.4e J", KE);
-        ImGui::Text("PE      %.4e J", PE);
-        ImGui::Text("E       %.4e J  (drift %.2e)", E,
-                    diagBaselineE != 0.0 ? (E - diagBaselineE) / std::abs(diagBaselineE) : 0.0);
-        ImGui::Text("|p|     %.4e  (drift %.2e)", pmag,
-                    diagBaselinePmag != 0.0 ? (pmag - diagBaselinePmag) / diagBaselinePmag : 0.0);
-        ImGui::Text("|L|     %.4e  (drift %.2e)", Lmag,
-                    diagBaselineLmag != 0.0 ? (Lmag - diagBaselineLmag) / diagBaselineLmag : 0.0);
-
-        if (ImGui::SmallButton("Reset baseline")) {
-            diagBaselineSet = false;
-        }
-    }
-
-    ImGui::Separator();
     {
         // Preset bundle — points to text files copied next to the exe by CMake POST_BUILD.
         struct Preset { const char* label; const char* path; };
@@ -341,17 +255,48 @@ bool UIManager::isRightMousePressed(GLFWwindow* window) {
            && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 }
 
-void UIManager::renderNavbar(const std::vector<CelestialBody>& bodies)
+void UIManager::renderDiagnostics(const std::vector<CelestialBody>& bodies)
 {
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Planets")) {
-            for (size_t i = 0; i < bodies.size(); ++i) {
-                if (ImGui::MenuItem(bodies[i].name.c_str())) {
-                    selectedPlanetIndex = static_cast<int>(i);
-                }
-            }
-            ImGui::EndMenu();
+    ImGui::Begin("Diagnostics", &showDiagnostics);
+
+    double KE = 0.0, PE = 0.0;
+    glm::dvec3 p_total(0.0);
+    glm::dvec3 L_total(0.0);
+    for (size_t i = 0; i < bodies.size(); ++i) {
+        const auto& bi = bodies[i];
+        p_total += bi.vel_m * bi.mass_kg;
+        L_total += bi.mass_kg * glm::cross(bi.pos_m, bi.vel_m);
+        KE      += 0.5 * bi.mass_kg * glm::dot(bi.vel_m, bi.vel_m);
+        for (size_t j = i + 1; j < bodies.size(); ++j) {
+            const auto& bj    = bodies[j];
+            const glm::dvec3 r = bj.pos_m - bi.pos_m;
+            const double dist = std::sqrt(glm::dot(r, r) + PhysicsSystem::SOFTEN);
+            PE -= PhysicsSystem::G * bi.mass_kg * bj.mass_kg / dist;
         }
-        ImGui::EndMainMenuBar();
     }
+    const double E    = KE + PE;
+    const double pmag = glm::length(p_total);
+    const double Lmag = glm::length(L_total);
+
+    if (!diagBaselineSet) {
+        diagBaselineE    = E;
+        diagBaselinePmag = pmag;
+        diagBaselineLmag = Lmag;
+        diagBaselineSet  = true;
+    }
+
+    ImGui::Text("KE      %.4e J", KE);
+    ImGui::Text("PE      %.4e J", PE);
+    ImGui::Text("E       %.4e J  (drift %.2e)", E,
+                diagBaselineE != 0.0 ? (E - diagBaselineE) / std::abs(diagBaselineE) : 0.0);
+    ImGui::Text("|p|     %.4e  (drift %.2e)", pmag,
+                diagBaselinePmag != 0.0 ? (pmag - diagBaselinePmag) / diagBaselinePmag : 0.0);
+    ImGui::Text("|L|     %.4e  (drift %.2e)", Lmag,
+                diagBaselineLmag != 0.0 ? (Lmag - diagBaselineLmag) / diagBaselineLmag : 0.0);
+
+    if (ImGui::SmallButton("Reset baseline")) {
+        diagBaselineSet = false;
+    }
+
+    ImGui::End();
 }

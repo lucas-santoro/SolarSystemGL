@@ -230,6 +230,28 @@ void Application::tick()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_);
+
+    if (uiManager_.menuRequested)
+    {
+        openReturnToMenuPopup_ = true;
+        uiManager_.menuRequested = false;
+    }
+    if (uiManager_.settingsRequested)
+    {
+        uiManager_.toasts().info("Settings modal coming soon");
+        uiManager_.settingsRequested = false;
+    }
+    if (uiManager_.saveRequested)
+    {
+        uiManager_.toasts().info("Save modal coming soon — use Solar System panel for now");
+        uiManager_.saveRequested = false;
+    }
+    if (uiManager_.loadRequested)
+    {
+        uiManager_.toasts().info("Load modal coming soon — use Solar System panel for now");
+        uiManager_.loadRequested = false;
+    }
+
     renderConfirmModals();
 
     if (uiManager_.vsyncDirty)
