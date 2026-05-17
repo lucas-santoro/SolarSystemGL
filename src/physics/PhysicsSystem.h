@@ -56,8 +56,16 @@ public:
      */
     void update(std::vector<CelestialBody>& bodies, double dtReal);
 
+    /// @return Total simulated seconds advanced since the last #reset call.
+    double getSimulatedTimeSeconds() const { return simulatedTime_; }
+
+    /// Reset the accumulator and the simulated-time counter (Application calls
+    /// this when starting a new simulation or returning to the menu).
+    void reset();
+
 private:
-    double accumulator = 0.0;
+    double accumulator    = 0.0;
+    double simulatedTime_ = 0.0;
     std::vector<glm::dvec3> accBuffer0;
     std::vector<glm::dvec3> accBuffer1;
 

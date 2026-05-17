@@ -88,6 +88,9 @@ public:
     /** @brief Render-toggle for emissive halos (fake bloom). */
     bool showBloom = true;
 
+    /** @brief Render-toggle for the selected body's predicted future trajectory. */
+    bool showPathPrediction = false;
+
     /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
     bool showDiagnostics = false;
 
@@ -117,6 +120,11 @@ private:
 
     bool pendingRemove = false;
 
+    // Right-click context menu state.
+    int  rmbPressedTargetIdx_   = -1;  ///< Body hovered when RMB was first pressed.
+    int  contextMenuTargetIdx_  = -1;  ///< Body the popup is acting on.
+    bool openContextMenuPopup_  = false;
+
     bool   diagBaselineSet  = false;
     double diagBaselineE    = 0.0;
     double diagBaselinePmag = 0.0;
@@ -140,4 +148,5 @@ private:
                            std::vector<CelestialBody>& bodies);
     void renderPlanetInfo(CelestialBody& body);
     void renderDiagnostics(const std::vector<CelestialBody>& bodies);
+    void renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera);
 };

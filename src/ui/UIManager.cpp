@@ -17,6 +17,7 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
 
     actionbar_.renderTopBar(window, camera, physics, bodies, *this, deltaTime);
     renderPlanetPopup(window, camera, view, projection, bodies);
+    renderBodyContextMenu(bodies, camera);
 
     if (selectedPlanetIndex >= 0 && selectedPlanetIndex < static_cast<int>(bodies.size()))
     {
@@ -118,6 +119,27 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
             camera.startSmoothMove(selected.renderPosition(), distance);
         }
     }
+
+    // Right-click on a body opens the context menu — but right-drag is also
+    // the mouse-look gesture, so we only treat it as a click if the cursor
+    // barely moved between press and release.
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        rmbPressedTargetIdx_ = hoveredIndex;
+    }
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+    {
+        const ImVec2 drag       = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+        const float  dragLenSq  = drag.x * drag.x + drag.y * drag.y;
+        constexpr float kClickThresholdSq = 16.0f;  // 4 px
+        if (rmbPressedTargetIdx_ != -1 && dragLenSq < kClickThresholdSq)
+        {
+            contextMenuTargetIdx_  = rmbPressedTargetIdx_;
+            openContextMenuPopup_  = true;
+        }
+        rmbPressedTargetIdx_ = -1;
+        ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
+    }
 }
 
 void UIManager::renderPlanetInfo(CelestialBody& body)
@@ -203,4 +225,82 @@ void UIManager::renderDiagnostics(const std::vector<CelestialBody>& bodies)
     }
 
     ImGui::End();
+}
+
+void UIManager::renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera)
+{
+    constexpr const char* kPopupId = "##bodyContextMenu";
+
+    if (openContextMenuPopup_)
+    {
+        ImGui::OpenPopup(kPopupId);
+        openContextMenuPopup_ = false;
+    }
+
+    if (!ImGui::BeginPopup(kPopupId)) return;
+
+    const bool validTarget = (contextMenuTargetIdx_ >= 0
+                              && contextMenuTargetIdx_ < static_cast<int>(bodies.size()));
+    if (!validTarget)
+    {
+        ImGui::EndPopup();
+        return;
+    }
+
+    CelestialBody& target = bodies[contextMenuTargetIdx_];
+    ImGui::TextDisabled("%s", target.name.c_str());
+    ImGui::Separator();
+
+    if (ImGui::MenuItem("Focus"))
+    {
+        camera.flyToOrbital(contextMenuTargetIdx_,
+                            target.renderPosition(),
+                            target.focusDistance());
+    }
+    if (ImGui::MenuItem("Edit"))
+    {
+        setSelected(contextMenuTargetIdx_);
+    }
+    if (ImGui::MenuItem("Make Star", nullptr, false, target.emissive < 0.5f))
+    {
+        target.emissive     = 1.0f;
+        target.color        = glm::vec3(1.0f, 0.85f, 0.45f);
+        target.displayScale = 0.4f;
+        toasts_.success(target.name + " is now a star");
+    }
+    if (ImGui::MenuItem("Duplicate"))
+    {
+        CelestialBody copy;
+        const glm::dvec3 velocityDirection = glm::length(target.vel_m) > 1.0
+            ? glm::normalize(target.vel_m)
+            : glm::dvec3(1.0, 0.0, 0.0);
+        const glm::dvec3 perpendicular = glm::normalize(
+            glm::cross(velocityDirection, glm::dvec3(0.0, 1.0, 0.0)));
+        constexpr double kDuplicateOffsetWU = 20.0;
+
+        copy.pos_m        = target.pos_m + perpendicular * kDuplicateOffsetWU * METERS_PER_WU;
+        copy.vel_m        = target.vel_m;
+        copy.mass_kg      = target.mass_kg;
+        copy.name         = target.name + " (copy)";
+        copy.color        = target.color;
+        copy.density      = target.density;
+        copy.emissive     = target.emissive;
+        copy.displayScale = target.displayScale;
+        copy.hasRings     = target.hasRings;
+        copy.recalculateGeometry();
+
+        const std::string newName = copy.name;
+        bodies.push_back(std::move(copy));
+        setSelected(static_cast<int>(bodies.size()) - 1);
+        toasts_.success("Duplicated as " + newName);
+    }
+
+    ImGui::Separator();
+    if (ImGui::MenuItem("Remove"))
+    {
+        selectedPlanetIndex = contextMenuTargetIdx_;
+        pendingRemove       = true;
+    }
+
+    ImGui::EndPopup();
 }
