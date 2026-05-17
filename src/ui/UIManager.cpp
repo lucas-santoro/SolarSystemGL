@@ -144,7 +144,18 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
 
 void UIManager::renderPlanetInfo(CelestialBody& body)
 {
-    ImGui::Begin("Planet Info");
+    // Dock at the right edge below the top actionbar on first use. The `##v2`
+    // suffix invalidates any pre-actionbar position saved in imgui.ini.
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    constexpr float kPanelWidth = 320.0f;
+    constexpr float kMargin     = 16.0f;
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - kPanelWidth - kMargin,
+               viewport->WorkPos.y + kMargin),
+        ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(kPanelWidth, 0.0f), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin("Planet Info##v2");
 
     ImGui::InputText("Name", editBuffer.name, sizeof(editBuffer.name));
     ImGui::InputFloat("Mass (kg)", &editBuffer.mass, 0.0f, 0.0f, "%.3e");
@@ -183,7 +194,18 @@ bool UIManager::isRightMousePressed(GLFWwindow* window) {
 
 void UIManager::renderDiagnostics(const std::vector<CelestialBody>& bodies)
 {
-    ImGui::Begin("Diagnostics", &showDiagnostics);
+    // Dock at the left edge below the top actionbar on first use; the `##v2`
+    // suffix invalidates any pre-actionbar position saved in imgui.ini.
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    constexpr float kPanelWidth = 360.0f;
+    constexpr float kMargin     = 16.0f;
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x + kMargin,
+               viewport->WorkPos.y + kMargin),
+        ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(kPanelWidth, 0.0f), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin("Diagnostics##v2", &showDiagnostics);
 
     double KE = 0.0, PE = 0.0;
     glm::dvec3 p_total(0.0);
