@@ -55,6 +55,15 @@ void PhysicsSystem::update(std::vector<CelestialBody>& bodies, double dtReal)
     while (accumulator >= FIXED_DT_REAL)
     {
         stepOnce(bodies, FIXED_DT_REAL);
-        accumulator -= FIXED_DT_REAL;
+        simulatedTime_ += FIXED_DT_REAL * static_cast<double>(timeScale);
+        accumulator    -= FIXED_DT_REAL;
     }
+}
+
+void PhysicsSystem::reset()
+{
+    accumulator    = 0.0;
+    simulatedTime_ = 0.0;
+    accBuffer0.clear();
+    accBuffer1.clear();
 }

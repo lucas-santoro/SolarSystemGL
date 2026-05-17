@@ -106,8 +106,11 @@ private:
     /// body the camera is tracking by index.
     void refreshOrbitalCameraTarget();
 
-    /// Process edge-detected one-shot hotkeys (Space, R, F, Esc, 1, 2).
+    /// Process edge-detected one-shot hotkeys (Space, R, F, Esc, 1, 2, F12).
     void handleHotkeys();
+
+    /// Read the current framebuffer and save it to `screenshots/<timestamp>.bmp`.
+    void captureScreenshot();
 
     /// Append the current frame's body positions to their trail history,
     /// applying motion threshold and teleport-detection rules.
@@ -205,6 +208,7 @@ private:
     bool wasEscPressed_   = false;
     bool wasOnePressed_   = false;
     bool wasTwoPressed_   = false;
+    bool wasF12Pressed_   = false;
 
     // Real-time tracking for delta-time computation.
     float previousFrameTime_ = 0.0f;
