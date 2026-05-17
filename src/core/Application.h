@@ -9,6 +9,9 @@
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
 #include "physics/PhysicsSystem.h"
+#include "ui/AddPlanetModal.h"
+#include "ui/SaveLoadModal.h"
+#include "ui/SettingsModal.h"
 #include "ui/StartMenu.h"
 #include "ui/UIManager.h"
 
@@ -162,10 +165,17 @@ private:
     Shader        skyShader_;
     Shader        ringShader_;
     PhysicsSystem physics_;
-    UIManager     uiManager_;
-    StartMenu     startMenu_;
-    Grid          grid_;
+    UIManager       uiManager_;
+    StartMenu       startMenu_;
+    SettingsModal   settingsModal_;
+    SaveLoadModal   saveLoadModal_;
+    AddPlanetModal  addPlanetModal_;
+    Grid            grid_;
     std::vector<CelestialBody> bodies_;
+
+    // User-tunable rendering settings (bound to the Settings modal).
+    float fieldOfView_ = 45.0f;
+    float guiScale_    = 1.0f;
 
     // Lifecycle state.
     AppState appState_                  = AppState::Menu;

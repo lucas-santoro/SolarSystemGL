@@ -103,6 +103,9 @@ public:
     /** @brief Output flag set when the actionbar's "Load" button is pressed. */
     bool loadRequested = false;
 
+    /** @brief Output flag set when the actionbar's "Add Planet" button is pressed. */
+    bool addPlanetRequested = false;
+
 private:
     int   selectedPlanetIndex = -1;
     int   hoveredIndex        = -1;
@@ -110,13 +113,7 @@ private:
     bool  isMouseMoving       = false;
     float smoothedFps         = 60.0f;
 
-    char      newPlanetName[128] = "New Planet";
-    glm::vec3 newPlanetColor{ 0.8f, 0.8f, 0.9f };
-    float     newPlanetMass = 1.0e24f;
-
-    char        saveFilename[256] = "savefile.txt";
-    int         currentPresetIdx = -1;   // -1 = none selected this session
-    ToastQueue  toasts_;
+    ToastQueue toasts_;
 
     bool pendingRemove = false;
 
@@ -142,7 +139,5 @@ private:
                            const glm::mat4& view, const glm::mat4& projection,
                            std::vector<CelestialBody>& bodies);
     void renderPlanetInfo(CelestialBody& body);
-    void renderMainPanel(std::vector<CelestialBody>& bodies,
-                         PhysicsSystem& physics, Camera& camera);
     void renderDiagnostics(const std::vector<CelestialBody>& bodies);
 };

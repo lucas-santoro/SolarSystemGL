@@ -43,6 +43,9 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/objects/PlanetMesh.cpp
     ${SRC_DIR}/physics/PhysicsSystem.cpp
     ${SRC_DIR}/ui/Actionbar.cpp
+    ${SRC_DIR}/ui/AddPlanetModal.cpp
+    ${SRC_DIR}/ui/SaveLoadModal.cpp
+    ${SRC_DIR}/ui/SettingsModal.cpp
     ${SRC_DIR}/ui/StartMenu.cpp
     ${SRC_DIR}/ui/Toast.cpp
     ${SRC_DIR}/ui/UIManager.cpp

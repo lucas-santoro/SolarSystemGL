@@ -1,7 +1,6 @@
 #include "UIManager.h"
 #include "imgui/imgui.h"
 #include "core/Constants.h"
-#include "core/SaveLoad.h"
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
@@ -18,7 +17,6 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
 
     actionbar_.renderTopBar(window, camera, physics, bodies, *this, deltaTime);
     renderPlanetPopup(window, camera, view, projection, bodies);
-    renderMainPanel(bodies, physics, camera);
 
     if (selectedPlanetIndex >= 0 && selectedPlanetIndex < static_cast<int>(bodies.size()))
     {
@@ -153,100 +151,6 @@ void UIManager::renderPlanetInfo(CelestialBody& body)
         pendingRemove = true;
     }
 
-    ImGui::End();
-}
-
-void UIManager::renderMainPanel(std::vector<CelestialBody>& bodies,
-                                PhysicsSystem& physics, Camera& camera)
-{
-    ImGui::Begin("Solar System");
-
-    {
-        // Preset bundle — points to text files copied next to the exe by CMake POST_BUILD.
-        struct Preset { const char* label; const char* path; };
-        static const Preset presets[] = {
-            { "Solar System (default)", "presets/solar-system.txt" },
-            { "Sun only (blank slate)", "presets/sun-only.txt" },
-            { "Binary stars",           "presets/binary-stars.txt" },
-        };
-        constexpr int presetCount = static_cast<int>(sizeof(presets) / sizeof(presets[0]));
-
-        const char* previewLabel = (currentPresetIdx >= 0 && currentPresetIdx < presetCount)
-                                       ? presets[currentPresetIdx].label
-                                       : "Choose preset...";
-        ImGui::Text("Presets");
-        if (ImGui::BeginCombo("##preset", previewLabel)) {
-            for (int i = 0; i < presetCount; ++i) {
-                const bool selected = (i == currentPresetIdx);
-                if (ImGui::Selectable(presets[i].label, selected)) {
-                    const std::string presetPath  = presets[i].path;
-                    const std::string presetLabel = presets[i].label;
-                    if (loadSimulation(presetPath, bodies, physics)) {
-                        currentPresetIdx    = i;
-                        camera.setMode(CameraMode::FREE);
-                        selectedPlanetIndex = -1;
-                        lastSelectedIndex   = -1;
-                        hoveredIndex        = -1;
-                        diagBaselineSet     = false;
-                        toasts_.success("Loaded preset: " + presetLabel);
-                    } else {
-                        toasts_.error("Failed to load preset: " + presetPath);
-                    }
-                }
-                if (selected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Save / Load");
-    ImGui::InputText("File##saveload", saveFilename, sizeof(saveFilename));
-    if (ImGui::Button("Save")) {
-        if (saveSimulation(saveFilename, bodies, physics))
-            toasts_.success(std::string("Saved to ") + saveFilename);
-        else
-            toasts_.error(std::string("Save failed: cannot write ") + saveFilename);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Load")) {
-        if (loadSimulation(saveFilename, bodies, physics)) {
-            // Body vector replaced — invalidate everything that referenced indices into it.
-            camera.setMode(CameraMode::FREE);
-            selectedPlanetIndex = -1;
-            lastSelectedIndex   = -1;
-            hoveredIndex        = -1;
-            diagBaselineSet     = false;
-            toasts_.success(std::string("Loaded from ") + saveFilename);
-        } else {
-            toasts_.error(std::string("Load failed: cannot open ") + saveFilename);
-        }
-    }
-
-    ImGui::Separator();
-    ImGui::Text("New body:");
-    ImGui::InputText("Name##new", newPlanetName, sizeof(newPlanetName));
-    ImGui::ColorEdit3("Color##new", &newPlanetColor[0]);
-    ImGui::InputFloat("Mass (kg)##new", &newPlanetMass, 0.0f, 0.0f, "%.3e");
-    if (ImGui::Button("Add Planet")) {
-        constexpr double SUN_MASS = 1.989e30;
-        const double a     = 1.5 * AU;
-        const double angle = static_cast<double>(bodies.size()) * 0.7;
-        const double v     = std::sqrt(PhysicsSystem::G * SUN_MASS / a);
-
-        CelestialBody nb;
-        nb.pos_m   = glm::dvec3(a * std::cos(angle), 0.0, a * std::sin(angle));
-        nb.vel_m   = glm::dvec3(-v * std::sin(angle), 0.0, v * std::cos(angle));
-        nb.mass_kg = static_cast<double>(newPlanetMass);
-        nb.name    = newPlanetName;
-        nb.color   = newPlanetColor;
-        nb.density = 3000.0f;
-        nb.recalculateGeometry();
-        const std::string addedName = nb.name;
-        bodies.push_back(std::move(nb));
-        selectedPlanetIndex = static_cast<int>(bodies.size()) - 1;
-        toasts_.success("Added " + addedName);
-    }
     ImGui::End();
 }
 

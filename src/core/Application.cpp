@@ -26,7 +26,6 @@ constexpr float  kHaloSizeMultiplier = 3.0f;
 
 // Camera and projection defaults.
 const     glm::vec3 kInitialCameraPosition{ 0.0f, 0.0f, 300.0f };
-constexpr float  kProjectionFovDegrees    = 45.0f;
 constexpr float  kProjectionNearPlane     = 0.01f;
 constexpr float  kProjectionFarPlane      = 10000.0f;
 
@@ -210,7 +209,7 @@ void Application::tick()
     const float aspectRatio = static_cast<float>(framebufferWidth)
                             / static_cast<float>(std::max(framebufferHeight, 1));
     const glm::mat4 view       = camera_.getViewMatrix();
-    const glm::mat4 projection = glm::perspective(glm::radians(kProjectionFovDegrees),
+    const glm::mat4 projection = glm::perspective(glm::radians(fieldOfView_),
                                                   aspectRatio,
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
@@ -238,20 +237,28 @@ void Application::tick()
     }
     if (uiManager_.settingsRequested)
     {
-        uiManager_.toasts().info("Settings modal coming soon");
+        settingsModal_.requestOpen();
         uiManager_.settingsRequested = false;
     }
     if (uiManager_.saveRequested)
     {
-        uiManager_.toasts().info("Save modal coming soon — use Solar System panel for now");
+        saveLoadModal_.requestOpenSave();
         uiManager_.saveRequested = false;
     }
     if (uiManager_.loadRequested)
     {
-        uiManager_.toasts().info("Load modal coming soon — use Solar System panel for now");
+        saveLoadModal_.requestOpenLoad();
         uiManager_.loadRequested = false;
     }
+    if (uiManager_.addPlanetRequested)
+    {
+        addPlanetModal_.requestOpen();
+        uiManager_.addPlanetRequested = false;
+    }
 
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+    saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
+    addPlanetModal_.render(bodies_, uiManager_);
     renderConfirmModals();
 
     if (uiManager_.vsyncDirty)
@@ -294,7 +301,7 @@ void Application::renderMenuFrame(float deltaTime)
     const glm::mat4 view       = glm::lookAt(menuCameraPosition,
                                              glm::vec3(0.0f),
                                              glm::vec3(0.0f, 1.0f, 0.0f));
-    const glm::mat4 projection = glm::perspective(glm::radians(kProjectionFovDegrees),
+    const glm::mat4 projection = glm::perspective(glm::radians(fieldOfView_),
                                                   aspectRatio,
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
@@ -308,6 +315,15 @@ void Application::renderMenuFrame(float deltaTime)
 
     const StartMenuAction action = startMenu_.render(framebufferWidth, framebufferHeight);
 
+    if (action == StartMenuAction::Settings)
+    {
+        settingsModal_.requestOpen();
+    }
+
+    // Settings is the only modal we render from the menu — it doesn't depend
+    // on the simulation state, only on settings_ + camera_ + uiManager_.
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -318,8 +334,8 @@ void Application::renderMenuFrame(float deltaTime)
     {
         case StartMenuAction::Start:    startSimulation(); break;
         case StartMenuAction::Quit:     glfwSetWindowShouldClose(glfwWindow, true); break;
-        case StartMenuAction::Load:     /* Wired in Task 12. */ break;
-        case StartMenuAction::Settings: /* Wired in Task 11. */ break;
+        case StartMenuAction::Load:     /* Not yet wired from the menu. */ break;
+        case StartMenuAction::Settings: /* Handled above. */                break;
         case StartMenuAction::None:     break;
     }
 }

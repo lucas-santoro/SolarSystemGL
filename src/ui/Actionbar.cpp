@@ -73,6 +73,11 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         }
         ImGui::EndCombo();
     }
+    ImGui::SameLine();
+    if (ImGui::Button("+"))
+    {
+        uiManager.addPlanetRequested = true;
+    }
     renderGroupSeparator();
 
     // --- Group 2: Time controls ------------------------------------------

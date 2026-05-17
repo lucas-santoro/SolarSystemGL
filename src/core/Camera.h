@@ -128,6 +128,12 @@ public:
     /// Restore the camera to its startup pose and FREE mode.
     void reset();
 
+    /// @return Mouse-look sensitivity multiplier (degrees per pixel-equivalent).
+    float getSensitivity() const { return sensitivity_; }
+
+    /// Set the mouse-look sensitivity multiplier.
+    void setSensitivity(float value) { sensitivity_ = value; }
+
 private:
     // Pose (FREE mode is authoritative; ORBITAL rewrites these from spherical coords).
     glm::vec3 position_;

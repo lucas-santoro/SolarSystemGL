@@ -66,9 +66,7 @@ StartMenuAction StartMenu::render(int viewportWidth, int viewportHeight)
     ImGui::EndDisabled();
 
     ImGui::SetCursorPosX(buttonOffsetX);
-    ImGui::BeginDisabled(true);
-    ImGui::Button("Settings", buttonSize);
-    ImGui::EndDisabled();
+    if (ImGui::Button("Settings", buttonSize)) action = StartMenuAction::Settings;
 
     ImGui::Spacing();
 
