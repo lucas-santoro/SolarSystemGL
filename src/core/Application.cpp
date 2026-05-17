@@ -191,9 +191,6 @@ void Application::tick()
         return;
     }
 
-    refreshOrbitalCameraTarget();
-    camera_.update(deltaTime);
-
     GLFWwindow* glfwWindow = window_.getGLFWwindow();
     if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS) camera_.processKeyboard(GLFW_KEY_W, deltaTime);
     if (glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS) camera_.processKeyboard(GLFW_KEY_S, deltaTime);
@@ -201,6 +198,16 @@ void Application::tick()
     if (glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS) camera_.processKeyboard(GLFW_KEY_D, deltaTime);
 
     handleHotkeys();
+
+    // Advance the simulation FIRST, then snap the orbital camera onto the
+    // freshly integrated body position. Doing this in the reverse order
+    // left the camera reading the previous-frame target while bodies
+    // rendered at their new positions — fast inner planets visibly
+    // "teleported" relative to the orbital camera every frame.
+    physics_.update(bodies_, static_cast<double>(deltaTime));
+    sampleOrbitTrails();
+    refreshOrbitalCameraTarget();
+    camera_.update(deltaTime);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -213,9 +220,6 @@ void Application::tick()
                                                   aspectRatio,
                                                   kProjectionNearPlane,
                                                   kProjectionFarPlane);
-
-    physics_.update(bodies_, static_cast<double>(deltaTime));
-    sampleOrbitTrails();
 
     renderSky(view, projection);
     renderBodies(view, projection);
@@ -678,9 +682,16 @@ void Application::renderBodies(const glm::mat4& view, const glm::mat4& projectio
     bodyShader_.setVec3("lightPos",   lightPosition);
     bodyShader_.setVec3("viewPos",    camera_.getPosition());
 
+    const bool       inOrbitalMode    = (camera_.getMode() == CameraMode::ORBITAL);
+    const int        orbitalTargetIdx = camera_.getOrbitalTargetIndex();
     for (size_t i = 0; i < bodies_.size(); ++i)
     {
-        bodies_[i].render(bodyShader_, uiManager_.isHovered(i));
+        // The orbital target is always under the cursor's "hover" raycast,
+        // so suppress the hover-scale on it — otherwise it visually inflates
+        // for the entire duration of orbital mode.
+        const bool isOrbitalTarget = inOrbitalMode && (orbitalTargetIdx == static_cast<int>(i));
+        const bool highlight       = uiManager_.isHovered(i) && !isOrbitalTarget;
+        bodies_[i].render(bodyShader_, highlight);
     }
 }
 

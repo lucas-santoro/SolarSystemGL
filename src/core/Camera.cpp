@@ -41,17 +41,17 @@ void Camera::processMouseMovement(float xoffset, float yoffset)
     xoffset *= sensitivity_;
     yoffset *= sensitivity_;
 
-    // ORBITAL inverts axes so dragging the mouse "pulls" the body toward
-    // the cursor (Maya/Blender convention), whereas FREE follows the
-    // FPS-style "drag right = look right".
+    // Yaw follows the same horizontal convention in both modes (drag right →
+    // viewport rotates right). Pitch is inverted in ORBITAL so dragging up
+    // tilts the view up over the body — what feels natural when the camera
+    // is anchored to a target.
+    yaw_ += xoffset;
     if (mode_ == CameraMode::ORBITAL)
     {
-        yaw_   -= xoffset;
         pitch_ -= yoffset;
     }
     else
     {
-        yaw_   += xoffset;
         pitch_ += yoffset;
     }
 
