@@ -30,7 +30,7 @@ namespace
         ImGui::SameLine(0.0f, kSeparatorIndent);
     }
 
-    /// Format simulated seconds since startup as "Day N · HH:MM UT".
+    /// Format simulated seconds since startup as "Day N HH:MM".
     void formatSimulatedDate(double simulatedSeconds, char* out, size_t outSize)
     {
         constexpr double kSecondsPerDay  = 86400.0;
@@ -43,9 +43,18 @@ namespace
         const int    minuteOfHour = static_cast<int>(std::floor(
             (timeOfDay - hourOfDay * kSecondsPerHour) / kSecondsPerMin));
 
-        std::snprintf(out, outSize, "Day %.0f \xc2\xb7 %02d:%02d UT",
+        std::snprintf(out, outSize, "Day %.0f %02d:%02d",
                       dayCount, hourOfDay, minuteOfHour);
     }
+
+    struct TimeScalePreset { const char* label; float value; };
+    constexpr TimeScalePreset kTimeScalePresets[] = {
+        { "1k\xc3\x97",   1000.0f       },
+        { "10k\xc3\x97",  10000.0f      },
+        { "100k\xc3\x97", 100000.0f     },
+        { "1M\xc3\x97",   1000000.0f    },
+        { "5M\xc3\x97",   5000000.0f    },
+    };
 }
 
 void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& physics,
@@ -106,21 +115,27 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::Checkbox("Paused", &physics.paused);
     ImGui::SetItemTooltip("Pause / resume the simulation (Space)");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SetNextItemWidth(140.0f);
     ImGui::SliderFloat("##timescale", &physics.timeScale,
-                       1.0f, 5.0e6f, "%.0fx", ImGuiSliderFlags_Logarithmic);
-    ImGui::SetItemTooltip("Simulated seconds per real second");
+                       1000.0f, 5.0e6f, "%.0fx", ImGuiSliderFlags_Logarithmic);
+    ImGui::SetItemTooltip("Simulated seconds per real second (log scale)");
     ImGui::SameLine();
-    if (ImGui::SmallButton("1x"))     physics.timeScale = 1.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1k"))     physics.timeScale = 1000.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("100k"))   physics.timeScale = 100000.0f;
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1M"))     physics.timeScale = 1.0e6f;
+    ImGui::SetNextItemWidth(72.0f);
+    if (ImGui::BeginCombo("##timepreset", "Preset", ImGuiComboFlags_NoArrowButton))
+    {
+        for (const auto& preset : kTimeScalePresets)
+        {
+            if (ImGui::Selectable(preset.label))
+            {
+                physics.timeScale = preset.value;
+            }
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::SetItemTooltip("Time-scale presets");
     ImGui::SameLine();
 
-    char simDateBuffer[48];
+    char simDateBuffer[32];
     formatSimulatedDate(physics.getSimulatedTimeSeconds(), simDateBuffer, sizeof(simDateBuffer));
     ImGui::TextDisabled("%s", simDateBuffer);
     ImGui::SetItemTooltip("Simulated time elapsed since Start Simulation");
@@ -162,7 +177,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::EndDisabled();
     ImGui::SameLine();
 
-    if (ImGui::Button("Reset Cam"))
+    if (ImGui::Button("Reset"))
     {
         camera.reset();
     }

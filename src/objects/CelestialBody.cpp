@@ -43,14 +43,12 @@ void CelestialBody::recalculateGeometry()
     mesh.rebuild(radius);
 }
 
-void CelestialBody::render(Shader& shader, bool highlight) const
+void CelestialBody::render(Shader& shader) const
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    const float hoverScale = highlight ? 1.10f : 1.0f;
-
     glm::mat4 model = glm::translate(glm::mat4(1.0f), renderPosition());
-    model = glm::scale(model, glm::vec3(displayScale * hoverScale));
+    model = glm::scale(model, glm::vec3(displayScale));
     shader.setMat4("model", model);
     shader.setVec3("planetColor", color);
     shader.setFloat("emissive", emissive);

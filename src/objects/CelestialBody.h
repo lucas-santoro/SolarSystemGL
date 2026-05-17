@@ -86,8 +86,7 @@ struct CelestialBody
 
     /**
      * @brief Issue the draw call for this body.
-     * @param shader    Bound body shader receiving `model`, `planetColor`, `emissive`.
-     * @param highlight `true` to scale the body slightly larger (hover feedback).
+     * @param shader Bound body shader — receives `model`, `planetColor`, `emissive`.
      */
-    void render(Shader& shader, bool highlight) const;
+    void render(Shader& shader) const;
 };

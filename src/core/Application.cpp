@@ -812,16 +812,9 @@ void Application::renderBodies(const glm::mat4& view, const glm::mat4& projectio
     bodyShader_.setVec3("lightPos",   lightPosition);
     bodyShader_.setVec3("viewPos",    camera_.getPosition());
 
-    const bool       inOrbitalMode    = (camera_.getMode() == CameraMode::ORBITAL);
-    const int        orbitalTargetIdx = camera_.getOrbitalTargetIndex();
-    for (size_t i = 0; i < bodies_.size(); ++i)
+    for (const auto& body : bodies_)
     {
-        // The orbital target is always under the cursor's "hover" raycast,
-        // so suppress the hover-scale on it — otherwise it visually inflates
-        // for the entire duration of orbital mode.
-        const bool isOrbitalTarget = inOrbitalMode && (orbitalTargetIdx == static_cast<int>(i));
-        const bool highlight       = uiManager_.isHovered(i) && !isOrbitalTarget;
-        bodies_[i].render(bodyShader_, highlight);
+        body.render(bodyShader_);
     }
 }
 
@@ -935,7 +928,7 @@ void Application::renderBloomPasses(const glm::mat4& view, const glm::mat4& proj
     for (const auto& body : bodies_)
     {
         if (body.emissive < 0.5f) continue;
-        body.render(bodyShader_, false);
+        body.render(bodyShader_);
     }
 
     // ---- Ping-pong Gaussian blur ----------------------------------------
