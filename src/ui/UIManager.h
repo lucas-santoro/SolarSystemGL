@@ -7,6 +7,7 @@
 #include "core/Camera.h"
 #include "core/Grid.h"
 #include "physics/PhysicsSystem.h"
+#include "ui/Toast.h"
 
 /**
  * @file UIManager.h
@@ -92,8 +93,8 @@ private:
     float     newPlanetMass = 1.0e24f;
 
     char        saveFilename[256] = "savefile.txt";
-    std::string saveLoadStatus;
     int         currentPresetIdx = -1;   // -1 = none selected this session
+    ToastQueue  toasts_;
 
     bool pendingRemove = false;
 

@@ -43,14 +43,19 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
         && selectedPlanetIndex >= 0
         && selectedPlanetIndex < static_cast<int>(bodies.size()))
     {
+        const std::string removedName = bodies[selectedPlanetIndex].name;
         camera.shiftOrbitalIndexOnRemove(selectedPlanetIndex);
         bodies.erase(bodies.begin() + selectedPlanetIndex);
         selectedPlanetIndex = -1;
         lastSelectedIndex   = -1;
         hoveredIndex        = -1;
         diagBaselineSet     = false;  // body count changed → invalidate baseline
+        toasts_.info("Removed " + removedName);
     }
     pendingRemove = false;
+
+    toasts_.update(deltaTime);
+    toasts_.render();
 }
 
 void UIManager::renderPlanetPopup(Window& window, Camera& camera,
@@ -260,16 +265,18 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<CelestialBody>& bod
             for (int i = 0; i < presetCount; ++i) {
                 const bool selected = (i == currentPresetIdx);
                 if (ImGui::Selectable(presets[i].label, selected)) {
-                    if (loadSimulation(presets[i].path, bodies, physics)) {
+                    const std::string presetPath  = presets[i].path;
+                    const std::string presetLabel = presets[i].label;
+                    if (loadSimulation(presetPath, bodies, physics)) {
                         currentPresetIdx    = i;
                         camera.setMode(CameraMode::FREE);
                         selectedPlanetIndex = -1;
                         lastSelectedIndex   = -1;
                         hoveredIndex        = -1;
                         diagBaselineSet     = false;
-                        saveLoadStatus      = std::string("Loaded preset: ") + presets[i].label;
+                        toasts_.success("Loaded preset: " + presetLabel);
                     } else {
-                        saveLoadStatus = std::string("Failed to load preset: ") + presets[i].path;
+                        toasts_.error("Failed to load preset: " + presetPath);
                     }
                 }
                 if (selected) ImGui::SetItemDefaultFocus();
@@ -283,9 +290,9 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<CelestialBody>& bod
     ImGui::InputText("File##saveload", saveFilename, sizeof(saveFilename));
     if (ImGui::Button("Save")) {
         if (saveSimulation(saveFilename, bodies, physics))
-            saveLoadStatus = std::string("Saved to ") + saveFilename;
+            toasts_.success(std::string("Saved to ") + saveFilename);
         else
-            saveLoadStatus = std::string("Save failed: cannot write ") + saveFilename;
+            toasts_.error(std::string("Save failed: cannot write ") + saveFilename);
     }
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
@@ -296,13 +303,10 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<CelestialBody>& bod
             lastSelectedIndex   = -1;
             hoveredIndex        = -1;
             diagBaselineSet     = false;
-            saveLoadStatus      = std::string("Loaded from ") + saveFilename;
+            toasts_.success(std::string("Loaded from ") + saveFilename);
         } else {
-            saveLoadStatus = std::string("Load failed: cannot open ") + saveFilename;
+            toasts_.error(std::string("Load failed: cannot open ") + saveFilename);
         }
-    }
-    if (!saveLoadStatus.empty()) {
-        ImGui::TextWrapped("%s", saveLoadStatus.c_str());
     }
 
     ImGui::Separator();
@@ -324,8 +328,10 @@ void UIManager::renderMainPanel(float deltaTime, std::vector<CelestialBody>& bod
         nb.color   = newPlanetColor;
         nb.density = 3000.0f;
         nb.recalculateGeometry();
+        const std::string addedName = nb.name;
         bodies.push_back(std::move(nb));
         selectedPlanetIndex = static_cast<int>(bodies.size()) - 1;
+        toasts_.success("Added " + addedName);
     }
     ImGui::End();
 }
