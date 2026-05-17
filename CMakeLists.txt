@@ -24,7 +24,48 @@ include_directories(
     ${SRC_DIR}/ui
     ${THIRD_PARTY_DIR}
     ${THIRD_PARTY_DIR}/imgui
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
+
+# --- Embed GLSL shaders into the executable --------------------------------
+# Each .glsl is read at configure time and stamped into EmbeddedShaders.h via
+# configure_file. CMAKE_CONFIGURE_DEPENDS forces a reconfigure (and thus a
+# regenerated header) whenever any shader source changes.
+set(SHADER_SOURCES
+    "${SHADER_DIR}/VertexShader.glsl"
+    "${SHADER_DIR}/FragmentShader.glsl"
+    "${SHADER_DIR}/GridVertexShader.glsl"
+    "${SHADER_DIR}/GridFragmentShader.glsl"
+    "${SHADER_DIR}/TrailVertexShader.glsl"
+    "${SHADER_DIR}/TrailFragmentShader.glsl"
+    "${SHADER_DIR}/HaloVertexShader.glsl"
+    "${SHADER_DIR}/HaloFragmentShader.glsl"
+    "${SHADER_DIR}/SkyVertexShader.glsl"
+    "${SHADER_DIR}/SkyFragmentShader.glsl"
+    "${SHADER_DIR}/RingVertexShader.glsl"
+    "${SHADER_DIR}/RingFragmentShader.glsl"
+)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${SHADER_SOURCES})
+
+file(READ "${SHADER_DIR}/VertexShader.glsl"        VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/FragmentShader.glsl"      FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/GridVertexShader.glsl"    GRID_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/GridFragmentShader.glsl"  GRID_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/TrailVertexShader.glsl"   TRAIL_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/TrailFragmentShader.glsl" TRAIL_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/HaloVertexShader.glsl"    HALO_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/HaloFragmentShader.glsl"  HALO_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/SkyVertexShader.glsl"     SKY_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/SkyFragmentShader.glsl"   SKY_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/RingVertexShader.glsl"    RING_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/RingFragmentShader.glsl"  RING_FRAGMENT_SHADER_SOURCE)
+
+configure_file(
+    "${SRC_DIR}/core/EmbeddedShaders.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/EmbeddedShaders.h"
+    @ONLY
+)
+message(STATUS "[Shaders] Embedded ${CMAKE_CURRENT_BINARY_DIR}/generated/EmbeddedShaders.h")
 
 # Explicit source list — preferred over file(GLOB_RECURSE). Adding a new .cpp
 # now requires editing this list, but you no longer need to manually rerun
@@ -83,15 +124,13 @@ else()
     message(STATUS "[Linking] Non-Windows: find_package(glfw3) + OpenGL::GL")
 endif()
 
-# Copy shaders next to the executable so they resolve regardless of CWD
-# (multi-config generators put the exe under Release/, Debug/, etc.).
-add_custom_command(TARGET SolarSystemGL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${SHADER_DIR}" "$<TARGET_FILE_DIR:SolarSystemGL>/shaders"
-    COMMENT "Copying shaders next to executable..."
-)
+# Shaders are now embedded into the executable via EmbeddedShaders.h (see
+# the configure_file invocation above) — no runtime shader directory is
+# needed alongside the binary.
 
-# Copy preset save-files next to the executable, same rationale as shaders.
+# Copy preset save-files next to the executable so loading defaults works
+# regardless of CWD (multi-config generators put the exe under Release/,
+# Debug/, etc.).
 add_custom_command(TARGET SolarSystemGL POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/presets" "$<TARGET_FILE_DIR:SolarSystemGL>/presets"

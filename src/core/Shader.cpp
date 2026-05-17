@@ -1,16 +1,12 @@
 #include "core/Shader.h"
 #include <glad/glad.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <utility>
 
-Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath)
+Shader::Shader(const std::string &vertexSource, const std::string &fragmentSource)
 {
-    const std::string vertexCode   = readFile(vertexPath);
-    const std::string fragmentCode = readFile(fragmentPath);
-    compileAndLink(vertexCode, fragmentCode, vertexPath, fragmentPath);
+    compileAndLink(vertexSource, fragmentSource);
 }
 
 Shader::~Shader()
@@ -47,11 +43,9 @@ unsigned int Shader::getID() const
 }
 
 void Shader::compileAndLink(const std::string &vertexCode,
-                            const std::string &fragmentCode,
-                            const std::string &vertexPath,
-                            const std::string &fragmentPath)
+                            const std::string &fragmentCode)
 {
-    auto compileStage = [](GLenum type, const char* src, const std::string& label) -> GLuint
+    auto compileStage = [](GLenum type, const char* src, const char* label) -> GLuint
     {
         GLuint shader = glCreateShader(type);
         glShaderSource(shader, 1, &src, nullptr);
@@ -63,13 +57,13 @@ void Shader::compileAndLink(const std::string &vertexCode,
             char log[1024];
             glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
             glDeleteShader(shader);
-            throw std::runtime_error("Failed to compile " + label + ":\n" + log);
+            throw std::runtime_error(std::string("Failed to compile ") + label + ":\n" + log);
         }
         return shader;
     };
 
-    GLuint vertex   = compileStage(GL_VERTEX_SHADER,   vertexCode.c_str(),   vertexPath);
-    GLuint fragment = compileStage(GL_FRAGMENT_SHADER, fragmentCode.c_str(), fragmentPath);
+    GLuint vertex   = compileStage(GL_VERTEX_SHADER,   vertexCode.c_str(),   "vertex shader");
+    GLuint fragment = compileStage(GL_FRAGMENT_SHADER, fragmentCode.c_str(), "fragment shader");
 
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
@@ -86,24 +80,11 @@ void Shader::compileAndLink(const std::string &vertexCode,
         ID = 0;
         glDeleteShader(vertex);
         glDeleteShader(fragment);
-        throw std::runtime_error("Failed to link shader program ("
-                                 + vertexPath + ", " + fragmentPath + "):\n" + log);
+        throw std::runtime_error(std::string("Failed to link shader program:\n") + log);
     }
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
-}
-
-std::string Shader::readFile(const std::string &filePath)
-{
-    std::ifstream file(filePath);
-    if (!file.is_open())
-    {
-        throw std::runtime_error("Failed to open shader file: " + filePath);
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
 }
 
 int Shader::uniformLocation(const std::string &name)

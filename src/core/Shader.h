@@ -13,10 +13,12 @@
 /**
  * @brief Owns a compiled-and-linked OpenGL program plus a uniform-location cache.
  *
- * The constructor loads vertex + fragment source from disk, compiles, links,
- * and throws `std::runtime_error` if any step fails (with the GL info log in
- * the exception message). Uniform locations are cached on first lookup so
- * `glGetUniformLocation` only runs once per name.
+ * The constructor accepts vertex + fragment source code directly — there is
+ * no runtime file I/O. Shader sources are embedded into the executable at
+ * configure time (see `EmbeddedShaders.h`). Compilation or linker failures
+ * throw `std::runtime_error` with the GL info log in the message. Uniform
+ * locations are cached on first lookup so `glGetUniformLocation` only runs
+ * once per name.
  *
  * Non-copyable and movable (RAII for the GL program handle).
  */
@@ -24,12 +26,12 @@ class Shader
 {
 public:
     /**
-     * @brief Compile and link a shader program from two source files.
-     * @param vertexPath   Path to the vertex shader GLSL file.
-     * @param fragmentPath Path to the fragment shader GLSL file.
-     * @throws std::runtime_error if either file is missing or compilation/linking fails.
+     * @brief Compile and link a shader program from raw GLSL source.
+     * @param vertexSource   GLSL source for the vertex stage.
+     * @param fragmentSource GLSL source for the fragment stage.
+     * @throws std::runtime_error if compilation or linking fails.
      */
-    Shader(const std::string& vertexPath, const std::string& fragmentPath);
+    Shader(const std::string& vertexSource, const std::string& fragmentSource);
 
     /** @brief Delete the underlying GL program. */
     ~Shader();
@@ -69,8 +71,5 @@ private:
 
     int  uniformLocation(const std::string& name);
     void compileAndLink(const std::string& vertexCode,
-                        const std::string& fragmentCode,
-                        const std::string& vertexPath,
-                        const std::string& fragmentPath);
-    static std::string readFile(const std::string& filePath);
+                        const std::string& fragmentCode);
 };
