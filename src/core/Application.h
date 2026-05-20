@@ -255,6 +255,9 @@ private:
     bool wasOnePressed_   = false;
     bool wasTwoPressed_   = false;
     bool wasF12Pressed_   = false;
+    bool wasF1Pressed_    = false;
+    bool wasF2Pressed_    = false;
+    bool wasF3Pressed_    = false;
     std::array<bool, 4> wasBookmarkKeyPressed_ = { false, false, false, false };
 
     // Camera bookmark slots — F5..F8 maps to slots 0..3. Shift+key saves,

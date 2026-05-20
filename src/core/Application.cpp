@@ -795,6 +795,18 @@ void Application::handleHotkeys()
     if (f12Down && !wasF12Pressed_) captureScreenshot();
     wasF12Pressed_ = f12Down;
 
+    // F1 / F2 / F3 — Blender-flavoured view presets. Always-on (no
+    // keyboard-capture gate) so they work even with a dialog focused.
+    const bool f1Down = glfwGetKey(glfwWindow, GLFW_KEY_F1) == GLFW_PRESS;
+    const bool f2Down = glfwGetKey(glfwWindow, GLFW_KEY_F2) == GLFW_PRESS;
+    const bool f3Down = glfwGetKey(glfwWindow, GLFW_KEY_F3) == GLFW_PRESS;
+    if (f1Down && !wasF1Pressed_) applyViewPreset(ViewPreset::Default);
+    if (f2Down && !wasF2Pressed_) applyViewPreset(ViewPreset::TopDown);
+    if (f3Down && !wasF3Pressed_) applyViewPreset(ViewPreset::SideOn);
+    wasF1Pressed_ = f1Down;
+    wasF2Pressed_ = f2Down;
+    wasF3Pressed_ = f3Down;
+
     // F5..F8 — camera bookmarks. Plain key restores the slot; Shift + key
     // captures the current pose into it. These also fire regardless of
     // ImGui keyboard capture, since they don't conflict with any panel.

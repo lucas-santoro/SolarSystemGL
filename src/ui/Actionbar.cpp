@@ -178,25 +178,29 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::EndDisabled();
     ImGui::SameLine();
 
-    struct ViewPresetOption { const char* label; int value; };
+    struct ViewPresetOption { const char* label; const char* shortcut; int value; };
     static constexpr ViewPresetOption kViewPresets[] = {
-        { "Default",  0 },
-        { "Top-down", 1 },
-        { "Side-on",  2 },
+        { "Default",  "F1", 0 },
+        { "Top-down", "F2", 1 },
+        { "Side-on",  "F3", 2 },
     };
     ImGui::SetNextItemWidth(72.0f);
     if (ImGui::BeginCombo("##view", "View", ImGuiComboFlags_NoArrowButton))
     {
         for (const auto& v : kViewPresets)
         {
-            if (ImGui::Selectable(v.label))
+            // Two-column row: option label on the left, shortcut hint on the
+            // right (mirrors how most native apps render menu accelerators).
+            if (ImGui::Selectable(v.label, false, ImGuiSelectableFlags_None))
             {
                 uiManager.viewPresetRequested = v.value;
             }
+            ImGui::SameLine(120.0f);
+            ImGui::TextDisabled("%s", v.shortcut);
         }
         ImGui::EndCombo();
     }
-    ImGui::SetItemTooltip("Fly to a preset view  (R for instant reset)");
+    ImGui::SetItemTooltip("Fly to a preset view  (F1 / F2 / F3 — R for instant reset)");
     renderGroupSeparator();
 
     // --- Group 4: Settings / Save / Load ---------------------------------
