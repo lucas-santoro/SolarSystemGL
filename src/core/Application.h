@@ -193,6 +193,7 @@ private:
     SaveLoadModal   saveLoadModal_;
     AddPlanetModal  addPlanetModal_;
     Grid            grid_;
+    GridSettings    gridSettings_;
     std::vector<CelestialBody> bodies_;
 
     // User-tunable rendering settings (bound to the Settings modal).

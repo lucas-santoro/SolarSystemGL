@@ -820,11 +820,13 @@ void Application::renderBodies(const glm::mat4& view, const glm::mat4& projectio
 
 void Application::renderGrid(const glm::mat4& view, const glm::mat4& projection)
 {
+    if (!gridSettings_.visible) return;
+
     gridShader_.use();
     gridShader_.setMat4("view",       view);
     gridShader_.setMat4("projection", projection);
     gridShader_.setMat4("model",      glm::mat4(1.0f));
-    grid_.draw(gridShader_, bodies_);
+    grid_.draw(gridShader_, bodies_, gridSettings_);
 }
 
 void Application::renderRings(const glm::mat4& view, const glm::mat4& projection)
