@@ -185,6 +185,19 @@ void UIManager::renderPlanetInfo(CelestialBody& body)
         pendingRemove = true;
     }
 
+    // Per-body visualisations — only make sense in the context of a
+    // selected body, so they live here rather than in the bottom bar
+    // (which now hosts only system-wide toggles).
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextDisabled("Visualisations");
+    ImGui::Checkbox("Path prediction", &showPathPrediction);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Project this body's future orbit as a dashed line");
+    ImGui::Checkbox("Lagrange points", &showLagrange);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Mark L1\xe2\x80\x93L5 between the most massive body and this one");
+
     ImGui::End();
 }
 

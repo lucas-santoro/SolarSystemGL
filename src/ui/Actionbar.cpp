@@ -236,14 +236,11 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
         return;
     }
 
+    // Bottom bar holds only system-wide toggles. Per-body visualisations
+    // (Prediction, Lagrange) live inside the Planet Info panel since they
+    // require a selection to mean anything.
     ImGui::Checkbox("Trails",      &uiManager.showTrails);
     ImGui::SetItemTooltip("Render orbit trails as line strips");
-    ImGui::SameLine();
-    ImGui::Checkbox("Prediction",  &uiManager.showPathPrediction);
-    ImGui::SetItemTooltip("Project the selected body's future orbit as a dashed line");
-    ImGui::SameLine();
-    ImGui::Checkbox("Lagrange",    &uiManager.showLagrange);
-    ImGui::SetItemTooltip("Mark L1\xe2\x80\x93L5 between the most massive body and the selection");
     ImGui::SameLine();
     ImGui::Checkbox("Bloom",       &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
