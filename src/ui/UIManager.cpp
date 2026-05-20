@@ -145,18 +145,27 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
 
 void UIManager::renderPlanetInfo(CelestialBody& body)
 {
-    // Dock at the right edge below the top actionbar on first use. The `##v2`
-    // suffix invalidates any pre-actionbar position saved in imgui.ini.
+    // Forced dock flush against the top actionbar — Planet Info now reads
+    // as a "drops down from the top bar" panel rather than a floating
+    // window the user can shove anywhere. ImGuiCond_Always so the lock is
+    // re-applied every frame (so the window can't be dragged or resized);
+    // the `##v3` suffix invalidates any stale imgui.ini layout from the
+    // previous floating version.
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    constexpr float kPanelWidth = 320.0f;
-    constexpr float kMargin     = 16.0f;
+    constexpr float kPanelWidth = 340.0f;
     ImGui::SetNextWindowPos(
-        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - kPanelWidth - kMargin,
-               viewport->WorkPos.y + kMargin),
-        ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(kPanelWidth, 0.0f), ImGuiCond_FirstUseEver);
+        ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - kPanelWidth,
+               viewport->WorkPos.y),
+        ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(kPanelWidth, 0.0f), ImGuiCond_Always);
 
-    ImGui::Begin("Planet Info##v2");
+    constexpr ImGuiWindowFlags kFlags =
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoSavedSettings;
+
+    ImGui::Begin("Planet Info##v3", nullptr, kFlags);
 
     ImGui::InputText("Name", editBuffer.name, sizeof(editBuffer.name));
     ImGui::InputFloat("Mass (kg)", &editBuffer.mass, 0.0f, 0.0f, "%.3e");
