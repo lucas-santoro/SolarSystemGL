@@ -104,6 +104,9 @@ public:
     /** @brief Render-toggle for the five Lagrange-point markers between the most massive body and the selection. */
     bool showLagrange = false;
 
+    /** @brief Persistent name-labels above every body (off by default; hover label always works). */
+    bool showBodyLabels = false;
+
     /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
     bool showDiagnostics = false;
 
@@ -174,6 +177,9 @@ private:
                            const glm::mat4& view, const glm::mat4& projection,
                            std::vector<CelestialBody>& bodies);
     void renderPlanetInfo(CelestialBody& body);
+    void renderPersistentBodyLabels(Window& window, Camera& camera,
+                                    const glm::mat4& view, const glm::mat4& projection,
+                                    const std::vector<CelestialBody>& bodies);
     void renderDiagnostics(const std::vector<CelestialBody>& bodies);
     void renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera);
 

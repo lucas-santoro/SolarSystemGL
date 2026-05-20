@@ -12,6 +12,21 @@
  */
 
 /**
+ * @brief Auto-derived classification used by the UI to label bodies in the
+ *        System dropdown and the Planet Info header.
+ *
+ * Mass and emissive are the only inputs — no orbit-tree analysis. Moons end
+ * up tagged as Planet under this scheme, which is acceptable since the
+ * default presets don't include moons.
+ */
+enum class BodyType
+{
+    Star,      ///< emissive >= 0.5
+    Planet,    ///< mass >= 1e22 kg, non-emissive
+    Asteroid   ///< mass <  1e22 kg, non-emissive
+};
+
+/**
  * @brief A single celestial body — the canonical owner of one entity's state.
  *
  * Kept as a `struct` with public fields by intent: this is a *data carrier*
@@ -101,4 +116,13 @@ struct CelestialBody
      * @param shader Bound body shader — receives `model`, `planetColor`, `emissive`.
      */
     void render(Shader& shader) const;
+
+    /// @return The auto-derived BodyType from this body's mass + emissive.
+    BodyType classify() const;
 };
+
+/// @return Short display label for the chip ("Star" / "Planet" / "Asteroid").
+const char* bodyTypeLabel(BodyType type);
+
+/// @return Tint used to colour the chip in the System dropdown / Planet Info.
+glm::vec3   bodyTypeColor(BodyType type);

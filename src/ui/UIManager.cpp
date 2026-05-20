@@ -38,6 +38,7 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
     }
 
     if (showDiagnostics) renderDiagnostics(bodies);
+    if (showBodyLabels)  renderPersistentBodyLabels(window, camera, view, projection, bodies);
 
     actionbar_.renderBottomBar(window, *this, gridSettings);
 
@@ -231,6 +232,17 @@ void UIManager::renderPlanetInfo(CelestialBody& body)
 
     ImGui::Begin("Planet Info##v3", nullptr, kFlags);
 
+    // Type chip + current name at the top — gives the panel an identity
+    // header before the editable buffer below.
+    const BodyType  bodyType   = body.classify();
+    const glm::vec3 chipRgb    = bodyTypeColor(bodyType);
+    const ImVec4    chipColor(chipRgb.r, chipRgb.g, chipRgb.b, 1.0f);
+    ImGui::TextColored(chipColor, "[%s]", bodyTypeLabel(bodyType));
+    ImGui::SameLine();
+    ImGui::TextUnformatted(body.name.c_str());
+    ImGui::Separator();
+    ImGui::Spacing();
+
     ImGui::InputText("Name", editBuffer.name, sizeof(editBuffer.name));
     ImGui::InputFloat("Mass (kg)", &editBuffer.mass, 0.0f, 0.0f, "%.3e");
     ImGui::InputFloat("Density (kg/m^3)", &editBuffer.density);
@@ -334,6 +346,48 @@ void UIManager::renderDiagnostics(const std::vector<CelestialBody>& bodies)
     }
 
     ImGui::End();
+}
+
+void UIManager::renderPersistentBodyLabels(Window& window, Camera& camera,
+                                           const glm::mat4& view, const glm::mat4& projection,
+                                           const std::vector<CelestialBody>& bodies)
+{
+    int width, height;
+    glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
+
+    constexpr ImGuiWindowFlags kFlags =
+        ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize     | ImGuiWindowFlags_NoMove     |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoNav;
+
+    for (size_t i = 0; i < bodies.size(); ++i)
+    {
+        const auto& body         = bodies[i];
+        const float displayR     = body.radius * body.displayScale;
+        const glm::vec3 worldAbove = body.renderPosition()
+                                   + glm::vec3(0.0f, displayR * 1.8f + 0.5f, 0.0f);
+
+        const glm::vec2 screenPos = camera.worldToScreen(worldAbove, view, projection, width, height);
+        if (screenPos.x < 0.0f || screenPos.y < 0.0f
+            || screenPos.x > static_cast<float>(width)
+            || screenPos.y > static_cast<float>(height))
+            continue;
+
+        const glm::vec3 chipRgb = bodyTypeColor(body.classify());
+        const ImVec4    color(chipRgb.r, chipRgb.g, chipRgb.b, 0.85f);
+
+        // Anchor centre-bottom so the label floats just above the body and
+        // stays centred horizontally as the camera pans.
+        ImGui::SetNextWindowPos(ImVec2(screenPos.x, screenPos.y), ImGuiCond_Always,
+                                ImVec2(0.5f, 1.0f));
+        ImGui::PushID(static_cast<int>(i));
+        ImGui::Begin("##bodylabel", nullptr, kFlags);
+        ImGui::TextColored(color, "%s", body.name.c_str());
+        ImGui::End();
+        ImGui::PopID();
+    }
 }
 
 void UIManager::renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera)

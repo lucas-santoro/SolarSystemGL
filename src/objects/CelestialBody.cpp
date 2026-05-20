@@ -55,3 +55,32 @@ void CelestialBody::render(Shader& shader) const
 
     mesh.draw();
 }
+
+BodyType CelestialBody::classify() const
+{
+    if (emissive >= 0.5f)         return BodyType::Star;
+    if (mass_kg  >= 1.0e22)       return BodyType::Planet;
+    return BodyType::Asteroid;
+}
+
+const char* bodyTypeLabel(BodyType type)
+{
+    switch (type)
+    {
+        case BodyType::Star:     return "Star";
+        case BodyType::Planet:   return "Planet";
+        case BodyType::Asteroid: return "Asteroid";
+    }
+    return "?";
+}
+
+glm::vec3 bodyTypeColor(BodyType type)
+{
+    switch (type)
+    {
+        case BodyType::Star:     return glm::vec3(1.00f, 0.90f, 0.30f);  // warm yellow
+        case BodyType::Planet:   return glm::vec3(0.40f, 0.75f, 1.00f);  // cyan-blue
+        case BodyType::Asteroid: return glm::vec3(0.70f, 0.70f, 0.70f);  // neutral grey
+    }
+    return glm::vec3(1.0f);
+}

@@ -89,17 +89,29 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     const char* systemPreview  = (selectedIdx >= 0 && selectedIdx < static_cast<int>(bodies.size()))
                                      ? bodies[selectedIdx].name.c_str()
                                      : "System";
-    ImGui::SetNextItemWidth(140.0f);
+    ImGui::SetNextItemWidth(160.0f);
     if (ImGui::BeginCombo("##system", systemPreview))
     {
         for (size_t i = 0; i < bodies.size(); ++i)
         {
-            const bool isSelected = (static_cast<int>(i) == selectedIdx);
-            if (ImGui::Selectable(bodies[i].name.c_str(), isSelected))
+            const bool      isSelected = (static_cast<int>(i) == selectedIdx);
+            const BodyType  type       = bodies[i].classify();
+            const glm::vec3 chipRgb    = bodyTypeColor(type);
+            const ImVec4    chipColor(chipRgb.r, chipRgb.g, chipRgb.b, 1.0f);
+
+            ImGui::PushID(static_cast<int>(i));
+            if (ImGui::Selectable("##row", isSelected,
+                                  ImGuiSelectableFlags_AllowOverlap,
+                                  ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing())))
             {
                 uiManager.setSelected(static_cast<int>(i));
             }
+            ImGui::SameLine();
+            ImGui::TextColored(chipColor, "%-9s", bodyTypeLabel(type));
+            ImGui::SameLine();
+            ImGui::TextUnformatted(bodies[i].name.c_str());
             if (isSelected) ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
         }
         ImGui::EndCombo();
     }
@@ -241,6 +253,9 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
     // require a selection to mean anything.
     ImGui::Checkbox("Trails",      &uiManager.showTrails);
     ImGui::SetItemTooltip("Render orbit trails as line strips");
+    ImGui::SameLine();
+    ImGui::Checkbox("Labels",      &uiManager.showBodyLabels);
+    ImGui::SetItemTooltip("Persistent name labels above every body (off by default; hover always works)");
     ImGui::SameLine();
     ImGui::Checkbox("Bloom",       &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
