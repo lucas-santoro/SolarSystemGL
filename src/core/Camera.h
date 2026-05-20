@@ -122,6 +122,26 @@ public:
      */
     void flyToOrbital(int targetIndex, const glm::vec3& targetPos, float distance);
 
+    /**
+     * @brief Smoothly fly to a free-camera pose — position + yaw + pitch
+     *        interpolate together over the duration of the move.
+     *
+     * Used by the pose-preset buttons (top-down, side-on, front-on) and by
+     * the F5–F8 bookmark restore. Switches the camera to FREE mode for the
+     * duration (clears any orbital target).
+     *
+     * @param position World-space target position.
+     * @param yaw      Target yaw in degrees.
+     * @param pitch    Target pitch in degrees.
+     */
+    void flyToPose(const glm::vec3& position, float yaw, float pitch);
+
+    /// @return The current yaw in degrees (for bookmark capture).
+    float getYaw() const { return yaw_; }
+
+    /// @return The current pitch in degrees (for bookmark capture).
+    float getPitch() const { return pitch_; }
+
     /// Advance any active smooth movement by @p dt seconds.
     void update(float dt);
 
@@ -148,6 +168,15 @@ private:
     bool      isTravelling_ = false;
     glm::vec3 targetPos_{ 0.0f };
     float     travelSpeed_  = 3000.0f;
+
+    // Optional pose-interpolation alongside the position move (used by
+    // flyToPose for the View dropdown and the F5–F8 bookmark restores).
+    bool      hasPendingPose_  = false;
+    glm::vec3 poseStartPos_{ 0.0f };
+    float     poseStartYaw_    = 0.0f;
+    float     poseStartPitch_  = 0.0f;
+    float     poseTargetYaw_   = 0.0f;
+    float     poseTargetPitch_ = 0.0f;
 
     // Mode + orbital state.
     CameraMode                mode_                = CameraMode::FREE;

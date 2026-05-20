@@ -178,11 +178,25 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::EndDisabled();
     ImGui::SameLine();
 
-    if (ImGui::Button("Reset"))
+    struct ViewPresetOption { const char* label; int value; };
+    static constexpr ViewPresetOption kViewPresets[] = {
+        { "Default",  0 },
+        { "Top-down", 1 },
+        { "Side-on",  2 },
+    };
+    ImGui::SetNextItemWidth(72.0f);
+    if (ImGui::BeginCombo("##view", "View", ImGuiComboFlags_NoArrowButton))
     {
-        camera.reset();
+        for (const auto& v : kViewPresets)
+        {
+            if (ImGui::Selectable(v.label))
+            {
+                uiManager.viewPresetRequested = v.value;
+            }
+        }
+        ImGui::EndCombo();
     }
-    ImGui::SetItemTooltip("Reset the camera to its initial pose (R)");
+    ImGui::SetItemTooltip("Fly to a preset view  (R for instant reset)");
     renderGroupSeparator();
 
     // --- Group 4: Settings / Save / Load ---------------------------------

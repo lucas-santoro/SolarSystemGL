@@ -10,6 +10,8 @@
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
 #include "objects/PlanetMesh.h"
+
+#include <array>
 #include "physics/PathPredictor.h"
 #include "physics/PhysicsSystem.h"
 #include "ui/AddPlanetModal.h"
@@ -114,6 +116,19 @@ private:
 
     /// Read the current framebuffer and save it to `screenshots/<timestamp>.bmp`.
     void captureScreenshot();
+
+    /// Snapshot the current camera pose into bookmark slot @p slot (0–3 = F5–F8).
+    void saveBookmark(int slot);
+
+    /// Restore camera bookmark @p slot via smooth pose-fly. No-op if empty.
+    void restoreBookmark(int slot);
+
+    /// Preset view ids surfaced via the actionbar View dropdown.
+    enum class ViewPreset { Default, TopDown, SideOn };
+
+    /// Smooth-fly to one of the canned view presets, auto-fitting distance
+    /// to whatever body extents currently exist.
+    void applyViewPreset(ViewPreset preset);
 
     /// Append the current frame's body positions to their trail history,
     /// applying motion threshold and teleport-detection rules.
@@ -240,6 +255,18 @@ private:
     bool wasOnePressed_   = false;
     bool wasTwoPressed_   = false;
     bool wasF12Pressed_   = false;
+    std::array<bool, 4> wasBookmarkKeyPressed_ = { false, false, false, false };
+
+    // Camera bookmark slots — F5..F8 maps to slots 0..3. Shift+key saves,
+    // bare key restores.
+    struct CameraBookmark
+    {
+        glm::vec3 position{ 0.0f };
+        float     yaw   = 0.0f;
+        float     pitch = 0.0f;
+        bool      occupied = false;
+    };
+    std::array<CameraBookmark, 4> bookmarks_;
 
     // Real-time tracking for delta-time computation.
     float previousFrameTime_ = 0.0f;

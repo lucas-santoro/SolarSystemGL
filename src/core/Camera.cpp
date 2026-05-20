@@ -166,6 +166,26 @@ void Camera::startSmoothMove(const glm::vec3& destination, float distance)
     isTravelling_ = true;
 }
 
+void Camera::flyToPose(const glm::vec3& position, float yaw, float pitch)
+{
+    // Capture the starting pose so update(dt) can interpolate alongside the
+    // position move via the same progress fraction.
+    poseStartPos_    = position_;
+    poseStartYaw_    = yaw_;
+    poseStartPitch_  = pitch_;
+    poseTargetYaw_   = yaw;
+    poseTargetPitch_ = pitch;
+    hasPendingPose_  = true;
+
+    targetPos_       = position;
+    isTravelling_    = true;
+
+    // Pose preset is a free-fly target — drop any orbital tracking.
+    mode_                = CameraMode::FREE;
+    orbitalTargetIndex_  = -1;
+    pendingMode_.reset();
+}
+
 void Camera::flyToOrbital(int targetIndex, const glm::vec3& targetPos, float distance)
 {
     orbitalTargetIndex_ = targetIndex;
@@ -210,6 +230,28 @@ void Camera::update(float dt)
         if (distance > 0.001f) front_ = toTarget / distance;
     }
 
+    // Pose interpolation — lerp yaw/pitch (and the derived front vector)
+    // alongside the position move so the camera smoothly tilts as it glides.
+    if (hasPendingPose_)
+    {
+        const glm::vec3 totalSpan      = targetPos_ - poseStartPos_;
+        const float     totalSpanLen   = glm::length(totalSpan);
+        const glm::vec3 remainingSpan  = targetPos_ - position_;
+        const float     remainingLen   = glm::length(remainingSpan);
+        const float     progress       = (totalSpanLen > 0.01f)
+                                            ? glm::clamp(1.0f - remainingLen / totalSpanLen, 0.0f, 1.0f)
+                                            : 1.0f;
+
+        yaw_   = glm::mix(poseStartYaw_,   poseTargetYaw_,   progress);
+        pitch_ = glm::mix(poseStartPitch_, poseTargetPitch_, progress);
+
+        glm::vec3 direction;
+        direction.x = std::cos(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+        direction.y = std::sin(glm::radians(pitch_));
+        direction.z = std::sin(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+        front_      = glm::normalize(direction);
+    }
+
     const glm::vec3 diff = targetPos_ - position_;
     const float     dist = glm::length(diff);
 
@@ -218,6 +260,19 @@ void Camera::update(float dt)
     {
         position_     = targetPos_;
         isTravelling_ = false;
+
+        if (hasPendingPose_)
+        {
+            yaw_   = poseTargetYaw_;
+            pitch_ = poseTargetPitch_;
+            glm::vec3 direction;
+            direction.x = std::cos(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+            direction.y = std::sin(glm::radians(pitch_));
+            direction.z = std::sin(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+            front_      = glm::normalize(direction);
+            hasPendingPose_ = false;
+        }
+
         if (pendingMode_.has_value())
         {
             mode_ = *pendingMode_;

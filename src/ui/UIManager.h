@@ -113,6 +113,13 @@ public:
     /** @brief Output flag set when the actionbar's "Add Planet" button is pressed. */
     bool addPlanetRequested = false;
 
+    /**
+     * @brief Set by the actionbar's View combo: 0 = Default, 1 = Top-down,
+     *        2 = Side-on; -1 means no pending request. Host loop reads this
+     *        each frame, calls `Application::applyViewPreset`, and resets.
+     */
+    int viewPresetRequested = -1;
+
 private:
     int   selectedPlanetIndex = -1;
     int   hoveredIndex        = -1;

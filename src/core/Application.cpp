@@ -346,6 +346,11 @@ void Application::tick()
         addPlanetModal_.requestOpen();
         uiManager_.addPlanetRequested = false;
     }
+    if (uiManager_.viewPresetRequested >= 0)
+    {
+        applyViewPreset(static_cast<ViewPreset>(uiManager_.viewPresetRequested));
+        uiManager_.viewPresetRequested = -1;
+    }
 
     settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_, gridSettings_);
     saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
@@ -492,6 +497,68 @@ void Application::captureScreenshot()
     {
         uiManager_.toasts().error("Screenshot failed: cannot write " + fullPath);
     }
+}
+
+void Application::saveBookmark(int slot)
+{
+    if (slot < 0 || slot >= static_cast<int>(bookmarks_.size())) return;
+    bookmarks_[slot].position = camera_.getPosition();
+    bookmarks_[slot].yaw      = camera_.getYaw();
+    bookmarks_[slot].pitch    = camera_.getPitch();
+    bookmarks_[slot].occupied = true;
+    uiManager_.toasts().success("Bookmark " + std::to_string(slot + 1) + " saved");
+}
+
+void Application::restoreBookmark(int slot)
+{
+    if (slot < 0 || slot >= static_cast<int>(bookmarks_.size())) return;
+    const auto& bm = bookmarks_[slot];
+    if (!bm.occupied)
+    {
+        uiManager_.toasts().info("Bookmark " + std::to_string(slot + 1) + " empty (Shift+F"
+                                 + std::to_string(slot + 5) + " to save)");
+        return;
+    }
+    camera_.flyToPose(bm.position, bm.yaw, bm.pitch);
+}
+
+void Application::applyViewPreset(ViewPreset preset)
+{
+    // Auto-fit: distance scales with the furthest body, clamped so a
+    // Trappist-1 sized system doesn't snap the camera right next to the
+    // star and Solar System doesn't pull the camera 30 AU out.
+    float maxBodyDistance = 100.0f;
+    for (const auto& body : bodies_)
+    {
+        const float r = glm::length(body.renderPosition());
+        if (r > maxBodyDistance) maxBodyDistance = r;
+    }
+    maxBodyDistance       = std::min(maxBodyDistance, 2000.0f);
+    const float distance  = maxBodyDistance * 1.5f;
+
+    glm::vec3 position;
+    float     yaw   = -90.0f;
+    float     pitch = 0.0f;
+    switch (preset)
+    {
+        case ViewPreset::TopDown:
+            position = glm::vec3(0.0f, distance, 0.0f);
+            yaw      = -90.0f;
+            pitch    = -89.0f;   // shader clamps at ±89; effectively straight down
+            break;
+        case ViewPreset::SideOn:
+            position = glm::vec3(distance, 0.0f, 0.0f);
+            yaw      = 180.0f;
+            pitch    = 0.0f;
+            break;
+        case ViewPreset::Default:
+        default:
+            position = kInitialCameraPosition;
+            yaw      = -90.0f;
+            pitch    = 0.0f;
+            break;
+    }
+    camera_.flyToPose(position, yaw, pitch);
 }
 
 void Application::renderConfirmModals()
@@ -724,6 +791,23 @@ void Application::handleHotkeys()
     // be available at all times.
     if (f12Down && !wasF12Pressed_) captureScreenshot();
     wasF12Pressed_ = f12Down;
+
+    // F5..F8 — camera bookmarks. Plain key restores the slot; Shift + key
+    // captures the current pose into it. These also fire regardless of
+    // ImGui keyboard capture, since they don't conflict with any panel.
+    const bool shiftHeld = glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT)  == GLFW_PRESS
+                        || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+    for (int slot = 0; slot < 4; ++slot)
+    {
+        const int  glfwKey = GLFW_KEY_F5 + slot;
+        const bool down    = glfwGetKey(glfwWindow, glfwKey) == GLFW_PRESS;
+        if (down && !wasBookmarkKeyPressed_[slot])
+        {
+            if (shiftHeld) saveBookmark(slot);
+            else           restoreBookmark(slot);
+        }
+        wasBookmarkKeyPressed_[slot] = down;
+    }
 
     if (!keyboardCaptured)
     {
