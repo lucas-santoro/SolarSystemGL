@@ -55,7 +55,13 @@ bool saveSimulation(const std::string &path,
         out << "density = "      << b.density  << "\n";
         out << "emissive = "     << b.emissive << "\n";
         out << "displayScale = " << b.displayScale << "\n";
-        out << "hasRings = "     << (b.hasRings ? "1" : "0") << "\n\n";
+        out << "hasRings = "     << (b.hasRings ? "1" : "0") << "\n";
+        out << "hasAtmosphere = "     << (b.hasAtmosphere ? "1" : "0") << "\n";
+        out << "atmosphereHeight = "  << b.atmosphereHeight << "\n";
+        out << "atmosphereColor = "   << b.atmosphereColor.r << " "
+                                      << b.atmosphereColor.g << " "
+                                      << b.atmosphereColor.b << "\n";
+        out << "atmosphereDensity = " << b.atmosphereDensity << "\n\n";
     }
     return out.good();
 }
@@ -101,7 +107,11 @@ bool loadSimulation(const std::string &path,
             else if (key == "density")      current->density      = std::stof(val);
             else if (key == "emissive")     current->emissive     = std::stof(val);
             else if (key == "displayScale") current->displayScale = std::stof(val);
-            else if (key == "hasRings")     current->hasRings     = (val == "1" || val == "true");
+            else if (key == "hasRings")          current->hasRings          = (val == "1" || val == "true");
+            else if (key == "hasAtmosphere")     current->hasAtmosphere     = (val == "1" || val == "true");
+            else if (key == "atmosphereHeight")  current->atmosphereHeight  = std::stof(val);
+            else if (key == "atmosphereColor")   current->atmosphereColor   = parseVec3(val);
+            else if (key == "atmosphereDensity") current->atmosphereDensity = std::stof(val);
             // unknown keys silently ignored
         }
     }

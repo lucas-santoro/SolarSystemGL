@@ -143,6 +143,7 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     , ringShader_           (embedded_shaders::RingVertexShader,       embedded_shaders::RingFragmentShader)
     , bloomBlurShader_      (embedded_shaders::FullscreenQuadVertexShader, embedded_shaders::BloomBlurFragmentShader)
     , bloomCompositeShader_ (embedded_shaders::FullscreenQuadVertexShader, embedded_shaders::BloomCompositeFragmentShader)
+    , atmosphereShader_     (embedded_shaders::AtmosphereVertexShader,     embedded_shaders::AtmosphereFragmentShader)
     , sceneFbo_             (windowWidth,     windowHeight,     true)
     , bloomPingFbo_         (windowWidth / 2, windowHeight / 2, false)
     , bloomPongFbo_         (windowWidth / 2, windowHeight / 2, false)
@@ -286,6 +287,9 @@ void Application::tick()
     renderSky(view, projection);
     renderBodies(view, projection);
     renderGrid(view, projection);
+    // Atmospheres before rings so the visible ring isn't hazed over by
+    // its own planet's atmosphere shell.
+    renderAtmospheres(view, projection);
     renderRings(view, projection);
 
     if (uiManager_.showTrails)         renderTrails(view, projection);
@@ -560,32 +564,43 @@ void Application::loadDefaultBodies()
         float       emissive;
         float       displayScale;
         bool        hasRings;
+        bool        hasAtmosphere;
+        float       atmosphereHeight;
+        glm::vec3   atmosphereColor;
+        float       atmosphereDensity;
     };
 
+    // Atmosphere tints are Rayleigh-flavored approximations of each planet's
+    // sky color as imaged from orbit (or its disk color for gas giants).
     const DefaultBody defaults[] = {
-        { "Sun",      0.000,     0.0, 1.989e30, 1408.0f, glm::vec3(1.00f, 0.90f, 0.30f), 1.0f, 0.4f, false },
-        { "Mercury",  0.387, 47900.0, 3.3011e23, 5427.0f, glm::vec3(0.50f, 0.50f, 0.50f), 0.0f, 1.0f, false },
-        { "Venus",    0.723, 35000.0, 4.8675e24, 5243.0f, glm::vec3(0.95f, 0.85f, 0.55f), 0.0f, 1.0f, false },
-        { "Earth",    1.000, 29780.0, 5.9720e24, 5514.0f, glm::vec3(0.20f, 0.40f, 1.00f), 0.0f, 1.0f, false },
-        { "Mars",     1.524, 24100.0, 6.4171e23, 3933.0f, glm::vec3(0.80f, 0.30f, 0.10f), 0.0f, 1.0f, false },
-        { "Jupiter",  5.203, 13070.0, 1.8980e27, 1326.0f, glm::vec3(0.90f, 0.70f, 0.40f), 0.0f, 1.0f, false },
-        { "Saturn",   9.537,  9680.0, 5.6834e26,  687.0f, glm::vec3(0.95f, 0.85f, 0.50f), 0.0f, 1.0f, true  },
-        { "Uranus",  19.191,  6800.0, 8.6810e25, 1271.0f, glm::vec3(0.60f, 0.85f, 0.90f), 0.0f, 1.0f, false },
-        { "Neptune", 30.070,  5430.0, 1.0240e26, 1638.0f, glm::vec3(0.30f, 0.40f, 0.85f), 0.0f, 1.0f, false },
+        // name      AU       v(m/s)    mass(kg)   density   color                                  emi  scale  rings  atm    height  atmColor                                  atmDensity
+        { "Sun",     0.000,      0.0,   1.989e30,  1408.0f,  glm::vec3(1.00f, 0.90f, 0.30f),       1.0f, 0.4f,  false, false, 0.00f,  glm::vec3(0.0f),                          0.0f },
+        { "Mercury", 0.387,  47900.0,   3.3011e23, 5427.0f,  glm::vec3(0.50f, 0.50f, 0.50f),       0.0f, 1.0f,  false, false, 0.00f,  glm::vec3(0.0f),                          0.0f },
+        { "Venus",   0.723,  35000.0,   4.8675e24, 5243.0f,  glm::vec3(0.95f, 0.85f, 0.55f),       0.0f, 1.0f,  false, true,  0.08f,  glm::vec3(1.00f, 0.85f, 0.40f),           1.5f },
+        { "Earth",   1.000,  29780.0,   5.9720e24, 5514.0f,  glm::vec3(0.20f, 0.40f, 1.00f),       0.0f, 1.0f,  false, true,  0.05f,  glm::vec3(0.40f, 0.60f, 1.00f),           1.0f },
+        { "Mars",    1.524,  24100.0,   6.4171e23, 3933.0f,  glm::vec3(0.80f, 0.30f, 0.10f),       0.0f, 1.0f,  false, true,  0.03f,  glm::vec3(0.95f, 0.50f, 0.35f),           0.5f },
+        { "Jupiter", 5.203,  13070.0,   1.8980e27, 1326.0f,  glm::vec3(0.90f, 0.70f, 0.40f),       0.0f, 1.0f,  false, true,  0.08f,  glm::vec3(0.95f, 0.78f, 0.50f),           1.4f },
+        { "Saturn",  9.537,   9680.0,   5.6834e26,  687.0f,  glm::vec3(0.95f, 0.85f, 0.50f),       0.0f, 1.0f,  true,  true,  0.07f,  glm::vec3(0.95f, 0.85f, 0.60f),           1.2f },
+        { "Uranus", 19.191,   6800.0,   8.6810e25, 1271.0f,  glm::vec3(0.60f, 0.85f, 0.90f),       0.0f, 1.0f,  false, true,  0.06f,  glm::vec3(0.45f, 0.85f, 0.90f),           1.1f },
+        { "Neptune",30.070,   5430.0,   1.0240e26, 1638.0f,  glm::vec3(0.30f, 0.40f, 0.85f),       0.0f, 1.0f,  false, true,  0.07f,  glm::vec3(0.25f, 0.40f, 0.95f),           1.2f },
     };
 
     for (const auto& spec : defaults)
     {
         CelestialBody body;
-        body.pos_m        = glm::dvec3(spec.semiMajorAxisAU * AU, 0.0, 0.0);
-        body.vel_m        = glm::dvec3(0.0, 0.0, spec.orbitalVelocityMS);
-        body.mass_kg      = spec.massKg;
-        body.name         = spec.name;
-        body.color        = spec.color;
-        body.density      = spec.densityKgPerM3;
-        body.emissive     = spec.emissive;
-        body.displayScale = spec.displayScale;
-        body.hasRings     = spec.hasRings;
+        body.pos_m             = glm::dvec3(spec.semiMajorAxisAU * AU, 0.0, 0.0);
+        body.vel_m             = glm::dvec3(0.0, 0.0, spec.orbitalVelocityMS);
+        body.mass_kg           = spec.massKg;
+        body.name              = spec.name;
+        body.color             = spec.color;
+        body.density           = spec.densityKgPerM3;
+        body.emissive          = spec.emissive;
+        body.displayScale      = spec.displayScale;
+        body.hasRings          = spec.hasRings;
+        body.hasAtmosphere     = spec.hasAtmosphere;
+        body.atmosphereHeight  = spec.atmosphereHeight;
+        body.atmosphereColor   = spec.atmosphereColor;
+        body.atmosphereDensity = spec.atmosphereDensity;
         body.recalculateGeometry();
         bodies_.push_back(std::move(body));
     }
@@ -814,6 +829,21 @@ void Application::renderBodies(const glm::mat4& view, const glm::mat4& projectio
 
     for (const auto& body : bodies_)
     {
+        // Ring-shadow uniforms are body-specific: ringed bodies cast a
+        // shadow on their own surface; everyone else has no shadow.
+        if (body.hasRings)
+        {
+            const float displayRadius = body.radius * body.displayScale;
+            const float ringScale     = displayRadius * kRingScaleMultiplier;
+            bodyShader_.setInt  ("hasRingShadow",   1);
+            bodyShader_.setVec3 ("ringCenter",      body.renderPosition());
+            bodyShader_.setFloat("ringInnerRadius", ringScale * kRingInnerRadius);
+            bodyShader_.setFloat("ringOuterRadius", ringScale * kRingOuterRadius);
+        }
+        else
+        {
+            bodyShader_.setInt("hasRingShadow", 0);
+        }
         body.render(bodyShader_);
     }
 }
@@ -832,10 +862,15 @@ void Application::renderGrid(const glm::mat4& view, const glm::mat4& projection)
 
 void Application::renderRings(const glm::mat4& view, const glm::mat4& projection)
 {
+    const glm::vec3 lightPosition = bodies_.empty()
+        ? glm::vec3(0.0f)
+        : bodies_[0].renderPosition();
+
     ringShader_.use();
     ringShader_.setMat4("view",       view);
     ringShader_.setMat4("projection", projection);
     ringShader_.setVec3("ringColor",  kSaturnRingColor);
+    ringShader_.setVec3("lightPos",   lightPosition);
 
     glBindVertexArray(ringVAO_);
     glDepthMask(GL_FALSE);
@@ -846,7 +881,9 @@ void Application::renderRings(const glm::mat4& view, const glm::mat4& projection
         const float ringScale     = displayRadius * kRingScaleMultiplier;
         glm::mat4 ringModel = glm::translate(glm::mat4(1.0f), body.renderPosition());
         ringModel = glm::scale(ringModel, glm::vec3(ringScale));
-        ringShader_.setMat4("model", ringModel);
+        ringShader_.setMat4 ("model",      ringModel);
+        ringShader_.setVec3 ("bodyCenter", body.renderPosition());
+        ringShader_.setFloat("bodyRadius", displayRadius);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, ringVertexCount_);
     }
     glDepthMask(GL_TRUE);
@@ -878,6 +915,41 @@ void Application::renderTrails(const glm::mat4& view, const glm::mat4& projectio
     }
     glDepthMask(GL_TRUE);
     glBindVertexArray(0);
+}
+
+void Application::renderAtmospheres(const glm::mat4& view, const glm::mat4& projection)
+{
+    if (bodies_.empty()) return;
+
+    const glm::vec3 lightPosition = bodies_[0].renderPosition();
+
+    atmosphereShader_.use();
+    atmosphereShader_.setMat4("view",       view);
+    atmosphereShader_.setMat4("projection", projection);
+    atmosphereShader_.setVec3("lightPos",   lightPosition);
+    atmosphereShader_.setVec3("viewPos",    camera_.getPosition());
+
+    // Translucent shell — depth-test against the scene (so it occludes
+    // correctly when planets pass in front), but don't write depth so
+    // overlapping atmospheres blend cleanly.
+    glDepthMask(GL_FALSE);
+
+    for (const auto& body : bodies_)
+    {
+        if (!body.hasAtmosphere) continue;
+
+        const float shellScale = body.displayScale * (1.0f + body.atmosphereHeight);
+        glm::mat4   model      = glm::translate(glm::mat4(1.0f), body.renderPosition());
+        model                  = glm::scale(model, glm::vec3(shellScale));
+
+        atmosphereShader_.setMat4 ("model",           model);
+        atmosphereShader_.setVec3 ("atmosphereColor", body.atmosphereColor);
+        atmosphereShader_.setFloat("density",         body.atmosphereDensity);
+
+        body.mesh.draw();
+    }
+
+    glDepthMask(GL_TRUE);
 }
 
 void Application::renderPathPrediction(const glm::mat4& view, const glm::mat4& projection)

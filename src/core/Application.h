@@ -130,6 +130,9 @@ private:
     /// Procedural ring disks for any body with `hasRings == true`.
     void renderRings(const glm::mat4& view, const glm::mat4& projection);
 
+    /// Translucent rim-lit shell around any body with `hasAtmosphere == true`.
+    void renderAtmospheres(const glm::mat4& view, const glm::mat4& projection);
+
     /// Per-body orbit-history line strips with alpha fade.
     void renderTrails(const glm::mat4& view, const glm::mat4& projection);
 
@@ -182,6 +185,7 @@ private:
     Shader        ringShader_;
     Shader        bloomBlurShader_;
     Shader        bloomCompositeShader_;
+    Shader        atmosphereShader_;
     Framebuffer   sceneFbo_;
     Framebuffer   bloomPingFbo_;
     Framebuffer   bloomPongFbo_;

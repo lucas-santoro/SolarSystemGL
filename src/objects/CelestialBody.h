@@ -56,6 +56,18 @@ struct CelestialBody
     /** @brief When `true`, a procedural ring disk is rendered around this body. */
     bool hasRings = false;
 
+    /** @brief When `true`, an extra translucent atmosphere shell is rendered around this body. */
+    bool hasAtmosphere = false;
+
+    /** @brief Atmosphere shell thickness as a fraction of the body radius (e.g. 0.05 = +5%). */
+    float atmosphereHeight = 0.05f;
+
+    /** @brief Linear-RGB tint of the atmosphere shell (Rayleigh-flavored, e.g. blue for Earth). */
+    glm::vec3 atmosphereColor{ 0.40f, 0.60f, 1.00f };
+
+    /** @brief Multiplier applied to the atmosphere shell's overall intensity. */
+    float atmosphereDensity = 1.0f;
+
     /** @brief GL state for this body's subdivided icosahedron mesh. */
     PlanetMesh mesh{ 3 };
 
