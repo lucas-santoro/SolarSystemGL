@@ -32,16 +32,18 @@ struct GridSettings
 
     // -- Visual ------------------------------------------------------------
 
-    /// RGB of grid lines at zero depth (flat regions). Soft cyan reads as a
-    /// "sci-fi spacetime mesh" instead of harsh white paper grid.
-    glm::vec3 baseColor            = { 0.45f, 0.72f, 1.0f };
+    /// RGB of grid lines at zero depth (flat regions). White reads cleanly
+    /// against the dark skybox and lets the warm well gradient pop.
+    glm::vec3 baseColor            = { 1.0f, 1.0f, 1.0f };
 
-    /// RGB the lines blend toward as the well depth grows. Warm amber
-    /// contrasts the cool base, so wells visually "heat up" toward the centre.
+    /// RGB the lines blend toward as the well depth grows. Warm amber so
+    /// wells visually "heat up" toward the centre against the white base.
     glm::vec3 wellColor            = { 1.0f, 0.55f, 0.20f };
 
     /// Base line alpha applied before per-line / distance modulation.
-    float     opacity              = 0.28f;
+    /// Slightly trimmed (was 0.28) because the higher default resolution
+    /// adds visual density on its own.
+    float     opacity              = 0.22f;
 
     /// Alpha multiplier for "major" lines (every Nth row/ring). Bundle B.
     float     majorLineBoost       = 3.5f;
@@ -88,7 +90,9 @@ struct GridSettings
     Style     style                = Style::Cartesian;
 
     /// Cartesian: half the line count per axis. Radial: ring count.
-    int       resolution           = 200;
+    /// Defaults to High so the mesh reads as a fine spacetime fabric out of
+    /// the box; users on weaker GPUs can drop to Medium/Low in Settings.
+    int       resolution           = 400;
 
     /// Total side length (Cartesian) or outer radius diameter (Radial), in world units.
     float     extent               = 10000.0f;
