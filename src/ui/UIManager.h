@@ -92,6 +92,9 @@ public:
     /** @brief Render-toggle for the selected body's predicted future trajectory. */
     bool showPathPrediction = false;
 
+    /** @brief Render-toggle for the five Lagrange-point markers between the most massive body and the selection. */
+    bool showLagrange = false;
+
     /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
     bool showDiagnostics = false;
 

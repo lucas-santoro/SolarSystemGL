@@ -90,6 +90,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/core/Window.cpp
     ${SRC_DIR}/objects/CelestialBody.cpp
     ${SRC_DIR}/objects/PlanetMesh.cpp
+    ${SRC_DIR}/physics/Lagrange.cpp
     ${SRC_DIR}/physics/PathPredictor.cpp
     ${SRC_DIR}/physics/PhysicsSystem.cpp
     ${SRC_DIR}/ui/Actionbar.cpp

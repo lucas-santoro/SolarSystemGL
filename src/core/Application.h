@@ -9,6 +9,7 @@
 #include "core/Shader.h"
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
+#include "objects/PlanetMesh.h"
 #include "physics/PathPredictor.h"
 #include "physics/PhysicsSystem.h"
 #include "ui/AddPlanetModal.h"
@@ -133,6 +134,10 @@ private:
     /// Translucent rim-lit shell around any body with `hasAtmosphere == true`.
     void renderAtmospheres(const glm::mat4& view, const glm::mat4& projection);
 
+    /// Five small glowing markers at L1–L5 between the Sun and the selected
+    /// body. Toggle via `uiManager_.showLagrange`.
+    void renderLagrange(const glm::mat4& view, const glm::mat4& projection);
+
     /// Per-body orbit-history line strips with alpha fade.
     void renderTrails(const glm::mat4& view, const glm::mat4& projection);
 
@@ -219,6 +224,8 @@ private:
     GLuint  fullscreenQuadVAO_   = 0;  ///< Shared by the sky pass and the bloom fullscreen passes.
     GLuint  fullscreenQuadVBO_   = 0;
     GLsizei ringVertexCount_     = 0;
+
+    PlanetMesh lagrangeMesh_{ 2 };       ///< Low-poly icosahedron used for L1–L5 markers.
 
     // Mouse-input state, shared between the GLFW callbacks and the main loop.
     float lastMouseX_       = 400.0f;

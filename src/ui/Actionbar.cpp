@@ -224,6 +224,9 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
     ImGui::Checkbox("Prediction",  &uiManager.showPathPrediction);
     ImGui::SetItemTooltip("Project the selected body's future orbit as a dashed line");
     ImGui::SameLine();
+    ImGui::Checkbox("Lagrange",    &uiManager.showLagrange);
+    ImGui::SetItemTooltip("Mark L1\xe2\x80\x93L5 between the most massive body and the selection");
+    ImGui::SameLine();
     ImGui::Checkbox("Bloom",       &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
     ImGui::SameLine();
