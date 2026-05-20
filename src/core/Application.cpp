@@ -300,6 +300,7 @@ void Application::tick()
     if (uiManager_.showTrails)         renderTrails(view, projection);
     if (uiManager_.showPathPrediction) renderPathPrediction(view, projection);
     if (uiManager_.showLagrange)       renderLagrange(view, projection);
+    if (uiManager_.isPlacingBody())    renderPlacementHint(view, projection);
 
     // ---- Bloom passes: bright-pass emissive bodies, then ping-pong blur -
     GLuint blurredBloomTexture = 0;
@@ -1052,6 +1053,33 @@ void Application::renderAtmospheres(const glm::mat4& view, const glm::mat4& proj
     }
 
     glDepthMask(GL_TRUE);
+}
+
+void Application::renderPlacementHint(const glm::mat4& view, const glm::mat4& projection)
+{
+    const glm::vec3 startPos = uiManager_.getPlacementStart();
+    const glm::vec3 endPos   = uiManager_.getPlacementEnd();
+    if (glm::length(endPos - startPos) < 0.1f) return;  // no drag yet
+
+    const std::vector<glm::vec3> points = { startPos, endPos };
+
+    trailShader_.use();
+    trailShader_.setMat4("view",       view);
+    trailShader_.setMat4("projection", projection);
+    trailShader_.setVec3("trailColor", glm::vec3(1.0f, 0.85f, 0.25f));  // amber
+    trailShader_.setInt ("pointCount", static_cast<int>(points.size()));
+
+    glBindVertexArray(trailVAO_);
+    glBindBuffer(GL_ARRAY_BUFFER, trailVBO_);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3),
+                 points.data(), GL_DYNAMIC_DRAW);
+
+    glDepthMask(GL_FALSE);
+    glLineWidth(3.0f);
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(points.size()));
+    glLineWidth(1.0f);
+    glDepthMask(GL_TRUE);
+    glBindVertexArray(0);
 }
 
 void Application::renderLagrange(const glm::mat4& view, const glm::mat4& projection)

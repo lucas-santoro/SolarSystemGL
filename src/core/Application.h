@@ -159,6 +159,10 @@ private:
     /// Reuses the trail shader to draw the path predictor's cached line strip.
     void renderPathPrediction(const glm::mat4& view, const glm::mat4& projection);
 
+    /// Yellow guide line from the placement start to the live cursor position
+    /// while the user is mid-drag building a new body.
+    void renderPlacementHint(const glm::mat4& view, const glm::mat4& projection);
+
     /// Render emissive bodies into the bloom ping FBO and run ping-pong
     /// Gaussian blurs. Leaves the final blurred image in @p outBlurredTexture.
     void renderBloomPasses(const glm::mat4& view, const glm::mat4& projection,

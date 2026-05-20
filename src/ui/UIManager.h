@@ -74,6 +74,15 @@ public:
     /** @brief Push a toast notification onto the in-game notification stack. */
     ToastQueue& toasts() { return toasts_; }
 
+    /** @return `true` while the user is mid-drag placing a new body. */
+    bool isPlacingBody() const { return placementActive_; }
+
+    /** @return Start position of the active drag-to-place in world units. */
+    glm::vec3 getPlacementStart() const { return placementStartPosWU_; }
+
+    /** @return Current cursor world-unit position during an active drag-to-place. */
+    glm::vec3 getPlacementEnd() const { return placementEndPosWU_; }
+
     /** @brief VSync state — toggled by the main-panel checkbox. */
     bool vsync = true;
 
@@ -131,6 +140,13 @@ private:
 
     bool pendingRemove = false;
 
+    // Drag-to-place state. LMB-click in empty 3D space starts a drag; the
+    // release point + drag vector determine the new body's position and
+    // initial velocity.
+    bool      placementActive_     = false;
+    glm::vec3 placementStartPosWU_{ 0.0f };
+    glm::vec3 placementEndPosWU_  { 0.0f };
+
     // Right-click context menu state.
     int  rmbPressedTargetIdx_   = -1;  ///< Body hovered when RMB was first pressed.
     int  contextMenuTargetIdx_  = -1;  ///< Body the popup is acting on.
@@ -160,4 +176,8 @@ private:
     void renderPlanetInfo(CelestialBody& body);
     void renderDiagnostics(const std::vector<CelestialBody>& bodies);
     void renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera);
+
+    /// Finalise the in-flight placement: build a CelestialBody from
+    /// placementStartPosWU_ + the drag vector, append to @p bodies, select.
+    void spawnPlacedBody(std::vector<CelestialBody>& bodies);
 };

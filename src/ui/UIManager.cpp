@@ -73,6 +73,30 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
     glm::vec3 rayDir  = camera.getRayFromMouse(mouseX, mouseY, width, height, view, projection);
     glm::vec3 rayOrig = camera.getPosition();
 
+    // Ray-vs-ecliptic-plane intersect (y = 0). Returns a sane fallback
+    // (a point in front of the camera) when the ray is parallel or
+    // pointing the wrong way.
+    auto castToEclipticPlane = [&]() -> glm::vec3 {
+        constexpr float kFallback = 100.0f;
+        if (std::abs(rayDir.y) < 1e-6f) return rayOrig + rayDir * kFallback;
+        const float t = -rayOrig.y / rayDir.y;
+        if (t < 0.0f) return rayOrig + rayDir * kFallback;
+        return rayOrig + t * rayDir;
+    };
+
+    // Update an in-flight placement regardless of ImGui mouse-capture state —
+    // the drag started outside the panels, so the user should be able to
+    // release it anywhere (including over the Planet Info dock).
+    if (placementActive_)
+    {
+        placementEndPosWU_ = castToEclipticPlane();
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            spawnPlacedBody(bodies);
+            placementActive_ = false;
+        }
+    }
+
     if (ImGui::GetIO().WantCaptureMouse) {
         hoveredIndex = -1;
         return;
@@ -103,21 +127,29 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
             ImGui::End();
         }
     }
-    else {
-        return;
-    }
 
-    if (glfwGetMouseButton(window.getGLFWwindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        selectedPlanetIndex = hoveredIndex;
-        auto& selected = bodies[hoveredIndex];
-
-        const float distance = selected.focusDistance();
-
-        if (camera.getMode() == CameraMode::ORBITAL) {
-            camera.flyToOrbital(hoveredIndex, selected.renderPosition(), distance);
+    // LMB click handling. On a body: select / fly to it (single-fire via
+    // IsMouseClicked). On empty space: start a drag-to-place that finishes
+    // when the user releases LMB.
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        if (hoveredIndex >= 0)
+        {
+            selectedPlanetIndex = hoveredIndex;
+            auto& selected = bodies[hoveredIndex];
+            const float distance = selected.focusDistance();
+            if (camera.getMode() == CameraMode::ORBITAL) {
+                camera.flyToOrbital(hoveredIndex, selected.renderPosition(), distance);
+            }
+            else {
+                camera.startSmoothMove(selected.renderPosition(), distance);
+            }
         }
-        else {
-            camera.startSmoothMove(selected.renderPosition(), distance);
+        else if (!placementActive_)
+        {
+            placementStartPosWU_ = castToEclipticPlane();
+            placementEndPosWU_   = placementStartPosWU_;
+            placementActive_     = true;
         }
     }
 
@@ -141,6 +173,38 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
         rmbPressedTargetIdx_ = -1;
         ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
     }
+}
+
+void UIManager::spawnPlacedBody(std::vector<CelestialBody>& bodies)
+{
+    const glm::dvec3 startMeters = glm::dvec3(placementStartPosWU_) * METERS_PER_WU;
+    const glm::dvec3 dragVecWU   = glm::dvec3(placementEndPosWU_ - placementStartPosWU_);
+
+    // Velocity scale chosen so a ~100 WU drag at 1 AU yields a near-circular
+    // orbital velocity for an Earth-mass body. Below that → spiral inward.
+    constexpr double kVelocityPerWU = 300.0;
+    const glm::dvec3 velocity = dragVecWU * kVelocityPerWU;
+
+    CelestialBody body;
+    body.pos_m        = startMeters;
+    body.vel_m        = velocity;
+    body.mass_kg      = 5.972e24;                 // Earth-mass default
+    body.name         = "Custom " + std::to_string(bodies.size() + 1);
+    body.color        = glm::vec3(0.40f, 0.70f, 1.00f);
+    body.density      = 3000.0f;
+    body.emissive     = 0.0f;
+    body.displayScale = 1.0f;
+    body.recalculateGeometry();
+
+    const std::string addedName = body.name;
+    bodies.push_back(std::move(body));
+    setSelected(static_cast<int>(bodies.size()) - 1);
+
+    const double speedKmS = glm::length(velocity) / 1000.0;
+    char buf[96];
+    std::snprintf(buf, sizeof(buf), "Placed %s — initial v = %.1f km/s",
+                  addedName.c_str(), speedKmS);
+    toasts_.success(buf);
 }
 
 void UIManager::renderPlanetInfo(CelestialBody& body)
