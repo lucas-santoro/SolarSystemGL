@@ -978,8 +978,10 @@ void Application::renderLagrange(const glm::mat4& view, const glm::mat4& project
     const lagrange::Points points = lagrange::compute(bodies_[primaryIdx], bodies_[selectedIdx]);
     if (!points.valid) return;
 
+    // L1 is intentionally lime / yellow-green so it doesn't blend with the
+    // Sun's warm yellow when both end up in frame.
     static constexpr glm::vec3 kColors[5] = {
-        glm::vec3(1.00f, 0.90f, 0.30f),  // L1 — warm yellow
+        glm::vec3(0.70f, 1.00f, 0.20f),  // L1 — lime green
         glm::vec3(1.00f, 0.55f, 0.15f),  // L2 — orange
         glm::vec3(1.00f, 0.25f, 0.25f),  // L3 — red
         glm::vec3(0.25f, 0.95f, 0.95f),  // L4 — cyan (stable)
