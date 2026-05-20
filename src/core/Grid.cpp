@@ -163,23 +163,27 @@ void Grid::draw(Shader& shader,
     const int count = std::min(static_cast<int>(bodies.size()), kMaxPlanetsForGrid);
     std::vector<glm::vec3> positions(count);
     std::vector<float>     masses(count);
+    std::vector<glm::vec3> colors(count);
 
     for (int i = 0; i < count; ++i)
     {
         positions[i] = bodies[i].renderPosition();
         masses[i]    = static_cast<float>(bodies[i].mass_kg / kEarthMassKg);
+        colors[i]    = bodies[i].color;
     }
 
     shader.setInt("planetCount", count);
     shader.setVec3Array("planetPositions", positions);
     shader.setFloatArray("planetMasses",   masses);
+    shader.setVec3Array("planetColors",    colors);
 
-    // Distortion uniforms (replace the former hardcoded magic numbers).
-    shader.setFloat("gridStrength",  settings.distortionStrength);
-    shader.setFloat("falloffRadius", settings.falloffRadius);
-    shader.setFloat("maxWellDepth",  settings.maxWellDepth);
+    // Distortion uniforms.
+    shader.setFloat("gridStrength",     settings.distortionStrength);
+    shader.setFloat("falloffRadius",    settings.falloffRadius);
+    shader.setFloat("maxWellDepth",     settings.maxWellDepth);
+    shader.setInt  ("useSchwarzschild", settings.useSchwarzschild ? 1 : 0);
 
-    // Visual uniforms (replace the former hardcoded white + 0.2 alpha).
+    // Visual uniforms.
     shader.setVec3 ("baseColor",         settings.baseColor);
     shader.setVec3 ("wellColor",         settings.wellColor);
     shader.setFloat("opacity",           settings.opacity);
@@ -187,6 +191,8 @@ void Grid::draw(Shader& shader,
     shader.setInt  ("majorLineInterval", settings.majorLineInterval);
     shader.setFloat("distanceFadeStart", settings.distanceFadeStart);
     shader.setFloat("distanceFadeEnd",   settings.distanceFadeEnd);
+    shader.setInt  ("perBodyTint",       settings.perBodyTint ? 1 : 0);
+    shader.setFloat("singularityDarken", settings.singularityDarken);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINES, 0, lineCount);

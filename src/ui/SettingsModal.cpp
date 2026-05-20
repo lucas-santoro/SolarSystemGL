@@ -79,6 +79,16 @@ namespace
         ImGui::SliderFloat("Major boost",  &grid.majorLineBoost,    1.0f, 6.0f, "%.1fx");
         ImGui::SliderFloat("Fade start",   &grid.distanceFadeStart, 0.0f, 20000.0f, "%.0f WU");
         ImGui::SliderFloat("Fade end",     &grid.distanceFadeEnd,   0.0f, 30000.0f, "%.0f WU");
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("Black hole flavor");
+        ImGui::Checkbox  ("Schwarzschild falloff", &grid.useSchwarzschild);
+        ImGui::SameLine();
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Switch from Lorentzian (1 / (1 + r^2)) to Schwarzschild-style (1 / r) — peakier wells.");
+        ImGui::Checkbox  ("Per-body color tint",   &grid.perBodyTint);
+        ImGui::SliderFloat("Singularity darken",   &grid.singularityDarken, 0.0f, 2.0f, "%.2f");
     }
 }
 

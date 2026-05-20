@@ -10,11 +10,13 @@ uniform mat4 projection;
 
 uniform vec3  planetPositions[MAX_PLANETS];
 uniform float planetMasses[MAX_PLANETS];
+uniform vec3  planetColors[MAX_PLANETS];
 uniform int   planetCount;
 
 uniform float gridStrength;     // GridSettings.distortionStrength
 uniform float falloffRadius;    // GridSettings.falloffRadius
 uniform float maxWellDepth;     // GridSettings.maxWellDepth
+uniform bool  useSchwarzschild; // GridSettings.useSchwarzschild
 
 uniform vec3  cameraPos;
 uniform int   majorLineInterval;
@@ -22,26 +24,45 @@ uniform int   majorLineInterval;
 out float vWellDepth;        // positive when the vertex is in a well
 out float vDistanceFromCam;  // world-space distance to the camera
 out float vIsMajorLine;      // 1.0 on major lines, 0.0 otherwise
+out vec3  vPerBodyColor;     // weighted blend of contributing body colors
 
 void main() {
-    vec3 distortedPos = aPos;
+    vec3  distortedPos    = aPos;
+    vec3  weightedColor   = vec3(0.0);
+    float totalDepth      = 0.0;
+
     for (int i = 0; i < planetCount; ++i) {
-        vec2  delta      = distortedPos.xz - planetPositions[i].xz;
-        float dist2      = max(dot(delta, delta), 0.001);
-        float distortion = gridStrength * planetMasses[i]
-                         / (1.0 + dist2 / (falloffRadius * falloffRadius));
-        distortion       = clamp(distortion, 0.0, maxWellDepth);
-        distortedPos.y  -= distortion;
+        vec2  delta = distortedPos.xz - planetPositions[i].xz;
+        float dist2 = max(dot(delta, delta), 0.001);
+
+        float depth;
+        if (useSchwarzschild) {
+            // Schwarzschild-inspired: depth ~ M / r. Softening keeps the
+            // singularity finite (r is in world units; the 0.5 softening
+            // matches the renderer's typical body display radius).
+            float r = sqrt(dist2);
+            depth = gridStrength * planetMasses[i] / max(r, 0.5);
+        } else {
+            depth = gridStrength * planetMasses[i]
+                  / (1.0 + dist2 / (falloffRadius * falloffRadius));
+        }
+
+        depth = clamp(depth, 0.0, maxWellDepth);
+        distortedPos.y -= depth;
+
+        weightedColor += planetColors[i] * depth;
+        totalDepth    += depth;
     }
 
-    vWellDepth = -distortedPos.y;
+    vWellDepth     = -distortedPos.y;
+    vPerBodyColor  = (totalDepth > 0.0001) ? (weightedColor / totalDepth) : vec3(0.0);
 
-    vec3 worldPos     = (model * vec4(distortedPos, 1.0)).xyz;
-    vDistanceFromCam  = length(cameraPos - worldPos);
+    vec3 worldPos    = (model * vec4(distortedPos, 1.0)).xyz;
+    vDistanceFromCam = length(cameraPos - worldPos);
 
-    int  interval     = (majorLineInterval > 0) ? majorLineInterval : 1;
-    float remainder   = mod(aLineIndex, float(interval));
-    vIsMajorLine      = (remainder < 0.5) ? 1.0 : 0.0;
+    int   interval  = (majorLineInterval > 0) ? majorLineInterval : 1;
+    float remainder = mod(aLineIndex, float(interval));
+    vIsMajorLine    = (remainder < 0.5) ? 1.0 : 0.0;
 
     gl_Position = projection * view * vec4(worldPos, 1.0);
 }
