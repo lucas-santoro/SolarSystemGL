@@ -5,6 +5,14 @@
 Camera::Camera(glm::vec3 startPosition)
     : position_(startPosition)
 {
+    // Compute front_ from member-default yaw/pitch so the initial view
+    // matches what `getViewMatrix` will produce. Without this, position_
+    // and yaw_/pitch_ would disagree until the first reset().
+    glm::vec3 direction;
+    direction.x = std::cos(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+    direction.y = std::sin(glm::radians(pitch_));
+    direction.z = std::sin(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+    front_      = glm::normalize(direction);
 }
 
 glm::mat4 Camera::getViewMatrix()
@@ -288,11 +296,21 @@ void Camera::update(float dt)
 
 void Camera::reset()
 {
-    position_     = glm::vec3(0.0f, 0.0f, 300.0f);
-    front_        = glm::vec3(0.0f, 0.0f, -1.0f);
+    // Cinematic 3/4 angle — upper-front-right looking down at the origin.
+    // Frames the inner Solar System bodies nicely on first load and provides
+    // a more interesting default than the flat (0, 0, 300) front view.
+    position_     = glm::vec3(220.0f, 160.0f, 280.0f);
+    yaw_          = -128.0f;
+    pitch_        = -24.0f;
     up_           = glm::vec3(0.0f, 1.0f, 0.0f);
-    yaw_          = -90.0f;
-    pitch_        = 0.0f;
-    isTravelling_ = false;
+
+    glm::vec3 direction;
+    direction.x = std::cos(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+    direction.y = std::sin(glm::radians(pitch_));
+    direction.z = std::sin(glm::radians(yaw_)) * std::cos(glm::radians(pitch_));
+    front_      = glm::normalize(direction);
+
+    isTravelling_   = false;
+    hasPendingPose_ = false;
     setMode(CameraMode::FREE);
 }

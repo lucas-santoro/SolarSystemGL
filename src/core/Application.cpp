@@ -29,7 +29,10 @@ constexpr float  kRingOuterRadius    = 1.5f;
 constexpr float  kRingScaleMultiplier = 1.5f;
 
 // Camera and projection defaults.
-const     glm::vec3 kInitialCameraPosition{ 0.0f, 0.0f, 300.0f };
+// Cinematic 3/4 angle from the upper-front-right; matches Camera::reset().
+const     glm::vec3 kInitialCameraPosition{ 220.0f, 160.0f, 280.0f };
+constexpr float     kInitialCameraYaw   = -128.0f;
+constexpr float     kInitialCameraPitch = -24.0f;
 constexpr float  kProjectionNearPlane     = 0.01f;
 constexpr float  kProjectionFarPlane      = 10000.0f;
 
@@ -554,8 +557,8 @@ void Application::applyViewPreset(ViewPreset preset)
         case ViewPreset::Default:
         default:
             position = kInitialCameraPosition;
-            yaw      = -90.0f;
-            pitch    = 0.0f;
+            yaw      = kInitialCameraYaw;
+            pitch    = kInitialCameraPitch;
             break;
     }
     camera_.flyToPose(position, yaw, pitch);

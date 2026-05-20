@@ -159,8 +159,10 @@ private:
     glm::vec3 position_;
     glm::vec3 front_{ 0.0f, 0.0f, -1.0f };
     glm::vec3 up_{ 0.0f, 1.0f, 0.0f };
-    float     yaw_         = -90.0f;
-    float     pitch_       = 0.0f;
+    // Cinematic 3/4 defaults — match the values inside Camera::reset() so a
+    // freshly-constructed Camera lines up with the post-reset state.
+    float     yaw_         = -128.0f;
+    float     pitch_       = -24.0f;
     float     speed_       = 80.0f;
     float     sensitivity_ = 0.1f;
 
