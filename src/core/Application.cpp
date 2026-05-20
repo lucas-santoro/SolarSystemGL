@@ -827,6 +827,21 @@ void Application::renderBodies(const glm::mat4& view, const glm::mat4& projectio
 
     for (const auto& body : bodies_)
     {
+        // Ring-shadow uniforms are body-specific: ringed bodies cast a
+        // shadow on their own surface; everyone else has no shadow.
+        if (body.hasRings)
+        {
+            const float displayRadius = body.radius * body.displayScale;
+            const float ringScale     = displayRadius * kRingScaleMultiplier;
+            bodyShader_.setInt  ("hasRingShadow",   1);
+            bodyShader_.setVec3 ("ringCenter",      body.renderPosition());
+            bodyShader_.setFloat("ringInnerRadius", ringScale * kRingInnerRadius);
+            bodyShader_.setFloat("ringOuterRadius", ringScale * kRingOuterRadius);
+        }
+        else
+        {
+            bodyShader_.setInt("hasRingShadow", 0);
+        }
         body.render(bodyShader_);
     }
 }
@@ -845,10 +860,15 @@ void Application::renderGrid(const glm::mat4& view, const glm::mat4& projection)
 
 void Application::renderRings(const glm::mat4& view, const glm::mat4& projection)
 {
+    const glm::vec3 lightPosition = bodies_.empty()
+        ? glm::vec3(0.0f)
+        : bodies_[0].renderPosition();
+
     ringShader_.use();
     ringShader_.setMat4("view",       view);
     ringShader_.setMat4("projection", projection);
     ringShader_.setVec3("ringColor",  kSaturnRingColor);
+    ringShader_.setVec3("lightPos",   lightPosition);
 
     glBindVertexArray(ringVAO_);
     glDepthMask(GL_FALSE);
@@ -859,7 +879,9 @@ void Application::renderRings(const glm::mat4& view, const glm::mat4& projection
         const float ringScale     = displayRadius * kRingScaleMultiplier;
         glm::mat4 ringModel = glm::translate(glm::mat4(1.0f), body.renderPosition());
         ringModel = glm::scale(ringModel, glm::vec3(ringScale));
-        ringShader_.setMat4("model", ringModel);
+        ringShader_.setMat4 ("model",      ringModel);
+        ringShader_.setVec3 ("bodyCenter", body.renderPosition());
+        ringShader_.setFloat("bodyRadius", displayRadius);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, ringVertexCount_);
     }
     glDepthMask(GL_TRUE);
