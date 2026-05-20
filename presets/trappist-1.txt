@@ -1,0 +1,126 @@
+# Trappist-1 preset — cool red dwarf with seven rocky planets in resonance.
+# Real semi-major axes (0.012–0.062 AU); planets are heavily scaled-up visually
+# (displayScale = 6) to be visible from a default camera distance.
+version = 1
+timeScale = 10000
+
+[body]
+name = Trappist-1
+pos_m = 0 0 0
+vel_m = 0 0 0
+mass_kg = 1.787e29
+color = 1.0 0.4 0.15
+density = 50000
+emissive = 1
+displayScale = 0.5
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Trappist-1b
+pos_m = 1.726359e+09 0 0
+vel_m = 0 0 8.311885e+04
+mass_kg = 8.200000e+24
+color = 1.0 0.55 0.30
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.060
+atmosphereColor = 1.0 0.55 0.30
+atmosphereDensity = 1.30
+
+[body]
+name = Trappist-1c
+pos_m = 2.363646e+09 0 0
+vel_m = 0 0 7.103525e+04
+mass_kg = 7.810000e+24
+color = 1.0 0.70 0.40
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.050
+atmosphereColor = 1.0 0.70 0.40
+atmosphereDensity = 1.10
+
+[body]
+name = Trappist-1d
+pos_m = 3.331545e+09 0 0
+vel_m = 0 0 5.983321e+04
+mass_kg = 2.320000e+24
+color = 0.70 0.85 0.55
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.040
+atmosphereColor = 0.55 0.80 0.55
+atmosphereDensity = 0.80
+
+[body]
+name = Trappist-1e
+pos_m = 4.375738e+09 0 0
+vel_m = 0 0 5.220829e+04
+mass_kg = 4.130000e+24
+color = 0.30 0.60 0.95
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.050
+atmosphereColor = 0.30 0.60 0.95
+atmosphereDensity = 1.00
+
+[body]
+name = Trappist-1f
+pos_m = 5.758022e+09 0 0
+vel_m = 0 0 4.551227e+04
+mass_kg = 6.200000e+24
+color = 0.40 0.70 0.85
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.050
+atmosphereColor = 0.40 0.70 0.95
+atmosphereDensity = 1.00
+
+[body]
+name = Trappist-1g
+pos_m = 7.005668e+09 0 0
+vel_m = 0 0 4.126106e+04
+mass_kg = 7.890000e+24
+color = 0.55 0.75 0.85
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.050
+atmosphereColor = 0.55 0.80 0.95
+atmosphereDensity = 1.00
+
+[body]
+name = Trappist-1h
+pos_m = 9.258612e+09 0 0
+vel_m = 0 0 3.589155e+04
+mass_kg = 1.950000e+24
+color = 0.85 0.92 0.98
+density = 5500
+emissive = 0
+displayScale = 6
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.040
+atmosphereColor = 0.80 0.90 1.00
+atmosphereDensity = 0.60
+
