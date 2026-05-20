@@ -1,7 +1,11 @@
 # SolarSystemGL preset: equal-mass binary star system.
-# Two solar-mass stars at +/- 1e10 m, orbiting their common barycenter at ~40.85 km/s.
-# Orbital period ~17 days; at default timeScale (864 000x) one orbit takes ~1.7 s of real time.
+# Two solar-mass stars at +/- 1e10 m (~20 WU apart), orbiting their common
+# barycenter at ~40.85 km/s. Orbital period ~17 days; at default timeScale
+# (864 000x) one orbit takes ~1.7 s of real time.
 # Total momentum is exactly zero by construction (symmetric).
+# displayScale = 0.05 keeps the stars small enough that they read as a
+# binary pair instead of overlapping into one blob (each star's raw
+# mass-derived radius is ~70 WU which would swallow the 20-WU separation).
 version = 1
 timeScale = 864000
 
@@ -13,7 +17,7 @@ mass_kg = 1.989e30
 color = 1.0 0.9 0.3
 density = 1408
 emissive = 1.0
-displayScale = 0.5
+displayScale = 0.05
 
 [body]
 name = Beta
@@ -23,4 +27,4 @@ mass_kg = 1.989e30
 color = 1.0 0.5 0.3
 density = 1408
 emissive = 1.0
-displayScale = 0.5
+displayScale = 0.05
