@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include "core/Grid.h"
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 namespace
@@ -137,6 +138,85 @@ void Grid::buildCartesianGeometry(int divisions, float extent)
     glBindVertexArray(0);
 }
 
+void Grid::buildRadialGeometry(int divisions, float extent)
+{
+    // Radial layout: a stack of concentric rings + a set of radial spokes,
+    // both tessellated finely enough to look smooth and to deform cleanly
+    // around bodies passing through them.
+    const int   rings           = std::max(divisions / 4, 8);
+    const int   spokes          = std::clamp(divisions / 4, 16, 96);
+    constexpr int kRingSegments = 64;
+    const float maxRadius       = extent * 0.5f;
+
+    constexpr int   kFloatsPerVertex = 4;
+    constexpr float kTwoPi           = 6.283185307179586f;
+
+    std::vector<GLfloat> vertices;
+    vertices.reserve(
+        static_cast<size_t>(rings) * kRingSegments * 2 * kFloatsPerVertex +
+        static_cast<size_t>(spokes) * rings * 2 * kFloatsPerVertex);
+
+    // Concentric rings.
+    for (int ring = 0; ring < rings; ++ring)
+    {
+        const float radius    = maxRadius * static_cast<float>(ring + 1) / static_cast<float>(rings);
+        const float lineIndex = static_cast<float>(ring);
+        for (int seg = 0; seg < kRingSegments; ++seg)
+        {
+            const float a0 = kTwoPi * static_cast<float>(seg)     / static_cast<float>(kRingSegments);
+            const float a1 = kTwoPi * static_cast<float>(seg + 1) / static_cast<float>(kRingSegments);
+            const float x0 = radius * std::cos(a0);
+            const float z0 = radius * std::sin(a0);
+            const float x1 = radius * std::cos(a1);
+            const float z1 = radius * std::sin(a1);
+            vertices.insert(vertices.end(), {
+                x0, 0.0f, z0, lineIndex,
+                x1, 0.0f, z1, lineIndex,
+            });
+        }
+    }
+
+    // Radial spokes — each broken at every ring intersection so the
+    // distortion bends smoothly along the spoke instead of in a single
+    // straight segment from origin to the outer radius.
+    for (int spoke = 0; spoke < spokes; ++spoke)
+    {
+        const float angle     = kTwoPi * static_cast<float>(spoke) / static_cast<float>(spokes);
+        const float dirX      = std::cos(angle);
+        const float dirZ      = std::sin(angle);
+        const float lineIndex = static_cast<float>(spoke);
+        for (int seg = 0; seg < rings; ++seg)
+        {
+            const float r0 = maxRadius * static_cast<float>(seg)     / static_cast<float>(rings);
+            const float r1 = maxRadius * static_cast<float>(seg + 1) / static_cast<float>(rings);
+            vertices.insert(vertices.end(), {
+                r0 * dirX, 0.0f, r0 * dirZ, lineIndex,
+                r1 * dirX, 0.0f, r1 * dirZ, lineIndex,
+            });
+        }
+    }
+
+    lineCount = static_cast<int>(vertices.size()) / kFloatsPerVertex;
+
+    if (VAO == 0) glGenVertexArrays(1, &VAO);
+    if (VBO == 0) glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
+                 vertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          kFloatsPerVertex * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE,
+                          kFloatsPerVertex * sizeof(GLfloat),
+                          (void*)(3 * sizeof(GLfloat)));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
 void Grid::rebuildIfDirty(const GridSettings& settings)
 {
     const bool styleChanged      = settings.style      != lastBuiltStyle_;
@@ -144,8 +224,16 @@ void Grid::rebuildIfDirty(const GridSettings& settings)
     const bool extentChanged     = settings.extent     != lastBuiltExtent_;
     if (!styleChanged && !resolutionChanged && !extentChanged) return;
 
-    // Phase 1: only Cartesian is implemented. Phase 5 adds the Radial branch.
-    buildCartesianGeometry(settings.resolution, settings.extent);
+    switch (settings.style)
+    {
+        case GridSettings::Style::Radial:
+            buildRadialGeometry(settings.resolution, settings.extent);
+            break;
+        case GridSettings::Style::Cartesian:
+        default:
+            buildCartesianGeometry(settings.resolution, settings.extent);
+            break;
+    }
 
     lastBuiltStyle_      = settings.style;
     lastBuiltResolution_ = settings.resolution;

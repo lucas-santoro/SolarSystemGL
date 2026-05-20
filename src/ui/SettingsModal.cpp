@@ -32,6 +32,13 @@ namespace
 
     void renderGridSection(GridSettings& grid)
     {
+        const char* styleLabels[] = { "Cartesian", "Radial" };
+        int styleIdx = static_cast<int>(grid.style);
+        if (ImGui::Combo("Style", &styleIdx, styleLabels, IM_ARRAYSIZE(styleLabels)))
+        {
+            grid.style = static_cast<GridSettings::Style>(styleIdx);
+        }
+
         ImGui::ColorEdit3("Base color", &grid.baseColor[0]);
         ImGui::SliderFloat("Opacity", &grid.opacity, 0.0f, 1.0f, "%.2f");
 

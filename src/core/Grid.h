@@ -135,6 +135,7 @@ public:
 
 private:
     void buildCartesianGeometry(int divisions, float extent);
+    void buildRadialGeometry(int divisions, float extent);
     void rebuildIfDirty(const GridSettings& settings);
 
     GLuint VAO       = 0;
