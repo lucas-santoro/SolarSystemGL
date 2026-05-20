@@ -32,26 +32,33 @@ struct GridSettings
 
     // -- Visual ------------------------------------------------------------
 
-    /// RGB of grid lines at zero depth (flat regions).
-    glm::vec3 baseColor            = { 1.0f, 1.0f, 1.0f };
+    /// RGB of grid lines at zero depth (flat regions). Soft cyan reads as a
+    /// "sci-fi spacetime mesh" instead of harsh white paper grid.
+    glm::vec3 baseColor            = { 0.45f, 0.72f, 1.0f };
 
-    /// RGB the lines blend toward as the well depth grows (used by Bundle B).
-    glm::vec3 wellColor            = { 0.20f, 0.05f, 0.40f };
+    /// RGB the lines blend toward as the well depth grows. Warm amber
+    /// contrasts the cool base, so wells visually "heat up" toward the centre.
+    glm::vec3 wellColor            = { 1.0f, 0.55f, 0.20f };
 
     /// Base line alpha applied before per-line / distance modulation.
-    float     opacity              = 0.20f;
+    float     opacity              = 0.28f;
 
     /// Alpha multiplier for "major" lines (every Nth row/ring). Bundle B.
-    float     majorLineBoost       = 2.5f;
+    float     majorLineBoost       = 3.5f;
 
     /// Major-line stride. `1` makes every line major (no minor lines). Bundle B.
     int       majorLineInterval    = 10;
 
-    /// Distance from the camera at which the alpha starts ramping toward zero. Bundle B.
-    float     distanceFadeStart    = 4000.0f;
+    /// Distance from the camera at which the alpha starts ramping toward
+    /// zero. Tightened (was 4000) so the grid focuses on the inner system
+    /// near the cinematic start camera instead of stretching past Neptune.
+    float     distanceFadeStart    = 1800.0f;
 
-    /// Distance from the camera at which the alpha reaches zero. Bundle B.
-    float     distanceFadeEnd      = 9000.0f;
+    /// Distance from the camera at which the alpha reaches zero. Tuned to
+    /// reach roughly Saturn distance (9.5 AU = 1425 WU) plus margin so the
+    /// outer planets are still discoverable but the empty void beyond
+    /// Neptune is cleanly invisible.
+    float     distanceFadeEnd      = 5500.0f;
 
     // -- Distortion physics -----------------------------------------------
 
@@ -69,7 +76,9 @@ struct GridSettings
     bool      useSchwarzschild     = false;
 
     /// Strength of the "singularity" darkening applied to very deep wells. Bundle C.
-    float     singularityDarken    = 1.0f;
+    /// A modest default (0.6) adds depth to the well centres without going
+    /// full black-hole — users can crank it to 1.5+ via Settings.
+    float     singularityDarken    = 0.6f;
 
     /// Mix the well color with the per-body color contributing to that well. Bundle C.
     bool      perBodyTint          = true;
