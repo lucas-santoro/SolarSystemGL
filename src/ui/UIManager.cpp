@@ -7,7 +7,8 @@
 #include <limits>
 
 void UIManager::render(Window& window, Camera& camera, float deltaTime,
-                       std::vector<CelestialBody>& bodies, Grid& /*grid*/, PhysicsSystem& physics)
+                       std::vector<CelestialBody>& bodies, Grid& /*grid*/, PhysicsSystem& physics,
+                       GridSettings& gridSettings)
 {
     int width, height;
     glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
@@ -38,7 +39,7 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
 
     if (showDiagnostics) renderDiagnostics(bodies);
 
-    actionbar_.renderBottomBar(window, *this);
+    actionbar_.renderBottomBar(window, *this, gridSettings);
 
     // Deferred removal — set inside renderPlanetInfo; processed here so we don't
     // mutate the bodies vector while the panel still holds a reference to it.

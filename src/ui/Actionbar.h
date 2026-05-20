@@ -7,6 +7,7 @@ class PhysicsSystem;
 class UIManager;
 class Window;
 struct CelestialBody;
+struct GridSettings;
 
 /**
  * @file Actionbar.h
@@ -46,8 +47,11 @@ public:
 
     /**
      * @brief Render the bottom side-bar for the current frame.
+     *
+     * @param gridSettings Read/write — the bottom bar binds the Grid
+     *                     visibility checkbox directly to `gridSettings.visible`.
      */
-    void renderBottomBar(Window& window, UIManager& uiManager);
+    void renderBottomBar(Window& window, UIManager& uiManager, GridSettings& gridSettings);
 
 private:
     /// Exponentially-smoothed FPS readout shown on the right of the top bar.

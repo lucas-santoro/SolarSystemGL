@@ -48,7 +48,8 @@ public:
      * @param physics    Physics system — `paused` and `timeScale` are bound to UI widgets.
      */
     void render(Window& window, Camera& camera, float deltaTime,
-                std::vector<CelestialBody>& bodies, Grid& grid, PhysicsSystem& physics);
+                std::vector<CelestialBody>& bodies, Grid& grid, PhysicsSystem& physics,
+                GridSettings& gridSettings);
 
     /** @return `true` if the right mouse button is held and ImGui is not capturing the mouse. */
     bool isRightMousePressed(GLFWwindow* window);

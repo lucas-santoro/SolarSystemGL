@@ -2,6 +2,7 @@
 
 #include "core/Window.h"   // first: pulls glad before any GLFW/OpenGL header
 #include "core/Camera.h"
+#include "core/Grid.h"
 #include "objects/CelestialBody.h"
 #include "physics/PhysicsSystem.h"
 #include "ui/UIManager.h"
@@ -204,7 +205,8 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::End();
 }
 
-void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager)
+void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
+                                GridSettings& gridSettings)
 {
     if (!ImGui::BeginViewportSideBar("##actionbar_bottom",
                                      ImGui::GetMainViewport(),
@@ -224,6 +226,9 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager)
     ImGui::SameLine();
     ImGui::Checkbox("Bloom",       &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
+    ImGui::SameLine();
+    ImGui::Checkbox("Grid",        &gridSettings.visible);
+    ImGui::SetItemTooltip("Render the spacetime distortion grid");
     ImGui::SameLine();
     ImGui::Checkbox("Diagnostics", &uiManager.showDiagnostics);
     ImGui::SetItemTooltip("Show the conservation-of-energy diagnostics panel");

@@ -2,11 +2,80 @@
 
 #include "ui/UIManager.h"  // pulls glad before any GLFW header
 #include "core/Camera.h"
+#include "core/Grid.h"
 
 #include <imgui.h>
 
+namespace
+{
+    void renderGeneralSection(Camera& camera, float& fieldOfView, float& guiScale,
+                              UIManager& uiManager)
+    {
+        float sensitivity = camera.getSensitivity();
+        if (ImGui::SliderFloat("Mouse sensitivity", &sensitivity, 0.01f, 1.0f, "%.3f"))
+        {
+            camera.setSensitivity(sensitivity);
+        }
+
+        ImGui::SliderFloat("Field of view", &fieldOfView, 30.0f, 120.0f, "%.0f deg");
+
+        if (ImGui::SliderFloat("GUI scale", &guiScale, 0.75f, 2.0f, "%.2fx"))
+        {
+            ImGui::GetIO().FontGlobalScale = guiScale;
+        }
+
+        if (ImGui::Checkbox("VSync", &uiManager.vsync))
+        {
+            uiManager.vsyncDirty = true;
+        }
+    }
+
+    void renderGridSection(GridSettings& grid)
+    {
+        ImGui::ColorEdit3("Base color", &grid.baseColor[0]);
+        ImGui::SliderFloat("Opacity", &grid.opacity, 0.0f, 1.0f, "%.2f");
+
+        ImGui::SliderFloat("Distortion strength", &grid.distortionStrength,
+                           0.0001f, 0.5f, "%.4f", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("Falloff radius",      &grid.falloffRadius,
+                           0.1f, 20.0f, "%.2f");
+        ImGui::SliderFloat("Max well depth",      &grid.maxWellDepth,
+                           1.0f, 200.0f, "%.1f");
+
+        // Resolution presets — combo keeps the UI compact while still
+        // exposing the three useful tiers. Custom values can be typed via
+        // Ctrl+click on the slider below.
+        struct ResolutionPreset { const char* label; int value; };
+        static constexpr ResolutionPreset kResolutionPresets[] = {
+            { "Low (100)",    100 },
+            { "Medium (200)", 200 },
+            { "High (400)",   400 },
+        };
+        const char* resolutionPreview = "Custom";
+        for (const auto& preset : kResolutionPresets)
+        {
+            if (preset.value == grid.resolution) { resolutionPreview = preset.label; break; }
+        }
+        if (ImGui::BeginCombo("Resolution", resolutionPreview))
+        {
+            for (const auto& preset : kResolutionPresets)
+            {
+                const bool isSelected = (preset.value == grid.resolution);
+                if (ImGui::Selectable(preset.label, isSelected))
+                {
+                    grid.resolution = preset.value;
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::SliderFloat("Extent (WU)", &grid.extent, 2000.0f, 30000.0f, "%.0f");
+    }
+}
+
 void SettingsModal::render(Camera& camera, float& fieldOfView, float& guiScale,
-                           UIManager& uiManager)
+                           UIManager& uiManager, GridSettings& gridSettings)
 {
     if (pendingOpen_)
     {
@@ -16,29 +85,21 @@ void SettingsModal::render(Camera& camera, float& fieldOfView, float& guiScale,
 
     const ImVec2 viewportCenter = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(360.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
 
     if (!ImGui::BeginPopupModal(kPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         return;
     }
 
-    float sensitivity = camera.getSensitivity();
-    if (ImGui::SliderFloat("Mouse sensitivity", &sensitivity, 0.01f, 1.0f, "%.3f"))
+    if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        camera.setSensitivity(sensitivity);
+        renderGeneralSection(camera, fieldOfView, guiScale, uiManager);
     }
 
-    ImGui::SliderFloat("Field of view", &fieldOfView, 30.0f, 120.0f, "%.0f deg");
-
-    if (ImGui::SliderFloat("GUI scale", &guiScale, 0.75f, 2.0f, "%.2fx"))
+    if (ImGui::CollapsingHeader("Grid", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::GetIO().FontGlobalScale = guiScale;
-    }
-
-    if (ImGui::Checkbox("VSync", &uiManager.vsync))
-    {
-        uiManager.vsyncDirty = true;
+        renderGridSection(gridSettings);
     }
 
     ImGui::Spacing();

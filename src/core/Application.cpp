@@ -312,7 +312,7 @@ void Application::tick()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_);
+    uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_, gridSettings_);
 
     if (uiManager_.menuRequested)
     {
@@ -340,7 +340,7 @@ void Application::tick()
         uiManager_.addPlanetRequested = false;
     }
 
-    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_, gridSettings_);
     saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
     addPlanetModal_.render(bodies_, uiManager_);
     renderConfirmModals();
@@ -410,7 +410,7 @@ void Application::renderMenuFrame(float deltaTime)
 
     // Settings is the only modal we render from the menu — it doesn't depend
     // on the simulation state, only on settings_ + camera_ + uiManager_.
-    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_);
+    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_, gridSettings_);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
