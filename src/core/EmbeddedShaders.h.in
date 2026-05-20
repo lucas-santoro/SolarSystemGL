@@ -29,6 +29,9 @@ inline constexpr const char* SkyFragmentShader = R"glsl(@SKY_FRAGMENT_SHADER_SOU
 inline constexpr const char* RingVertexShader = R"glsl(@RING_VERTEX_SHADER_SOURCE@)glsl";
 inline constexpr const char* RingFragmentShader = R"glsl(@RING_FRAGMENT_SHADER_SOURCE@)glsl";
 
+inline constexpr const char* AtmosphereVertexShader = R"glsl(@ATMOSPHERE_VERTEX_SHADER_SOURCE@)glsl";
+inline constexpr const char* AtmosphereFragmentShader = R"glsl(@ATMOSPHERE_FRAGMENT_SHADER_SOURCE@)glsl";
+
 inline constexpr const char* FullscreenQuadVertexShader = R"glsl(@FULLSCREEN_QUAD_VERTEX_SHADER_SOURCE@)glsl";
 inline constexpr const char* BloomBlurFragmentShader = R"glsl(@BLOOM_BLUR_FRAGMENT_SHADER_SOURCE@)glsl";
 inline constexpr const char* BloomCompositeFragmentShader = R"glsl(@BLOOM_COMPOSITE_FRAGMENT_SHADER_SOURCE@)glsl";

@@ -45,6 +45,8 @@ set(SHADER_SOURCES
     "${SHADER_DIR}/FullscreenQuadVertexShader.glsl"
     "${SHADER_DIR}/BloomBlurFragmentShader.glsl"
     "${SHADER_DIR}/BloomCompositeFragmentShader.glsl"
+    "${SHADER_DIR}/AtmosphereVertexShader.glsl"
+    "${SHADER_DIR}/AtmosphereFragmentShader.glsl"
 )
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${SHADER_SOURCES})
 
@@ -61,6 +63,8 @@ file(READ "${SHADER_DIR}/RingFragmentShader.glsl"            RING_FRAGMENT_SHADE
 file(READ "${SHADER_DIR}/FullscreenQuadVertexShader.glsl"    FULLSCREEN_QUAD_VERTEX_SHADER_SOURCE)
 file(READ "${SHADER_DIR}/BloomBlurFragmentShader.glsl"       BLOOM_BLUR_FRAGMENT_SHADER_SOURCE)
 file(READ "${SHADER_DIR}/BloomCompositeFragmentShader.glsl"  BLOOM_COMPOSITE_FRAGMENT_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/AtmosphereVertexShader.glsl"        ATMOSPHERE_VERTEX_SHADER_SOURCE)
+file(READ "${SHADER_DIR}/AtmosphereFragmentShader.glsl"      ATMOSPHERE_FRAGMENT_SHADER_SOURCE)
 
 configure_file(
     "${SRC_DIR}/core/EmbeddedShaders.h.in"
