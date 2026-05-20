@@ -287,8 +287,10 @@ void Application::tick()
     renderSky(view, projection);
     renderBodies(view, projection);
     renderGrid(view, projection);
-    renderRings(view, projection);
+    // Atmospheres before rings so the visible ring isn't hazed over by
+    // its own planet's atmosphere shell.
     renderAtmospheres(view, projection);
+    renderRings(view, projection);
 
     if (uiManager_.showTrails)         renderTrails(view, projection);
     if (uiManager_.showPathPrediction) renderPathPrediction(view, projection);
