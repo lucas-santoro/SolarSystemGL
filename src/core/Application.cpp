@@ -826,6 +826,7 @@ void Application::renderGrid(const glm::mat4& view, const glm::mat4& projection)
     gridShader_.setMat4("view",       view);
     gridShader_.setMat4("projection", projection);
     gridShader_.setMat4("model",      glm::mat4(1.0f));
+    gridShader_.setVec3("cameraPos",  camera_.getPosition());
     grid_.draw(gridShader_, bodies_, gridSettings_);
 }
 

@@ -1,5 +1,6 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec3  aPos;
+layout (location = 1) in float aLineIndex;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -11,10 +12,16 @@ uniform vec3  planetPositions[MAX_PLANETS];
 uniform float planetMasses[MAX_PLANETS];
 uniform int   planetCount;
 
-// Distortion knobs (driven by GridSettings on the CPU).
-uniform float gridStrength;     // was the magic 0.008
-uniform float falloffRadius;    // was the magic 2.0
-uniform float maxWellDepth;     // was the magic 38.0
+uniform float gridStrength;     // GridSettings.distortionStrength
+uniform float falloffRadius;    // GridSettings.falloffRadius
+uniform float maxWellDepth;     // GridSettings.maxWellDepth
+
+uniform vec3  cameraPos;
+uniform int   majorLineInterval;
+
+out float vWellDepth;        // positive when the vertex is in a well
+out float vDistanceFromCam;  // world-space distance to the camera
+out float vIsMajorLine;      // 1.0 on major lines, 0.0 otherwise
 
 void main() {
     vec3 distortedPos = aPos;
@@ -27,5 +34,14 @@ void main() {
         distortedPos.y  -= distortion;
     }
 
-    gl_Position = projection * view * model * vec4(distortedPos, 1.0);
+    vWellDepth = -distortedPos.y;
+
+    vec3 worldPos     = (model * vec4(distortedPos, 1.0)).xyz;
+    vDistanceFromCam  = length(cameraPos - worldPos);
+
+    int  interval     = (majorLineInterval > 0) ? majorLineInterval : 1;
+    float remainder   = mod(aLineIndex, float(interval));
+    vIsMajorLine      = (remainder < 0.5) ? 1.0 : 0.0;
+
+    gl_Position = projection * view * vec4(worldPos, 1.0);
 }

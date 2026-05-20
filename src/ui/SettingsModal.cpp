@@ -71,6 +71,14 @@ namespace
         }
 
         ImGui::SliderFloat("Extent (WU)", &grid.extent, 2000.0f, 30000.0f, "%.0f");
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("Visual polish");
+        ImGui::ColorEdit3("Well color",    &grid.wellColor[0]);
+        ImGui::SliderInt  ("Major every",  &grid.majorLineInterval, 1, 50);
+        ImGui::SliderFloat("Major boost",  &grid.majorLineBoost,    1.0f, 6.0f, "%.1fx");
+        ImGui::SliderFloat("Fade start",   &grid.distanceFadeStart, 0.0f, 20000.0f, "%.0f WU");
+        ImGui::SliderFloat("Fade end",     &grid.distanceFadeEnd,   0.0f, 30000.0f, "%.0f WU");
     }
 }
 

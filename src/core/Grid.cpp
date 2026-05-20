@@ -76,35 +76,47 @@ void Grid::buildCartesianGeometry(int divisions, float extent)
         }
     }
 
+    // Interleaved vertex layout: (x, y, z, lineIndex) — 4 floats per vertex.
+    // lineIndex carries the row index for horizontal lines and the column
+    // index for vertical lines; the shader uses it for major/minor banding.
     std::vector<GLfloat> vertices;
-    vertices.reserve(gridPoints.size() * 6);
+    vertices.reserve(gridPoints.size() * 8);
 
-    // Horizontal lines
+    // Horizontal lines (row i, columns j to j+1).
     for (int i = 0; i <= actualDivisions; ++i)
     {
+        const float lineIndex = static_cast<float>(i);
         for (int j = 0; j < actualDivisions; ++j)
         {
             const int   idx = i * (actualDivisions + 1) + j;
             const auto& a   = gridPoints[idx];
             const auto& b   = gridPoints[idx + 1];
-            vertices.insert(vertices.end(), { a.x, a.y, a.z, b.x, b.y, b.z });
+            vertices.insert(vertices.end(), {
+                a.x, a.y, a.z, lineIndex,
+                b.x, b.y, b.z, lineIndex,
+            });
         }
     }
 
-    // Vertical lines
+    // Vertical lines (column j, rows i to i+1).
     for (int j = 0; j <= actualDivisions; ++j)
     {
+        const float lineIndex = static_cast<float>(j);
         for (int i = 0; i < actualDivisions; ++i)
         {
             const int   idx     = i       * (actualDivisions + 1) + j;
             const int   nextIdx = (i + 1) * (actualDivisions + 1) + j;
             const auto& a       = gridPoints[idx];
             const auto& b       = gridPoints[nextIdx];
-            vertices.insert(vertices.end(), { a.x, a.y, a.z, b.x, b.y, b.z });
+            vertices.insert(vertices.end(), {
+                a.x, a.y, a.z, lineIndex,
+                b.x, b.y, b.z, lineIndex,
+            });
         }
     }
 
-    lineCount = static_cast<int>(vertices.size()) / 3;
+    constexpr int kFloatsPerVertex = 4;
+    lineCount = static_cast<int>(vertices.size()) / kFloatsPerVertex;
 
     if (VAO == 0) glGenVertexArrays(1, &VAO);
     if (VBO == 0) glGenBuffers(1, &VBO);
@@ -112,8 +124,15 @@ void Grid::buildCartesianGeometry(int divisions, float extent)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
                  vertices.data(), GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          kFloatsPerVertex * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE,
+                          kFloatsPerVertex * sizeof(GLfloat),
+                          (void*)(3 * sizeof(GLfloat)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -161,8 +180,13 @@ void Grid::draw(Shader& shader,
     shader.setFloat("maxWellDepth",  settings.maxWellDepth);
 
     // Visual uniforms (replace the former hardcoded white + 0.2 alpha).
-    shader.setVec3 ("baseColor", settings.baseColor);
-    shader.setFloat("opacity",   settings.opacity);
+    shader.setVec3 ("baseColor",         settings.baseColor);
+    shader.setVec3 ("wellColor",         settings.wellColor);
+    shader.setFloat("opacity",           settings.opacity);
+    shader.setFloat("majorLineBoost",    settings.majorLineBoost);
+    shader.setInt  ("majorLineInterval", settings.majorLineInterval);
+    shader.setFloat("distanceFadeStart", settings.distanceFadeStart);
+    shader.setFloat("distanceFadeEnd",   settings.distanceFadeEnd);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINES, 0, lineCount);
