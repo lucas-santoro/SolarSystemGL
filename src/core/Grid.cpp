@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#include "core/GL.h"
 #include "core/Grid.h"
 #include <algorithm>
 #include <cmath>

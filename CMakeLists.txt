@@ -104,7 +104,6 @@ set(PROJECT_SOURCES
 )
 
 set(THIRD_PARTY_SOURCES
-    ${THIRD_PARTY_DIR}/glad/glad.c
     ${THIRD_PARTY_DIR}/imgui/imgui.cpp
     ${THIRD_PARTY_DIR}/imgui/imgui_draw.cpp
     ${THIRD_PARTY_DIR}/imgui/imgui_tables.cpp
@@ -112,6 +111,11 @@ set(THIRD_PARTY_SOURCES
     ${THIRD_PARTY_DIR}/imgui/backends/imgui_impl_glfw.cpp
     ${THIRD_PARTY_DIR}/imgui/backends/imgui_impl_opengl3.cpp
 )
+# glad.c only feeds the desktop OpenGL function-pointer loader. Emscripten
+# talks to WebGL2 directly so this file is excluded from the wasm build.
+if (NOT EMSCRIPTEN)
+    list(APPEND THIRD_PARTY_SOURCES ${THIRD_PARTY_DIR}/glad/glad.c)
+endif()
 
 message(STATUS "[Sources] Project files:")
 foreach(source ${PROJECT_SOURCES})
@@ -120,9 +124,46 @@ endforeach()
 
 add_executable(SolarSystemGL ${PROJECT_SOURCES} ${THIRD_PARTY_SOURCES})
 
-# Platform-conditional linker: keep the vendored GLFW on Windows (tested), use
-# find_package on Linux / macOS where system or vcpkg-installed glfw3 is common.
-if (WIN32)
+# Platform-conditional linker:
+# - Emscripten: WebGL2 + emscripten's bundled GLFW3 port + virtual FS preloads.
+# - Windows: vendored GLFW3 .lib (VC2022 build).
+# - Linux / macOS: find_package(glfw3) + system OpenGL.
+if (EMSCRIPTEN)
+    # Emscripten supplies a GLFW3-compatible glue layer via -sUSE_GLFW=3
+    # and exposes WebGL2 as OpenGL ES 3 with -sUSE_WEBGL2=1 / -sFULL_ES3=1.
+    # No find_package, no vendored .lib — the linker is em++.
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
+    target_compile_options(SolarSystemGL PRIVATE
+        "-sUSE_GLFW=3"
+    )
+    target_link_options(SolarSystemGL PRIVATE
+        "-sUSE_GLFW=3"
+        "-sUSE_WEBGL2=1"
+        "-sFULL_ES3=1"
+        "-sMIN_WEBGL_VERSION=2"
+        "-sMAX_WEBGL_VERSION=2"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sINITIAL_MEMORY=64MB"
+        "-sSTACK_SIZE=4MB"
+        # Preload the runtime data files (presets + Inter font) into the
+        # virtual filesystem at "/presets" and "/fonts" so std::ifstream
+        # paths in the C++ code resolve identically to the native build.
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/presets@/presets"
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/third_party/fonts@/fonts"
+        # Use Emscripten's own minimal shell as the HTML wrapper. A
+        # custom shell can be slotted in later via --shell-file.
+    )
+    # SOLARSYSTEM_BUILD_WEB         — our own switch for code branches.
+    # IMGUI_IMPL_OPENGL_ES3         — tells imgui_impl_opengl3.cpp to emit
+    #                                 OpenGL ES 3 calls (and the right shader
+    #                                 preamble) instead of desktop GL.
+    target_compile_definitions(SolarSystemGL PRIVATE
+        SOLARSYSTEM_BUILD_WEB=1
+        IMGUI_IMPL_OPENGL_ES3=1
+    )
+    message(STATUS "[Linking] Emscripten: -sUSE_GLFW=3 -sUSE_WEBGL2=1 + preload-file presets/ + fonts/")
+elseif (WIN32)
     target_link_libraries(SolarSystemGL
         ${THIRD_PARTY_DIR}/glfw/lib-vc2022/glfw3.lib
         opengl32
@@ -139,19 +180,24 @@ endif()
 # the configure_file invocation above) — no runtime shader directory is
 # needed alongside the binary.
 
-# Copy preset save-files next to the executable so loading defaults works
-# regardless of CWD (multi-config generators put the exe under Release/,
-# Debug/, etc.).
-add_custom_command(TARGET SolarSystemGL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/presets" "$<TARGET_FILE_DIR:SolarSystemGL>/presets"
-    COMMENT "Copying presets next to executable..."
-)
+# Preset / font copying only matters for native builds — emscripten
+# preloads them straight into the virtual FS at link time (see
+# --preload-file flags above).
+if (NOT EMSCRIPTEN)
+    # Copy preset save-files next to the executable so loading defaults works
+    # regardless of CWD (multi-config generators put the exe under Release/,
+    # Debug/, etc.).
+    add_custom_command(TARGET SolarSystemGL POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/presets" "$<TARGET_FILE_DIR:SolarSystemGL>/presets"
+        COMMENT "Copying presets next to executable..."
+    )
 
-# Copy the bundled TTF font next to the executable so ImGui can load it at
-# startup. Same rationale as the presets POST_BUILD copy.
-add_custom_command(TARGET SolarSystemGL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fonts" "$<TARGET_FILE_DIR:SolarSystemGL>/fonts"
-    COMMENT "Copying fonts next to executable..."
-)
+    # Copy the bundled TTF font next to the executable so ImGui can load it at
+    # startup. Same rationale as the presets POST_BUILD copy.
+    add_custom_command(TARGET SolarSystemGL POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fonts" "$<TARGET_FILE_DIR:SolarSystemGL>/fonts"
+        COMMENT "Copying fonts next to executable..."
+    )
+endif()

@@ -8,6 +8,10 @@
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 
+#ifdef SOLARSYSTEM_BUILD_WEB
+#  include <emscripten.h>
+#endif
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -285,12 +289,29 @@ Application::~Application()
 // Public API
 //----------------------------------------------------------------------------
 
+#ifdef SOLARSYSTEM_BUILD_WEB
+void Application::emscriptenTick(void* arg)
+{
+    static_cast<Application*>(arg)->tick();
+}
+#endif
+
 void Application::run()
 {
+#ifdef SOLARSYSTEM_BUILD_WEB
+    // Browsers don't tolerate blocking main loops — surrender control
+    // to requestAnimationFrame via Emscripten. fps=0 means "use rAF";
+    // simulate_infinite_loop=1 unwinds the C++ stack so destructors
+    // for stack objects past run() never fire (acceptable here since
+    // Application::~Application releases everything we own).
+    emscripten_set_main_loop_arg(&Application::emscriptenTick, this, /*fps=*/0,
+                                 /*simulate_infinite_loop=*/1);
+#else
     while (!glfwWindowShouldClose(window_.getGLFWwindow()))
     {
         tick();
     }
+#endif
 }
 
 //----------------------------------------------------------------------------

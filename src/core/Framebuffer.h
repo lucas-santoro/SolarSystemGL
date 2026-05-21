@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/glad.h>
+#include "core/GL.h"
 
 /**
  * @file Framebuffer.h

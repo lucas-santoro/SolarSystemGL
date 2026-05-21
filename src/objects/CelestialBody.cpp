@@ -45,7 +45,11 @@ void CelestialBody::recalculateGeometry()
 
 void CelestialBody::render(Shader& shader) const
 {
+#ifndef SOLARSYSTEM_BUILD_WEB
+    // glPolygonMode doesn't exist in WebGL2 / OpenGL ES, and the default
+    // is GL_FILL on every conformant context anyway — safe to skip.
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), renderPosition());
     model = glm::scale(model, glm::vec3(displayScale));

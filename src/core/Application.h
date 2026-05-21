@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/glad.h>
+#include "core/GL.h"
 #include <vector>
 
 #include "core/Camera.h"
@@ -98,6 +98,12 @@ private:
 
     /// One iteration of the main loop.
     void tick();
+
+#ifdef SOLARSYSTEM_BUILD_WEB
+    /// Static thunk used by `emscripten_set_main_loop_arg` so we can pass
+    /// `this` through `void*` and still reach private members.
+    static void emscriptenTick(void* arg);
+#endif
 
     /// Draw the menu screen for one frame (skybox rotation + StartMenu modal).
     void renderMenuFrame(float deltaTime);

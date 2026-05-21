@@ -1,12 +1,44 @@
 #include "core/Shader.h"
-#include <glad/glad.h>
+#include "core/GL.h"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
 
+namespace
+{
+#ifdef SOLARSYSTEM_BUILD_WEB
+    /// Rewrite a desktop GLSL 3.30 core source into something WebGL2 accepts.
+    /// WebGL2 only takes GLSL ES 3.00 shaders, so we swap the version pragma
+    /// and inject default precision qualifiers — required for fragment shaders,
+    /// harmless for vertex shaders. The body of the shader is otherwise
+    /// `in/out`-flavoured already and stays compatible.
+    std::string toWebGL2GLSL(const std::string& src)
+    {
+        const std::string desktopVersion = "#version 330 core";
+        const std::string webglPreamble =
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "precision highp int;\n"
+            "precision mediump sampler2D;\n";
+
+        std::string result = src;
+        const auto pos = result.find(desktopVersion);
+        if (pos != std::string::npos)
+        {
+            result.replace(pos, desktopVersion.length(), webglPreamble);
+        }
+        return result;
+    }
+#endif
+}
+
 Shader::Shader(const std::string &vertexSource, const std::string &fragmentSource)
 {
+#ifdef SOLARSYSTEM_BUILD_WEB
+    compileAndLink(toWebGL2GLSL(vertexSource), toWebGL2GLSL(fragmentSource));
+#else
     compileAndLink(vertexSource, fragmentSource);
+#endif
 }
 
 Shader::~Shader()

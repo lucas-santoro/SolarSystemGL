@@ -32,11 +32,15 @@ bool Window::init()
     }
 
     glfwMakeContextCurrent(window);
+#ifndef SOLARSYSTEM_BUILD_WEB
+    // Emscripten resolves WebGL calls via its JS glue layer — no loader
+    // needed. Desktop builds still pull function pointers through glad.
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Err - GLAD" << std::endl;
         return false;
     }
+#endif
 
     return true;
 }

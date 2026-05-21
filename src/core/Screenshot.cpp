@@ -1,6 +1,6 @@
 #include "Screenshot.h"
 
-#include <glad/glad.h>
+#include "core/GL.h"
 
 #include <array>
 #include <cstdint>

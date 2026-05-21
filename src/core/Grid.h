@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/glad.h>
+#include "core/GL.h"
 #include <glm/glm.hpp>
 #include <vector>
 #include "objects/CelestialBody.h"
