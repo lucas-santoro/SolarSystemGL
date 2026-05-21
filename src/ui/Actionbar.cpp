@@ -152,6 +152,20 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     formatSimulatedDate(physics.getSimulatedTimeSeconds(), simDateBuffer, sizeof(simDateBuffer));
     ImGui::TextDisabled("%s", simDateBuffer);
     ImGui::SetItemTooltip("Simulated time elapsed since Start Simulation");
+
+    // The date text width grows / shrinks as digits roll over (e.g. "Day 9"
+    // vs "Day 92") and Inter is a proportional font, so without padding the
+    // controls to the right would jitter. Reserve a fixed slot by padding
+    // a Dummy out to the worst-case width of "Day 9999 23:59" so the next
+    // group always starts at the same X regardless of the current date.
+    const float widestDateWidth = ImGui::CalcTextSize("Day 9999 23:59").x + 10.0f;
+    const float currentDateWidth = ImGui::GetItemRectSize().x;
+    if (currentDateWidth < widestDateWidth)
+    {
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(widestDateWidth - currentDateWidth, 0.0f));
+    }
+
     renderGroupSeparator();
 
     // --- Group 3: Camera controls ----------------------------------------
