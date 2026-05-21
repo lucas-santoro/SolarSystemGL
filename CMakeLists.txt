@@ -146,3 +146,11 @@ add_custom_command(TARGET SolarSystemGL POST_BUILD
     "${CMAKE_CURRENT_SOURCE_DIR}/presets" "$<TARGET_FILE_DIR:SolarSystemGL>/presets"
     COMMENT "Copying presets next to executable..."
 )
+
+# Copy the bundled TTF font next to the executable so ImGui can load it at
+# startup. Same rationale as the presets POST_BUILD copy.
+add_custom_command(TARGET SolarSystemGL POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fonts" "$<TARGET_FILE_DIR:SolarSystemGL>/fonts"
+    COMMENT "Copying fonts next to executable..."
+)

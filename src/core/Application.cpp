@@ -13,6 +13,7 @@
 #include <cmath>
 #include <ctime>
 #include <filesystem>
+#include <iostream>
 #include <string>
 
 namespace
@@ -46,6 +47,70 @@ const     glm::vec3 kPredictionColor{ 0.55f, 0.95f, 1.0f };
 
 // Visual ring color.
 const     glm::vec3 kSaturnRingColor{ 0.90f, 0.85f, 0.70f };
+
+// Deep-space dark-blue ImGui palette tuned for the Solar System's black
+// skybox + bright planet sprites. Applied once at startup; user-tunable
+// pieces (GUI scale, VSync) keep their existing paths.
+void applyDarkSpaceTheme()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::StyleColorsDark();  // base — we override the chromatic pieces
+
+    // Rounding — softer-than-default corners give the dock-style panels
+    // a less utilitarian look without becoming bubbly.
+    style.WindowRounding    = 4.0f;
+    style.ChildRounding     = 4.0f;
+    style.FrameRounding     = 4.0f;
+    style.PopupRounding     = 4.0f;
+    style.ScrollbarRounding = 4.0f;
+    style.GrabRounding      = 4.0f;
+    style.TabRounding       = 4.0f;
+
+    // Padding & spacing — slightly more generous so Inter at 16px breathes.
+    style.WindowPadding    = ImVec2(10.0f, 8.0f);
+    style.FramePadding     = ImVec2(8.0f, 4.0f);
+    style.ItemSpacing      = ImVec2(8.0f, 6.0f);
+    style.ItemInnerSpacing = ImVec2(6.0f, 4.0f);
+
+    // Palette — every chromatic ImGuiCol that shows up in the actionbar +
+    // panels gets a deep-blue tint; accents (slider grabs, checkmarks)
+    // pop in lighter cyan so they read against the dark fill.
+    ImVec4* c = style.Colors;
+    c[ImGuiCol_Text]                  = ImVec4(0.86f, 0.88f, 0.94f, 1.00f);
+    c[ImGuiCol_TextDisabled]          = ImVec4(0.45f, 0.50f, 0.60f, 1.00f);
+    c[ImGuiCol_WindowBg]              = ImVec4(0.03f, 0.047f, 0.086f, 0.94f);
+    c[ImGuiCol_ChildBg]               = ImVec4(0.03f, 0.047f, 0.086f, 0.50f);
+    c[ImGuiCol_PopupBg]               = ImVec4(0.04f, 0.06f, 0.10f, 0.94f);
+    c[ImGuiCol_Border]                = ImVec4(0.12f, 0.16f, 0.24f, 0.50f);
+    c[ImGuiCol_FrameBg]               = ImVec4(0.05f, 0.07f, 0.12f, 0.94f);
+    c[ImGuiCol_FrameBgHovered]        = ImVec4(0.10f, 0.15f, 0.25f, 1.00f);
+    c[ImGuiCol_FrameBgActive]         = ImVec4(0.15f, 0.22f, 0.36f, 1.00f);
+    c[ImGuiCol_TitleBg]               = ImVec4(0.04f, 0.06f, 0.10f, 1.00f);
+    c[ImGuiCol_TitleBgActive]         = ImVec4(0.06f, 0.10f, 0.18f, 1.00f);
+    c[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.04f, 0.06f, 0.10f, 0.75f);
+    c[ImGuiCol_MenuBarBg]             = ImVec4(0.04f, 0.06f, 0.10f, 1.00f);
+    c[ImGuiCol_Header]                = ImVec4(0.16f, 0.28f, 0.50f, 0.50f);
+    c[ImGuiCol_HeaderHovered]         = ImVec4(0.20f, 0.35f, 0.62f, 0.80f);
+    c[ImGuiCol_HeaderActive]          = ImVec4(0.25f, 0.45f, 0.75f, 1.00f);
+    c[ImGuiCol_Button]                = ImVec4(0.12f, 0.18f, 0.30f, 0.80f);
+    c[ImGuiCol_ButtonHovered]         = ImVec4(0.20f, 0.30f, 0.50f, 1.00f);
+    c[ImGuiCol_ButtonActive]          = ImVec4(0.30f, 0.45f, 0.70f, 1.00f);
+    c[ImGuiCol_CheckMark]             = ImVec4(0.40f, 0.75f, 1.00f, 1.00f);
+    c[ImGuiCol_SliderGrab]            = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+    c[ImGuiCol_SliderGrabActive]      = ImVec4(0.40f, 0.65f, 0.95f, 1.00f);
+    c[ImGuiCol_ScrollbarBg]           = ImVec4(0.04f, 0.06f, 0.10f, 0.60f);
+    c[ImGuiCol_ScrollbarGrab]         = ImVec4(0.12f, 0.18f, 0.30f, 1.00f);
+    c[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.20f, 0.30f, 0.50f, 1.00f);
+    c[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.30f, 0.45f, 0.70f, 1.00f);
+    c[ImGuiCol_Separator]             = ImVec4(0.12f, 0.18f, 0.30f, 0.50f);
+    c[ImGuiCol_SeparatorHovered]      = ImVec4(0.20f, 0.30f, 0.50f, 0.80f);
+    c[ImGuiCol_SeparatorActive]       = ImVec4(0.30f, 0.45f, 0.70f, 1.00f);
+    c[ImGuiCol_ResizeGrip]            = ImVec4(0.12f, 0.18f, 0.30f, 0.50f);
+    c[ImGuiCol_ResizeGripHovered]     = ImVec4(0.20f, 0.30f, 0.50f, 0.80f);
+    c[ImGuiCol_ResizeGripActive]      = ImVec4(0.30f, 0.45f, 0.70f, 1.00f);
+    c[ImGuiCol_Tab]                   = ImVec4(0.08f, 0.13f, 0.22f, 1.00f);
+    c[ImGuiCol_TabHovered]            = ImVec4(0.20f, 0.30f, 0.50f, 1.00f);
+}
 } // namespace
 
 //----------------------------------------------------------------------------
@@ -187,6 +252,21 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     // and only loads the default solar system when the user clicks Start.
 
     ImGui::CreateContext();
+
+    // Load Inter Regular (bundled in third_party/fonts/, copied next to the
+    // exe by the CMake POST_BUILD step). Falls back gracefully to the
+    // built-in ProggyClean if the TTF can't be found.
+    ImGuiIO& io = ImGui::GetIO();
+    const ImFont* interFont = io.Fonts->AddFontFromFileTTF(
+        "fonts/Inter-Regular.ttf", 16.0f);
+    if (interFont == nullptr)
+    {
+        std::cerr << "Warning: fonts/Inter-Regular.ttf not found — falling "
+                     "back to ImGui's default font.\n";
+    }
+
+    applyDarkSpaceTheme();
+
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
