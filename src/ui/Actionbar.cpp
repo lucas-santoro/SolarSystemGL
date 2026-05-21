@@ -173,24 +173,40 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     const bool       hasSelection = (selectedIdx >= 0
                                      && selectedIdx < static_cast<int>(bodies.size()));
 
-    if (ImGui::RadioButton("Free", currentMode == CameraMode::FREE))
+    // Free / Orbital rendered as a segmented control rather than ImGui
+    // radio buttons: the radio's tiny outline reads as invisible against
+    // the dark actionbar, so users couldn't tell which mode was active.
+    // Two pill-buttons with a filled-blue selected state are unambiguous.
+    auto drawSegmentedToggle = [](const char* label, bool selected, bool disabled) -> bool
+    {
+        const ImVec4 activeFill   (0.22f, 0.44f, 0.78f, 1.00f);
+        const ImVec4 activeHover  (0.28f, 0.52f, 0.88f, 1.00f);
+        const ImVec4 inactiveFill (0.07f, 0.11f, 0.18f, 0.85f);
+        const ImVec4 inactiveHover(0.14f, 0.22f, 0.34f, 1.00f);
+
+        ImGui::PushStyleColor(ImGuiCol_Button,        selected ? activeFill  : inactiveFill);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, selected ? activeHover : inactiveHover);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  activeFill);
+        ImGui::BeginDisabled(disabled);
+        const bool clicked = ImGui::Button(label);
+        ImGui::EndDisabled();
+        ImGui::PopStyleColor(3);
+        return clicked;
+    };
+
+    if (drawSegmentedToggle("Free", currentMode == CameraMode::FREE, /*disabled=*/false))
     {
         camera.setMode(CameraMode::FREE);
     }
     ImGui::SetItemTooltip("Free-fly camera (WASD + right-click drag) [1]");
     ImGui::SameLine();
-    ImGui::BeginDisabled(!hasSelection);
-    if (ImGui::RadioButton("Orbital", currentMode == CameraMode::ORBITAL))
+    if (drawSegmentedToggle("Orbital", currentMode == CameraMode::ORBITAL, /*disabled=*/!hasSelection))
     {
-        if (hasSelection)
-        {
-            camera.flyToOrbital(selectedIdx,
-                                bodies[selectedIdx].renderPosition(),
-                                bodies[selectedIdx].focusDistance());
-        }
+        camera.flyToOrbital(selectedIdx,
+                            bodies[selectedIdx].renderPosition(),
+                            bodies[selectedIdx].focusDistance());
     }
     ImGui::SetItemTooltip("Orbit the selected body [2]");
-    ImGui::EndDisabled();
     ImGui::SameLine();
 
     ImGui::BeginDisabled(!hasSelection);
