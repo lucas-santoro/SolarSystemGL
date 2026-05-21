@@ -125,6 +125,13 @@ public:
     /** @brief Output flag set when the actionbar's "Add Planet" button is pressed. */
     bool addPlanetRequested = false;
 
+    /** @brief Output flag set when the actionbar's "?" Help button is pressed. */
+    bool helpRequested = false;
+
+    /** @brief When true, the host loop hides every UI panel and drives the
+     *         camera in a slow cinematic orbit ("Demo Mode"). F11 toggles. */
+    bool demoModeActive = false;
+
     /**
      * @brief Set by the actionbar's View combo: 0 = Default, 1 = Top-down,
      *        2 = Side-on; -1 means no pending request. Host loop reads this

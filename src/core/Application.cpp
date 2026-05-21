@@ -357,7 +357,30 @@ void Application::tick()
     glfwGetFramebufferSize(glfwWindow, &framebufferWidth, &framebufferHeight);
     const float aspectRatio = static_cast<float>(framebufferWidth)
                             / static_cast<float>(std::max(framebufferHeight, 1));
-    const glm::mat4 view       = camera_.getViewMatrix();
+
+    // Demo mode overrides the view with a slow auto-orbit around the
+    // system origin and ignores the camera state. Otherwise normal.
+    glm::mat4 view;
+    if (uiManager_.demoModeActive)
+    {
+        demoTime_ += deltaTime;
+        const float orbitAngle  = demoTime_ * 0.08f;
+        float       maxBody     = 100.0f;
+        for (const auto& b : bodies_) {
+            const float r = glm::length(b.renderPosition());
+            if (r > maxBody) maxBody = r;
+        }
+        const float radius = std::min(maxBody, 2000.0f) * 1.6f;
+        const glm::vec3 demoCameraPos(radius * std::cos(orbitAngle),
+                                      radius * 0.45f,
+                                      radius * std::sin(orbitAngle));
+        view = glm::lookAt(demoCameraPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    else
+    {
+        view = camera_.getViewMatrix();
+    }
+
     const glm::mat4 projection = glm::perspective(glm::radians(fieldOfView_),
                                                   aspectRatio,
                                                   kProjectionNearPlane,
@@ -403,43 +426,56 @@ void Application::tick()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_, gridSettings_);
 
-    if (uiManager_.menuRequested)
+    // Demo Mode hides every panel and modal except the tutorial — that
+    // way Esc / F11 can exit, but no chrome distracts from the cinematic.
+    if (!uiManager_.demoModeActive)
     {
-        openReturnToMenuPopup_ = true;
-        uiManager_.menuRequested = false;
-    }
-    if (uiManager_.settingsRequested)
-    {
-        settingsModal_.requestOpen();
-        uiManager_.settingsRequested = false;
-    }
-    if (uiManager_.saveRequested)
-    {
-        saveLoadModal_.requestOpenSave();
-        uiManager_.saveRequested = false;
-    }
-    if (uiManager_.loadRequested)
-    {
-        saveLoadModal_.requestOpenLoad();
-        uiManager_.loadRequested = false;
-    }
-    if (uiManager_.addPlanetRequested)
-    {
-        addPlanetModal_.requestOpen();
-        uiManager_.addPlanetRequested = false;
-    }
-    if (uiManager_.viewPresetRequested >= 0)
-    {
-        applyViewPreset(static_cast<ViewPreset>(uiManager_.viewPresetRequested));
-        uiManager_.viewPresetRequested = -1;
+        uiManager_.render(window_, camera_, deltaTime, bodies_, grid_, physics_, gridSettings_);
+
+        if (uiManager_.menuRequested)
+        {
+            openReturnToMenuPopup_ = true;
+            uiManager_.menuRequested = false;
+        }
+        if (uiManager_.settingsRequested)
+        {
+            settingsModal_.requestOpen();
+            uiManager_.settingsRequested = false;
+        }
+        if (uiManager_.saveRequested)
+        {
+            saveLoadModal_.requestOpenSave();
+            uiManager_.saveRequested = false;
+        }
+        if (uiManager_.loadRequested)
+        {
+            saveLoadModal_.requestOpenLoad();
+            uiManager_.loadRequested = false;
+        }
+        if (uiManager_.addPlanetRequested)
+        {
+            addPlanetModal_.requestOpen();
+            uiManager_.addPlanetRequested = false;
+        }
+        if (uiManager_.helpRequested)
+        {
+            tutorial_.requestOpen();
+            uiManager_.helpRequested = false;
+        }
+        if (uiManager_.viewPresetRequested >= 0)
+        {
+            applyViewPreset(static_cast<ViewPreset>(uiManager_.viewPresetRequested));
+            uiManager_.viewPresetRequested = -1;
+        }
+
+        settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_, gridSettings_);
+        saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
+        addPlanetModal_.render(bodies_, uiManager_);
+        renderConfirmModals();
     }
 
-    settingsModal_.render(camera_, fieldOfView_, guiScale_, uiManager_, gridSettings_);
-    saveLoadModal_.render(bodies_, physics_, camera_, uiManager_);
-    addPlanetModal_.render(bodies_, uiManager_);
-    renderConfirmModals();
+    tutorial_.render();
 
     if (uiManager_.vsyncDirty)
     {
@@ -535,6 +571,14 @@ void Application::startSimulation()
     framesSinceLastPrediction_ = kPredictionRefreshFrames;
     appState_ = AppState::Running;
     previousFrameTime_ = static_cast<float>(glfwGetTime());
+
+    // Auto-open the tutorial on the very first launch (no `.tutorial_seen`
+    // marker yet). Subsequent launches can still re-open it via the "?"
+    // button in the top actionbar.
+    if (Tutorial::isFirstRun())
+    {
+        tutorial_.requestOpen();
+    }
 }
 
 void Application::returnToMenu()
@@ -888,6 +932,15 @@ void Application::handleHotkeys()
     wasF2Pressed_ = f2Down;
     wasF3Pressed_ = f3Down;
 
+    // F11 — toggle Demo Mode (cinematic auto-orbit, UI hidden).
+    const bool f11Down = glfwGetKey(glfwWindow, GLFW_KEY_F11) == GLFW_PRESS;
+    if (f11Down && !wasF11Pressed_)
+    {
+        uiManager_.demoModeActive = !uiManager_.demoModeActive;
+        if (uiManager_.demoModeActive) demoTime_ = 0.0f;
+    }
+    wasF11Pressed_ = f11Down;
+
     // F5..F8 — camera bookmarks. Plain key restores the slot; Shift + key
     // captures the current pose into it. These also fire regardless of
     // ImGui keyboard capture, since they don't conflict with any panel.
@@ -922,9 +975,15 @@ void Application::handleHotkeys()
 
         if (escDown && !wasEscPressed_)
         {
-            // Two-stage Esc: close info panel first, only prompt to leave the
-            // simulation if nothing is selected.
-            if (uiManager_.getSelectedPlanetIndex() >= 0)
+            // Triple-stage Esc:
+            //   1. In Demo Mode → exit Demo Mode.
+            //   2. With a body selected → clear the selection (hide Planet Info).
+            //   3. Otherwise → prompt Return-to-Menu.
+            if (uiManager_.demoModeActive)
+            {
+                uiManager_.demoModeActive = false;
+            }
+            else if (uiManager_.getSelectedPlanetIndex() >= 0)
             {
                 uiManager_.clearSelection();
             }

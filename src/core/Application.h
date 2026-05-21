@@ -18,6 +18,7 @@
 #include "ui/SaveLoadModal.h"
 #include "ui/SettingsModal.h"
 #include "ui/StartMenu.h"
+#include "ui/Tutorial.h"
 #include "ui/UIManager.h"
 
 /**
@@ -220,6 +221,7 @@ private:
     SettingsModal   settingsModal_;
     SaveLoadModal   saveLoadModal_;
     AddPlanetModal  addPlanetModal_;
+    Tutorial        tutorial_;
     Grid            grid_;
     GridSettings    gridSettings_;
     std::vector<CelestialBody> bodies_;
@@ -259,6 +261,7 @@ private:
     bool wasOnePressed_   = false;
     bool wasTwoPressed_   = false;
     bool wasF12Pressed_   = false;
+    bool wasF11Pressed_   = false;
     bool wasF1Pressed_    = false;
     bool wasF2Pressed_    = false;
     bool wasF3Pressed_    = false;
@@ -277,6 +280,9 @@ private:
 
     // Real-time tracking for delta-time computation.
     float previousFrameTime_ = 0.0f;
+
+    // Demo mode accumulator — drives the auto-orbit angle. Reset on enter.
+    float demoTime_ = 0.0f;
 
     // Path-prediction throttle: only recompute every N frames.
     int   framesSinceLastPrediction_ = 0;

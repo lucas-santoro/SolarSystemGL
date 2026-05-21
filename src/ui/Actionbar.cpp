@@ -254,6 +254,9 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::SameLine();
     if (ImGui::Button("Load"))     uiManager.loadRequested     = true;
     ImGui::SetItemTooltip("Load a previously saved state");
+    ImGui::SameLine();
+    if (ImGui::Button("?"))        uiManager.helpRequested     = true;
+    ImGui::SetItemTooltip("Re-open the tutorial");
 
     // --- Group 5: FPS (right-anchored) -----------------------------------
     const float windowWidth  = ImGui::GetWindowSize().x;

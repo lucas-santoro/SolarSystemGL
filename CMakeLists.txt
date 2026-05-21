@@ -99,6 +99,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/ui/SettingsModal.cpp
     ${SRC_DIR}/ui/StartMenu.cpp
     ${SRC_DIR}/ui/Toast.cpp
+    ${SRC_DIR}/ui/Tutorial.cpp
     ${SRC_DIR}/ui/UIManager.cpp
 )
 
