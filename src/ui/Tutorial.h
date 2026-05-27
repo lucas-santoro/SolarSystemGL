@@ -24,12 +24,16 @@ public:
     static void markSeen();
 
     /// Schedule the popup to open on the next #render call.
-    void requestOpen() { pendingOpen_ = true; step_ = 0; }
+    void requestOpen()
+    {
+        pendingOpen_ = true;
+        step_        = 0;
+    }
 
     /// Draw the popup if open. Call between NewFrame and Render.
     void render();
 
 private:
     bool pendingOpen_ = false;
-    int  step_        = 0;
+    int step_         = 0;
 };

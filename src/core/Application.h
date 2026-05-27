@@ -35,8 +35,8 @@
  */
 enum class AppState
 {
-    Menu,    ///< Pre-simulation: rotating skybox + StartMenu modal.
-    Running  ///< Simulation is active: physics, bodies, full HUD.
+    Menu,   ///< Pre-simulation: rotating skybox + StartMenu modal.
+    Running ///< Simulation is active: physics, bodies, full HUD.
 };
 
 /**
@@ -115,12 +115,12 @@ private:
     /// from drags; `lastX/Y` is the last seen position (updated on each move).
     struct TouchPoint
     {
-        int   id            = -1;     ///< Emscripten touch identifier, -1 == slot free.
+        int id              = -1; ///< Emscripten touch identifier, -1 == slot free.
         float startX        = 0.0f;
         float startY        = 0.0f;
         float lastX         = 0.0f;
         float lastY         = 0.0f;
-        float maxMovementPx = 0.0f;   ///< Max displacement from start over the gesture's life.
+        float maxMovementPx = 0.0f; ///< Max displacement from start over the gesture's life.
         double startTimeMs  = 0.0;
     };
 
@@ -135,15 +135,15 @@ private:
     /// `userData` pointer passed at registration and dispatch to instance
     /// methods below. Return value matches `em_touch_callback_func` (bool —
     /// `true` = `preventDefault()` the event; we always return `false`).
-    static bool touchStartCallback (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
-    static bool touchMoveCallback  (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
-    static bool touchEndCallback   (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchStartCallback(int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchMoveCallback(int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchEndCallback(int eventType, const struct EmscriptenTouchEvent* e, void* userData);
     static bool touchCancelCallback(int eventType, const struct EmscriptenTouchEvent* e, void* userData);
 
     /// Instance handlers — manipulate `activeTouches_` and feed the Camera.
-    void handleTouchStart (const struct EmscriptenTouchEvent& e);
-    void handleTouchMove  (const struct EmscriptenTouchEvent& e);
-    void handleTouchEnd   (const struct EmscriptenTouchEvent& e);
+    void handleTouchStart(const struct EmscriptenTouchEvent& e);
+    void handleTouchMove(const struct EmscriptenTouchEvent& e);
+    void handleTouchEnd(const struct EmscriptenTouchEvent& e);
     void handleTouchCancel(const struct EmscriptenTouchEvent& e);
 #endif
 
@@ -178,7 +178,12 @@ private:
     void restoreBookmark(int slot);
 
     /// Preset view ids surfaced via the actionbar View dropdown.
-    enum class ViewPreset { Default, TopDown, SideOn };
+    enum class ViewPreset
+    {
+        Default,
+        TopDown,
+        SideOn
+    };
 
     /// Smooth-fly to one of the canned view presets, auto-fitting distance
     /// to whatever body extents currently exist.
@@ -219,8 +224,7 @@ private:
 
     /// Render emissive bodies into the bloom ping FBO and run ping-pong
     /// Gaussian blurs. Leaves the final blurred image in @p outBlurredTexture.
-    void renderBloomPasses(const glm::mat4& view, const glm::mat4& projection,
-                           GLuint& outBlurredTexture);
+    void renderBloomPasses(const glm::mat4& view, const glm::mat4& projection, GLuint& outBlurredTexture);
 
     /// Fullscreen quad pass: composite `sceneResolveFbo_.colorTexture()` with
     /// the blurred bloom result onto the default framebuffer.
@@ -254,30 +258,30 @@ private:
 
     // Construction order matters: Window first (creates the GL context),
     // then GL-owning resources (Shaders, Grid, Framebuffers), then non-GL state.
-    Window        window_;
-    Camera        camera_;
-    Shader        bodyShader_;
-    Shader        gridShader_;
-    Shader        trailShader_;
-    Shader        skyShader_;
-    Shader        ringShader_;
-    Shader        bloomBlurShader_;
-    Shader        bloomCompositeShader_;
-    Shader        atmosphereShader_;
-    Framebuffer   sceneFbo_;          ///< Multisample target for the 3D scene pass.
-    Framebuffer   sceneResolveFbo_;   ///< Single-sample resolve of sceneFbo_, sampled by the composite.
-    Framebuffer   bloomPingFbo_;
-    Framebuffer   bloomPongFbo_;
+    Window window_;
+    Camera camera_;
+    Shader bodyShader_;
+    Shader gridShader_;
+    Shader trailShader_;
+    Shader skyShader_;
+    Shader ringShader_;
+    Shader bloomBlurShader_;
+    Shader bloomCompositeShader_;
+    Shader atmosphereShader_;
+    Framebuffer sceneFbo_;        ///< Multisample target for the 3D scene pass.
+    Framebuffer sceneResolveFbo_; ///< Single-sample resolve of sceneFbo_, sampled by the composite.
+    Framebuffer bloomPingFbo_;
+    Framebuffer bloomPongFbo_;
     PhysicsSystem physics_;
     PathPredictor pathPredictor_;
-    UIManager       uiManager_;
-    StartMenu       startMenu_;
-    SettingsModal   settingsModal_;
-    SaveLoadModal   saveLoadModal_;
-    AddPlanetModal  addPlanetModal_;
-    Tutorial        tutorial_;
-    Grid            grid_;
-    GridSettings    gridSettings_;
+    UIManager uiManager_;
+    StartMenu startMenu_;
+    SettingsModal settingsModal_;
+    SaveLoadModal saveLoadModal_;
+    AddPlanetModal addPlanetModal_;
+    Tutorial tutorial_;
+    Grid grid_;
+    GridSettings gridSettings_;
     std::vector<CelestialBody> bodies_;
 
     // User-tunable rendering settings (bound to the Settings modal).
@@ -285,51 +289,52 @@ private:
     float guiScale_    = 1.0f;
 
     // Lifecycle state.
-    AppState appState_                  = AppState::Menu;
-    float    menuTime_                  = 0.0f;
-    bool     wasAutoPaused_             = false;  ///< Set when the window-focus callback auto-pauses physics.
-    bool     openReturnToMenuPopup_     = false;  ///< Pending "Return to Menu?" modal open request.
-    bool     openQuitPopup_             = false;  ///< Pending "Quit application?" modal open request.
-    bool     persistenceWarningPending_ = false;  ///< Web: IDBFS init failed; surface as a warning on the first frame.
+    AppState appState_          = AppState::Menu;
+    float menuTime_             = 0.0f;
+    bool wasAutoPaused_         = false; ///< Set when the window-focus callback auto-pauses physics.
+    bool openReturnToMenuPopup_ = false; ///< Pending "Return to Menu?" modal open request.
+    bool openQuitPopup_         = false; ///< Pending "Quit application?" modal open request.
+    bool persistenceWarningPending_ =
+        false; ///< Web: IDBFS init failed; surface as a warning on the first frame.
 
     // Auxiliary GL resources directly owned by Application.
-    GLuint  trailVAO_            = 0;
-    GLuint  trailVBO_            = 0;
-    GLuint  ringVAO_             = 0;
-    GLuint  ringVBO_             = 0;
-    GLuint  fullscreenQuadVAO_   = 0;  ///< Shared by the sky pass and the bloom fullscreen passes.
-    GLuint  fullscreenQuadVBO_   = 0;
-    GLsizei ringVertexCount_     = 0;
+    GLuint trailVAO_          = 0;
+    GLuint trailVBO_          = 0;
+    GLuint ringVAO_           = 0;
+    GLuint ringVBO_           = 0;
+    GLuint fullscreenQuadVAO_ = 0; ///< Shared by the sky pass and the bloom fullscreen passes.
+    GLuint fullscreenQuadVBO_ = 0;
+    GLsizei ringVertexCount_  = 0;
 
-    PlanetMesh lagrangeMesh_{ 2 };       ///< Low-poly icosahedron used for L1–L5 markers.
+    PlanetMesh lagrangeMesh_{2}; ///< Low-poly icosahedron used for L1–L5 markers.
 
     // Mouse-input state, shared between the GLFW callbacks and the main loop.
-    float lastMouseX_       = 400.0f;
-    float lastMouseY_       = 300.0f;
-    bool  firstMouseEvent_  = true;
+    float lastMouseX_     = 400.0f;
+    float lastMouseY_     = 300.0f;
+    bool firstMouseEvent_ = true;
 
     // Edge-detection state for one-shot keyboard hotkeys.
-    bool wasSpacePressed_ = false;
-    bool wasRPressed_     = false;
-    bool wasFPressed_     = false;
-    bool wasEscPressed_   = false;
-    bool wasOnePressed_   = false;
-    bool wasTwoPressed_   = false;
-    bool wasF12Pressed_   = false;
-    bool wasF11Pressed_   = false;
-    bool wasF1Pressed_    = false;
-    bool wasF2Pressed_    = false;
-    bool wasF3Pressed_    = false;
-    std::array<bool, 4> wasBookmarkKeyPressed_ = { false, false, false, false };
+    bool wasSpacePressed_                      = false;
+    bool wasRPressed_                          = false;
+    bool wasFPressed_                          = false;
+    bool wasEscPressed_                        = false;
+    bool wasOnePressed_                        = false;
+    bool wasTwoPressed_                        = false;
+    bool wasF12Pressed_                        = false;
+    bool wasF11Pressed_                        = false;
+    bool wasF1Pressed_                         = false;
+    bool wasF2Pressed_                         = false;
+    bool wasF3Pressed_                         = false;
+    std::array<bool, 4> wasBookmarkKeyPressed_ = {false, false, false, false};
 
     // Camera bookmark slots — F5..F8 maps to slots 0..3. Shift+key saves,
     // bare key restores.
     struct CameraBookmark
     {
-        glm::vec3 position{ 0.0f };
-        float     yaw   = 0.0f;
-        float     pitch = 0.0f;
-        bool      occupied = false;
+        glm::vec3 position{0.0f};
+        float yaw     = 0.0f;
+        float pitch   = 0.0f;
+        bool occupied = false;
     };
     std::array<CameraBookmark, 4> bookmarks_;
 
@@ -340,12 +345,12 @@ private:
     float demoTime_ = 0.0f;
 
     // Path-prediction throttle: only recompute every N frames.
-    int   framesSinceLastPrediction_ = 0;
+    int framesSinceLastPrediction_ = 0;
 
     // Cached horizon for the live prediction. Frozen on enable / selection
     // change — recomputing it every refresh let `estimateOrbitalPeriod`'s
     // dependency on the instantaneous radius drag the path tip back and forth
     // (the "teleporting tip" bug visible in the orbital camera).
     double predictionHorizonSeconds_ = 0.0;
-    int    lastPredictionSelected_   = -1;
+    int lastPredictionSelected_      = -1;
 };

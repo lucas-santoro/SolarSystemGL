@@ -10,11 +10,11 @@
  */
 enum class StartMenuAction
 {
-    None,      ///< User did not click any action button this frame.
-    Start,     ///< Begin a new simulation from the default preset.
-    Load,      ///< Open the load-save modal (deferred to Task 12).
-    Settings,  ///< Open the settings modal (deferred to Task 11).
-    Quit       ///< Close the application.
+    None,     ///< User did not click any action button this frame.
+    Start,    ///< Begin a new simulation from the default preset.
+    Load,     ///< Open the load-save modal (deferred to Task 12).
+    Settings, ///< Open the settings modal (deferred to Task 11).
+    Quit      ///< Close the application.
 };
 
 /**

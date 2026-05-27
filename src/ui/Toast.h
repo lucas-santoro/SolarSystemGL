@@ -15,10 +15,10 @@
  */
 struct Toast
 {
-    std::string message;        ///< Display text.
-    float       remaining;      ///< Seconds left before the toast disappears.
-    float       totalDuration;  ///< Initial duration, used to drive the fade-out alpha.
-    glm::vec4   color;          ///< Base RGBA before fade-out is applied.
+    std::string message; ///< Display text.
+    float remaining;     ///< Seconds left before the toast disappears.
+    float totalDuration; ///< Initial duration, used to drive the fade-out alpha.
+    glm::vec4 color;     ///< Base RGBA before fade-out is applied.
 };
 
 /**

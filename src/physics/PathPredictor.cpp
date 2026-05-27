@@ -14,11 +14,12 @@ void PathPredictor::computeAccelerations(std::vector<glm::dvec3>& out) const
     {
         for (size_t j = 0; j < shadowBodies_.size(); ++j)
         {
-            if (i == j) continue;
+            if (i == j)
+                continue;
 
-            const glm::dvec3 r     = shadowBodies_[j].pos_m - shadowBodies_[i].pos_m;
-            const double     dist2 = glm::dot(r, r) + PhysicsSystem::SOFTEN;
-            const double     invD  = 1.0 / std::sqrt(dist2);
+            const glm::dvec3 r = shadowBodies_[j].pos_m - shadowBodies_[i].pos_m;
+            const double dist2 = glm::dot(r, r) + PhysicsSystem::SOFTEN;
+            const double invD  = 1.0 / std::sqrt(dist2);
 
             out[i] += (PhysicsSystem::G * shadowBodies_[j].mass_kg * invD * invD) * r * invD;
         }
@@ -43,13 +44,15 @@ void PathPredictor::stepOnce(double dtSim)
 
 double PathPredictor::estimateOrbitalPeriod(const std::vector<CelestialBody>& bodies, int selectedIdx)
 {
-    if (selectedIdx < 0 || selectedIdx >= static_cast<int>(bodies.size())) return 0.0;
+    if (selectedIdx < 0 || selectedIdx >= static_cast<int>(bodies.size()))
+        return 0.0;
 
-    int    centralIdx  = -1;
-    double maxMassKg   = 0.0;
+    int centralIdx   = -1;
+    double maxMassKg = 0.0;
     for (size_t i = 0; i < bodies.size(); ++i)
     {
-        if (static_cast<int>(i) == selectedIdx) continue;
+        if (static_cast<int>(i) == selectedIdx)
+            continue;
         if (bodies[i].mass_kg > maxMassKg)
         {
             maxMassKg  = bodies[i].mass_kg;
@@ -57,11 +60,13 @@ double PathPredictor::estimateOrbitalPeriod(const std::vector<CelestialBody>& bo
         }
     }
 
-    if (centralIdx < 0 || maxMassKg <= 0.0) return 0.0;
+    if (centralIdx < 0 || maxMassKg <= 0.0)
+        return 0.0;
 
     const glm::dvec3 separation = bodies[selectedIdx].pos_m - bodies[centralIdx].pos_m;
-    const double     radius     = glm::length(separation);
-    if (radius <= 0.0) return 0.0;
+    const double radius         = glm::length(separation);
+    if (radius <= 0.0)
+        return 0.0;
 
     constexpr double kTwoPi = 6.283185307179586;
     return kTwoPi * std::sqrt(radius * radius * radius / (PhysicsSystem::G * maxMassKg));
@@ -72,8 +77,10 @@ void PathPredictor::recompute(const std::vector<CelestialBody>& bodies, int sele
 {
     path_.clear();
 
-    if (selectedIdx < 0 || selectedIdx >= static_cast<int>(bodies.size())) return;
-    if (sampleCount <= 0 || horizonSeconds <= 0.0) return;
+    if (selectedIdx < 0 || selectedIdx >= static_cast<int>(bodies.size()))
+        return;
+    if (sampleCount <= 0 || horizonSeconds <= 0.0)
+        return;
 
     shadowBodies_.resize(bodies.size());
     for (size_t i = 0; i < bodies.size(); ++i)

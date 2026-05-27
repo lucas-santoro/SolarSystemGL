@@ -3,10 +3,7 @@
 #include <utility>
 
 Framebuffer::Framebuffer(int width, int height, bool withDepth, int samples)
-    : width_(width)
-    , height_(height)
-    , samples_(samples < 1 ? 1 : samples)
-    , hasDepth_(withDepth)
+    : width_(width), height_(height), samples_(samples < 1 ? 1 : samples), hasDepth_(withDepth)
 {
     create();
 }
@@ -17,14 +14,9 @@ Framebuffer::~Framebuffer()
 }
 
 Framebuffer::Framebuffer(Framebuffer&& other) noexcept
-    : fbo_(other.fbo_)
-    , colorTexture_(other.colorTexture_)
-    , colorRenderbuffer_(other.colorRenderbuffer_)
-    , depthRenderbuffer_(other.depthRenderbuffer_)
-    , width_(other.width_)
-    , height_(other.height_)
-    , samples_(other.samples_)
-    , hasDepth_(other.hasDepth_)
+    : fbo_(other.fbo_), colorTexture_(other.colorTexture_), colorRenderbuffer_(other.colorRenderbuffer_),
+      depthRenderbuffer_(other.depthRenderbuffer_), width_(other.width_), height_(other.height_),
+      samples_(other.samples_), hasDepth_(other.hasDepth_)
 {
     other.fbo_               = 0;
     other.colorTexture_      = 0;
@@ -37,14 +29,14 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept
     if (this != &other)
     {
         destroy();
-        fbo_               = other.fbo_;
-        colorTexture_      = other.colorTexture_;
-        colorRenderbuffer_ = other.colorRenderbuffer_;
-        depthRenderbuffer_ = other.depthRenderbuffer_;
-        width_             = other.width_;
-        height_            = other.height_;
-        samples_           = other.samples_;
-        hasDepth_          = other.hasDepth_;
+        fbo_                     = other.fbo_;
+        colorTexture_            = other.colorTexture_;
+        colorRenderbuffer_       = other.colorRenderbuffer_;
+        depthRenderbuffer_       = other.depthRenderbuffer_;
+        width_                   = other.width_;
+        height_                  = other.height_;
+        samples_                 = other.samples_;
+        hasDepth_                = other.hasDepth_;
         other.fbo_               = 0;
         other.colorTexture_      = 0;
         other.colorRenderbuffer_ = 0;
@@ -66,8 +58,7 @@ void Framebuffer::create()
         glGenRenderbuffers(1, &colorRenderbuffer_);
         glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer_);
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples_, GL_RGBA8, width_, height_);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                  GL_RENDERBUFFER, colorRenderbuffer_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderbuffer_);
     }
     else
     {
@@ -87,15 +78,14 @@ void Framebuffer::create()
         glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer_);
         if (samples_ > 1)
         {
-            glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples_,
-                                             GL_DEPTH_COMPONENT24, width_, height_);
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples_, GL_DEPTH_COMPONENT24, width_,
+                                             height_);
         }
         else
         {
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width_, height_);
         }
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                  GL_RENDERBUFFER, depthRenderbuffer_);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer_);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -105,10 +95,14 @@ void Framebuffer::create()
 
 void Framebuffer::destroy()
 {
-    if (depthRenderbuffer_) glDeleteRenderbuffers(1, &depthRenderbuffer_);
-    if (colorRenderbuffer_) glDeleteRenderbuffers(1, &colorRenderbuffer_);
-    if (colorTexture_)      glDeleteTextures(1, &colorTexture_);
-    if (fbo_)               glDeleteFramebuffers(1, &fbo_);
+    if (depthRenderbuffer_)
+        glDeleteRenderbuffers(1, &depthRenderbuffer_);
+    if (colorRenderbuffer_)
+        glDeleteRenderbuffers(1, &colorRenderbuffer_);
+    if (colorTexture_)
+        glDeleteTextures(1, &colorTexture_);
+    if (fbo_)
+        glDeleteFramebuffers(1, &fbo_);
     depthRenderbuffer_ = 0;
     colorRenderbuffer_ = 0;
     colorTexture_      = 0;
@@ -124,9 +118,7 @@ void Framebuffer::blitColorTo(const Framebuffer& dst) const
 {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst.fbo_);
-    glBlitFramebuffer(0, 0, width_,     height_,
-                      0, 0, dst.width_, dst.height_,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, width_, height_, 0, 0, dst.width_, dst.height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
@@ -138,7 +130,8 @@ void Framebuffer::bindDefault()
 
 void Framebuffer::resize(int width, int height)
 {
-    if (width == width_ && height == height_) return;
+    if (width == width_ && height == height_)
+        return;
     destroy();
     width_  = width;
     height_ = height;
@@ -148,7 +141,8 @@ void Framebuffer::resize(int width, int height)
 void Framebuffer::setSamples(int samples)
 {
     const int clamped = samples < 1 ? 1 : samples;
-    if (clamped == samples_) return;
+    if (clamped == samples_)
+        return;
     destroy();
     samples_ = clamped;
     create();

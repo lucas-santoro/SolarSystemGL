@@ -5,20 +5,22 @@
 
 #include <cmath>
 
-namespace lagrange {
+namespace lagrange
+{
 
 Points compute(const CelestialBody& primary, const CelestialBody& secondary)
 {
     Points result;
 
     const glm::dvec3 separation = secondary.pos_m - primary.pos_m;
-    const double     R          = glm::length(separation);
-    const double     totalMass  = primary.mass_kg + secondary.mass_kg;
+    const double R              = glm::length(separation);
+    const double totalMass      = primary.mass_kg + secondary.mass_kg;
 
-    if (R < 1.0 || totalMass <= 0.0) return result;
+    if (R < 1.0 || totalMass <= 0.0)
+        return result;
 
-    const glm::dvec3 axis = separation / R;          // unit vector primary → secondary
-    const double     mu   = secondary.mass_kg / totalMass;
+    const glm::dvec3 axis = separation / R; // unit vector primary → secondary
+    const double mu       = secondary.mass_kg / totalMass;
 
     // Hill radius — the L1/L2 distance from the secondary along the
     // primary-secondary axis. Good to better than 1% for μ < 0.01
@@ -38,16 +40,12 @@ Points compute(const CelestialBody& primary, const CelestialBody& secondary)
     // L4, L5: equilateral-triangle points in the XZ orbital plane. Rotate
     // the separation vector by ±60° around the Y axis.
     constexpr double kCos60 = 0.5;
-    const     double kSin60 = std::sqrt(3.0) * 0.5;
+    const double kSin60     = std::sqrt(3.0) * 0.5;
 
-    const glm::dvec3 L4offset(
-        separation.x * kCos60 - separation.z * kSin60,
-        separation.y,
-        separation.x * kSin60 + separation.z * kCos60);
-    const glm::dvec3 L5offset(
-        separation.x * kCos60 + separation.z * kSin60,
-        separation.y,
-       -separation.x * kSin60 + separation.z * kCos60);
+    const glm::dvec3 L4offset(separation.x * kCos60 - separation.z * kSin60, separation.y,
+                              separation.x * kSin60 + separation.z * kCos60);
+    const glm::dvec3 L5offset(separation.x * kCos60 + separation.z * kSin60, separation.y,
+                              -separation.x * kSin60 + separation.z * kCos60);
 
     const glm::dvec3 L4m = primary.pos_m + L4offset;
     const glm::dvec3 L5m = primary.pos_m + L5offset;
@@ -61,4 +59,4 @@ Points compute(const CelestialBody& primary, const CelestialBody& secondary)
     return result;
 }
 
-}  // namespace lagrange
+} // namespace lagrange

@@ -23,79 +23,83 @@
 struct GridSettings
 {
     /// @brief Two grid topologies — Cartesian rows × columns or Radial rings × spokes.
-    enum class Style { Cartesian, Radial };
+    enum class Style
+    {
+        Cartesian,
+        Radial
+    };
 
     // -- Visibility --------------------------------------------------------
 
     /// Master toggle. When `false`, `Application::renderGrid` skips the call entirely.
-    bool      visible              = true;
+    bool visible = true;
 
     // -- Visual ------------------------------------------------------------
 
     /// RGB of grid lines at zero depth (flat regions). White reads cleanly
     /// against the dark skybox and lets the warm well gradient pop.
-    glm::vec3 baseColor            = { 1.0f, 1.0f, 1.0f };
+    glm::vec3 baseColor = {1.0f, 1.0f, 1.0f};
 
     /// RGB the lines blend toward as the well depth grows. Warm amber so
     /// wells visually "heat up" toward the centre against the white base.
-    glm::vec3 wellColor            = { 1.0f, 0.55f, 0.20f };
+    glm::vec3 wellColor = {1.0f, 0.55f, 0.20f};
 
     /// Base line alpha applied before per-line / distance modulation.
     /// Slightly trimmed (was 0.28) because the higher default resolution
     /// adds visual density on its own.
-    float     opacity              = 0.22f;
+    float opacity = 0.22f;
 
     /// Alpha multiplier for "major" lines (every Nth row/ring). Bundle B.
-    float     majorLineBoost       = 3.5f;
+    float majorLineBoost = 3.5f;
 
     /// Major-line stride. `1` makes every line major (no minor lines). Bundle B.
-    int       majorLineInterval    = 10;
+    int majorLineInterval = 10;
 
     /// Distance from the camera at which the alpha starts ramping toward
     /// zero. Tightened (was 4000) so the grid focuses on the inner system
     /// near the cinematic start camera instead of stretching past Neptune.
-    float     distanceFadeStart    = 1800.0f;
+    float distanceFadeStart = 1800.0f;
 
     /// Distance from the camera at which the alpha reaches zero. Tuned to
     /// reach roughly Saturn distance (9.5 AU = 1425 WU) plus margin so the
     /// outer planets are still discoverable but the empty void beyond
     /// Neptune is cleanly invisible.
-    float     distanceFadeEnd      = 5500.0f;
+    float distanceFadeEnd = 5500.0f;
 
     // -- Distortion physics -----------------------------------------------
 
     /// Multiplier in the falloff numerator (`depth = strength × mass / …`).
-    float     distortionStrength   = 0.008f;
+    float distortionStrength = 0.008f;
 
     /// Falloff radius used by the default Lorentzian profile.
-    float     falloffRadius        = 2.0f;
+    float falloffRadius = 2.0f;
 
     /// Hard upper bound on per-body well depth in world units.
-    float     maxWellDepth         = 38.0f;
+    float maxWellDepth = 38.0f;
 
     /// When true, the shader uses a Schwarzschild-inspired `1/r` profile
     /// instead of the smooth Lorentzian. Bundle C.
-    bool      useSchwarzschild     = false;
+    bool useSchwarzschild = false;
 
     /// Strength of the "singularity" darkening applied to very deep wells. Bundle C.
     /// A modest default (0.6) adds depth to the well centres without going
     /// full black-hole — users can crank it to 1.5+ via Settings.
-    float     singularityDarken    = 0.6f;
+    float singularityDarken = 0.6f;
 
     /// Mix the well color with the per-body color contributing to that well. Bundle C.
-    bool      perBodyTint          = true;
+    bool perBodyTint = true;
 
     // -- Geometry ----------------------------------------------------------
 
-    Style     style                = Style::Cartesian;
+    Style style = Style::Cartesian;
 
     /// Cartesian: half the line count per axis. Radial: ring count.
     /// Defaults to High so the mesh reads as a fine spacetime fabric out of
     /// the box; users on weaker GPUs can drop to Medium/Low in Settings.
-    int       resolution           = 400;
+    int resolution = 400;
 
     /// Total side length (Cartesian) or outer radius diameter (Radial), in world units.
-    float     extent               = 10000.0f;
+    float extent = 10000.0f;
 };
 
 /**
@@ -142,21 +146,19 @@ public:
      * @param bodies   Current body list (capped by `MAX_PLANETS` on both sides).
      * @param settings Active GridSettings — visual + physical + geometry knobs.
      */
-    void draw(Shader& shader,
-              const std::vector<CelestialBody>& bodies,
-              const GridSettings& settings);
+    void draw(Shader& shader, const std::vector<CelestialBody>& bodies, const GridSettings& settings);
 
 private:
     void buildCartesianGeometry(int divisions, float extent);
     void buildRadialGeometry(int divisions, float extent);
     void rebuildIfDirty(const GridSettings& settings);
 
-    GLuint VAO       = 0;
-    GLuint VBO       = 0;
-    int    lineCount = 0;
+    GLuint VAO    = 0;
+    GLuint VBO    = 0;
+    int lineCount = 0;
 
     // Last-built geometry signature — used to detect when a rebuild is needed.
-    GridSettings::Style lastBuiltStyle_      = GridSettings::Style::Cartesian;
-    int                 lastBuiltResolution_ = 0;
-    float               lastBuiltExtent_     = 0.0f;
+    GridSettings::Style lastBuiltStyle_ = GridSettings::Style::Cartesian;
+    int lastBuiltResolution_            = 0;
+    float lastBuiltExtent_              = 0.0f;
 };

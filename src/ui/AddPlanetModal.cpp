@@ -1,6 +1,6 @@
 #include "AddPlanetModal.h"
 
-#include "ui/UIManager.h"  // pulls glad before any GLFW header
+#include "ui/UIManager.h" // pulls glad before any GLFW header
 #include "ui/UI.h"
 #include "core/Constants.h"
 #include "objects/CelestialBody.h"
@@ -13,11 +13,11 @@
 
 namespace
 {
-    constexpr double kSunMassKg            = 1.989e30;
-    constexpr double kNewPlanetOrbitAU     = 1.5;
-    constexpr double kBodyToBodyYawOffset  = 0.7;
-    constexpr float  kNewPlanetDensity     = 3000.0f;
-}
+constexpr double kSunMassKg           = 1.989e30;
+constexpr double kNewPlanetOrbitAU    = 1.5;
+constexpr double kBodyToBodyYawOffset = 0.7;
+constexpr float kNewPlanetDensity     = 3000.0f;
+} // namespace
 
 void AddPlanetModal::render(std::vector<CelestialBody>& bodies, UIManager& uiManager)
 {
@@ -52,8 +52,7 @@ void AddPlanetModal::render(std::vector<CelestialBody>& bodies, UIManager& uiMan
         CelestialBody body;
         body.pos_m   = glm::dvec3(semiMajorAxisMeters * std::cos(yawAngle), 0.0,
                                   semiMajorAxisMeters * std::sin(yawAngle));
-        body.vel_m   = glm::dvec3(-orbitalSpeed * std::sin(yawAngle), 0.0,
-                                   orbitalSpeed * std::cos(yawAngle));
+        body.vel_m   = glm::dvec3(-orbitalSpeed * std::sin(yawAngle), 0.0, orbitalSpeed * std::cos(yawAngle));
         body.mass_kg = static_cast<double>(newPlanetMass_);
         body.name    = newPlanetName_;
         body.color   = newPlanetColor_;

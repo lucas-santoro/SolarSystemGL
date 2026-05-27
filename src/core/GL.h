@@ -14,8 +14,8 @@
  */
 
 #ifdef SOLARSYSTEM_BUILD_WEB
-#  include <GLES3/gl3.h>
-#  include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
+#include <GLES2/gl2ext.h>
 #else
-#  include <glad/glad.h>
+#include <glad/glad.h>
 #endif

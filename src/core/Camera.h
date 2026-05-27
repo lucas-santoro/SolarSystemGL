@@ -16,8 +16,8 @@
  */
 enum class CameraMode
 {
-    FREE,    /**< WASD movement, mouse look. position/front/yaw/pitch live freely. */
-    ORBITAL  /**< Locked to a body, orbits around it via yaw/pitch/distance. */
+    FREE,   /**< WASD movement, mouse look. position/front/yaw/pitch live freely. */
+    ORBITAL /**< Locked to a body, orbits around it via yaw/pitch/distance. */
 };
 
 /**
@@ -48,8 +48,7 @@ public:
      * @param projection    Current projection matrix.
      * @return              Normalized world-space ray direction.
      */
-    glm::vec3 getRayFromMouse(double mouseX, double mouseY,
-                              int screenWidth, int screenHeight,
+    glm::vec3 getRayFromMouse(double mouseX, double mouseY, int screenWidth, int screenHeight,
                               const glm::mat4& view, const glm::mat4& projection);
 
     /// @return The current world-space camera position.
@@ -59,8 +58,7 @@ public:
      * @brief Project a world point to screen pixel coordinates.
      * @return `(x, y)` pixel position, or `(-1, -1)` if the point projects behind the camera.
      */
-    glm::vec2 worldToScreen(const glm::vec3& worldPos,
-                            const glm::mat4& view, const glm::mat4& projection,
+    glm::vec2 worldToScreen(const glm::vec3& worldPos, const glm::mat4& view, const glm::mat4& projection,
                             int screenWidth, int screenHeight);
 
     /// @return The current operating mode.
@@ -137,10 +135,16 @@ public:
     void flyToPose(const glm::vec3& position, float yaw, float pitch);
 
     /// @return The current yaw in degrees (for bookmark capture).
-    float getYaw() const { return yaw_; }
+    float getYaw() const
+    {
+        return yaw_;
+    }
 
     /// @return The current pitch in degrees (for bookmark capture).
-    float getPitch() const { return pitch_; }
+    float getPitch() const
+    {
+        return pitch_;
+    }
 
     /// Advance any active smooth movement by @p dt seconds.
     void update(float dt);
@@ -149,41 +153,47 @@ public:
     void reset();
 
     /// @return Mouse-look sensitivity multiplier (degrees per pixel-equivalent).
-    float getSensitivity() const { return sensitivity_; }
+    float getSensitivity() const
+    {
+        return sensitivity_;
+    }
 
     /// Set the mouse-look sensitivity multiplier.
-    void setSensitivity(float value) { sensitivity_ = value; }
+    void setSensitivity(float value)
+    {
+        sensitivity_ = value;
+    }
 
 private:
     // Pose (FREE mode is authoritative; ORBITAL rewrites these from spherical coords).
     glm::vec3 position_;
-    glm::vec3 front_{ 0.0f, 0.0f, -1.0f };
-    glm::vec3 up_{ 0.0f, 1.0f, 0.0f };
+    glm::vec3 front_{0.0f, 0.0f, -1.0f};
+    glm::vec3 up_{0.0f, 1.0f, 0.0f};
     // Cinematic 3/4 defaults — match the values inside Camera::reset() so a
     // freshly-constructed Camera lines up with the post-reset state.
-    float     yaw_         = -128.0f;
-    float     pitch_       = -24.0f;
-    float     speed_       = 80.0f;
-    float     sensitivity_ = 0.1f;
+    float yaw_         = -128.0f;
+    float pitch_       = -24.0f;
+    float speed_       = 80.0f;
+    float sensitivity_ = 0.1f;
 
     // Smooth-move state.
-    bool      isTravelling_ = false;
-    glm::vec3 targetPos_{ 0.0f };
-    float     travelSpeed_  = 3000.0f;
+    bool isTravelling_ = false;
+    glm::vec3 targetPos_{0.0f};
+    float travelSpeed_ = 3000.0f;
 
     // Optional pose-interpolation alongside the position move (used by
     // flyToPose for the View dropdown and the F5–F8 bookmark restores).
-    bool      hasPendingPose_  = false;
-    glm::vec3 poseStartPos_{ 0.0f };
-    float     poseStartYaw_    = 0.0f;
-    float     poseStartPitch_  = 0.0f;
-    float     poseTargetYaw_   = 0.0f;
-    float     poseTargetPitch_ = 0.0f;
+    bool hasPendingPose_ = false;
+    glm::vec3 poseStartPos_{0.0f};
+    float poseStartYaw_    = 0.0f;
+    float poseStartPitch_  = 0.0f;
+    float poseTargetYaw_   = 0.0f;
+    float poseTargetPitch_ = 0.0f;
 
     // Mode + orbital state.
-    CameraMode                mode_                = CameraMode::FREE;
-    int                       orbitalTargetIndex_  = -1;
-    glm::vec3                 orbitalTargetPos_{ 0.0f };
-    float                     orbitalDistance_     = 100.0f;
-    std::optional<CameraMode> pendingMode_;  ///< Mode to apply when an in-flight smooth move arrives.
+    CameraMode mode_        = CameraMode::FREE;
+    int orbitalTargetIndex_ = -1;
+    glm::vec3 orbitalTargetPos_{0.0f};
+    float orbitalDistance_ = 100.0f;
+    std::optional<CameraMode> pendingMode_; ///< Mode to apply when an in-flight smooth move arrives.
 };

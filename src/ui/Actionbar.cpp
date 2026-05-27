@@ -1,6 +1,6 @@
 #include "Actionbar.h"
 
-#include "core/Window.h"   // first: pulls glad before any GLFW/OpenGL header
+#include "core/Window.h" // first: pulls glad before any GLFW/OpenGL header
 #include "core/Camera.h"
 #include "core/Grid.h"
 #include "objects/CelestialBody.h"
@@ -9,7 +9,7 @@
 #include "ui/UIManager.h"
 
 #include <imgui.h>
-#include <imgui_internal.h>  // BeginViewportSideBar lives here
+#include <imgui_internal.h> // BeginViewportSideBar lives here
 
 #include <algorithm>
 #include <cmath>
@@ -17,61 +17,56 @@
 
 namespace
 {
-    constexpr float kSeparatorIndent = 8.0f;
+constexpr float kSeparatorIndent = 8.0f;
 
-    constexpr ImGuiWindowFlags kBarFlags =
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoScrollbar     |
-        ImGuiWindowFlags_NoScrollWithMouse;
+constexpr ImGuiWindowFlags kBarFlags =
+    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
-    /// Vertical separator between actionbar groups.
-    void renderGroupSeparator()
-    {
-        ImGui::SameLine(0.0f, kSeparatorIndent);
-        ImGui::TextDisabled("|");
-        ImGui::SameLine(0.0f, kSeparatorIndent);
-    }
-
-    /// Format simulated seconds since startup as "Day N HH:MM".
-    void formatSimulatedDate(double simulatedSeconds, char* out, size_t outSize)
-    {
-        constexpr double kSecondsPerDay  = 86400.0;
-        constexpr double kSecondsPerHour = 3600.0;
-        constexpr double kSecondsPerMin  = 60.0;
-
-        const double dayCount     = std::floor(simulatedSeconds / kSecondsPerDay);
-        const double timeOfDay    = simulatedSeconds - dayCount * kSecondsPerDay;
-        const int    hourOfDay    = static_cast<int>(std::floor(timeOfDay / kSecondsPerHour));
-        const int    minuteOfHour = static_cast<int>(std::floor(
-            (timeOfDay - hourOfDay * kSecondsPerHour) / kSecondsPerMin));
-
-        std::snprintf(out, outSize, "Day %.0f %02d:%02d",
-                      dayCount, hourOfDay, minuteOfHour);
-    }
-
-    struct TimeScalePreset { const char* label; float value; };
-    constexpr TimeScalePreset kTimeScalePresets[] = {
-        { "1k\xc3\x97",   1000.0f       },
-        { "10k\xc3\x97",  10000.0f      },
-        { "100k\xc3\x97", 100000.0f     },
-        { "1M\xc3\x97",   1000000.0f    },
-        { "5M\xc3\x97",   5000000.0f    },
-    };
+/// Vertical separator between actionbar groups.
+void renderGroupSeparator()
+{
+    ImGui::SameLine(0.0f, kSeparatorIndent);
+    ImGui::TextDisabled("|");
+    ImGui::SameLine(0.0f, kSeparatorIndent);
 }
+
+/// Format simulated seconds since startup as "Day N HH:MM".
+void formatSimulatedDate(double simulatedSeconds, char* out, size_t outSize)
+{
+    constexpr double kSecondsPerDay  = 86400.0;
+    constexpr double kSecondsPerHour = 3600.0;
+    constexpr double kSecondsPerMin  = 60.0;
+
+    const double dayCount  = std::floor(simulatedSeconds / kSecondsPerDay);
+    const double timeOfDay = simulatedSeconds - dayCount * kSecondsPerDay;
+    const int hourOfDay    = static_cast<int>(std::floor(timeOfDay / kSecondsPerHour));
+    const int minuteOfHour =
+        static_cast<int>(std::floor((timeOfDay - hourOfDay * kSecondsPerHour) / kSecondsPerMin));
+
+    std::snprintf(out, outSize, "Day %.0f %02d:%02d", dayCount, hourOfDay, minuteOfHour);
+}
+
+struct TimeScalePreset
+{
+    const char* label;
+    float value;
+};
+constexpr TimeScalePreset kTimeScalePresets[] = {
+    {"1k\xc3\x97", 1000.0f},    {"10k\xc3\x97", 10000.0f},  {"100k\xc3\x97", 100000.0f},
+    {"1M\xc3\x97", 1000000.0f}, {"5M\xc3\x97", 5000000.0f},
+};
+} // namespace
 
 void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& physics,
                              std::vector<CelestialBody>& bodies, UIManager& uiManager,
                              GridSettings& gridSettings, float deltaTime)
 {
-    (void)window;  // size is taken from the main viewport directly
+    (void) window; // size is taken from the main viewport directly
 
     const float instantFps = 1.0f / std::max(deltaTime, 1e-6f);
-    smoothedFps_ = smoothedFps_ * 0.9f + instantFps * 0.1f;
+    smoothedFps_           = smoothedFps_ * 0.9f + instantFps * 0.1f;
 
-    if (!ImGui::BeginViewportSideBar("##actionbar_top",
-                                     ImGui::GetMainViewport(),
-                                     ImGuiDir_Up,
-                                     kTopBarHeight,
+    if (!ImGui::BeginViewportSideBar("##actionbar_top", ImGui::GetMainViewport(), ImGuiDir_Up, kTopBarHeight,
                                      kBarFlags))
     {
         ImGui::End();
@@ -92,23 +87,22 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::SetItemTooltip("Return to the main menu (Esc)");
     ImGui::SameLine();
 
-    const int  selectedIdx     = uiManager.getSelectedPlanetIndex();
-    const char* systemPreview  = (selectedIdx >= 0 && selectedIdx < static_cast<int>(bodies.size()))
-                                     ? bodies[selectedIdx].name.c_str()
-                                     : "System";
+    const int selectedIdx     = uiManager.getSelectedPlanetIndex();
+    const char* systemPreview = (selectedIdx >= 0 && selectedIdx < static_cast<int>(bodies.size()))
+                                    ? bodies[selectedIdx].name.c_str()
+                                    : "System";
     ImGui::SetNextItemWidth(mobile ? 110.0f : 160.0f);
     if (ImGui::BeginCombo("##system", systemPreview))
     {
         for (size_t i = 0; i < bodies.size(); ++i)
         {
-            const bool      isSelected = (static_cast<int>(i) == selectedIdx);
-            const BodyType  type       = bodies[i].classify();
-            const glm::vec3 chipRgb    = bodyTypeColor(type);
-            const ImVec4    chipColor(chipRgb.r, chipRgb.g, chipRgb.b, 1.0f);
+            const bool isSelected   = (static_cast<int>(i) == selectedIdx);
+            const BodyType type     = bodies[i].classify();
+            const glm::vec3 chipRgb = bodyTypeColor(type);
+            const ImVec4 chipColor(chipRgb.r, chipRgb.g, chipRgb.b, 1.0f);
 
             ImGui::PushID(static_cast<int>(i));
-            if (ImGui::Selectable("##row", isSelected,
-                                  ImGuiSelectableFlags_AllowOverlap,
+            if (ImGui::Selectable("##row", isSelected, ImGuiSelectableFlags_AllowOverlap,
                                   ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing())))
             {
                 uiManager.setSelected(static_cast<int>(i));
@@ -117,7 +111,8 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
             ImGui::TextColored(chipColor, "%-9s", bodyTypeLabel(type));
             ImGui::SameLine();
             ImGui::TextUnformatted(bodies[i].name.c_str());
-            if (isSelected) ImGui::SetItemDefaultFocus();
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
             ImGui::PopID();
         }
         ImGui::EndCombo();
@@ -132,8 +127,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     renderGroupSeparator();
 
     const CameraMode currentMode = camera.getMode();
-    const bool       hasSelection = (selectedIdx >= 0
-                                     && selectedIdx < static_cast<int>(bodies.size()));
+    const bool hasSelection      = (selectedIdx >= 0 && selectedIdx < static_cast<int>(bodies.size()));
 
     // Free / Orbital rendered as a segmented control rather than ImGui
     // radio buttons: the radio's tiny outline reads as invisible against
@@ -141,14 +135,14 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     // Two pill-buttons with a filled-blue selected state are unambiguous.
     auto drawSegmentedToggle = [](const char* label, bool selected, bool disabled) -> bool
     {
-        const ImVec4 activeFill   (0.22f, 0.44f, 0.78f, 1.00f);
-        const ImVec4 activeHover  (0.28f, 0.52f, 0.88f, 1.00f);
-        const ImVec4 inactiveFill (0.07f, 0.11f, 0.18f, 0.85f);
+        const ImVec4 activeFill(0.22f, 0.44f, 0.78f, 1.00f);
+        const ImVec4 activeHover(0.28f, 0.52f, 0.88f, 1.00f);
+        const ImVec4 inactiveFill(0.07f, 0.11f, 0.18f, 0.85f);
         const ImVec4 inactiveHover(0.14f, 0.22f, 0.34f, 1.00f);
 
-        ImGui::PushStyleColor(ImGuiCol_Button,        selected ? activeFill  : inactiveFill);
+        ImGui::PushStyleColor(ImGuiCol_Button, selected ? activeFill : inactiveFill);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, selected ? activeHover : inactiveHover);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  activeFill);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeFill);
         ImGui::BeginDisabled(disabled);
         const bool clicked = ImGui::Button(label);
         ImGui::EndDisabled();
@@ -156,11 +150,16 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         return clicked;
     };
 
-    struct ViewPresetOption { const char* label; const char* shortcut; int value; };
+    struct ViewPresetOption
+    {
+        const char* label;
+        const char* shortcut;
+        int value;
+    };
     static constexpr ViewPresetOption kViewPresets[] = {
-        { "Default",  "F1", 0 },
-        { "Top-down", "F2", 1 },
-        { "Side-on",  "F3", 2 },
+        {"Default", "F1", 0},
+        {"Top-down", "F2", 1},
+        {"Side-on", "F3", 2},
     };
 
     if (!mobile)
@@ -172,8 +171,8 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         ImGui::SetItemTooltip("Pause / resume the simulation (Space)");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(140.0f);
-        ImGui::SliderFloat("##timescale", &physics.timeScale,
-                           1000.0f, 5.0e6f, "%.0fx", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("##timescale", &physics.timeScale, 1000.0f, 5.0e6f, "%.0fx",
+                           ImGuiSliderFlags_Logarithmic);
         ImGui::SetItemTooltip("Simulated seconds per real second (log scale)");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(72.0f);
@@ -220,8 +219,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         ImGui::SameLine();
         if (drawSegmentedToggle("Orbital", currentMode == CameraMode::ORBITAL, /*disabled=*/!hasSelection))
         {
-            camera.flyToOrbital(selectedIdx,
-                                bodies[selectedIdx].renderPosition(),
+            camera.flyToOrbital(selectedIdx, bodies[selectedIdx].renderPosition(),
                                 bodies[selectedIdx].focusDistance());
         }
         ImGui::SetItemTooltip("Orbit the selected body [2]");
@@ -230,8 +228,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         ImGui::BeginDisabled(!hasSelection);
         if (ImGui::Button("Focus") && hasSelection)
         {
-            camera.flyToOrbital(selectedIdx,
-                                bodies[selectedIdx].renderPosition(),
+            camera.flyToOrbital(selectedIdx, bodies[selectedIdx].renderPosition(),
                                 bodies[selectedIdx].focusDistance());
         }
         ImGui::SetItemTooltip("Fly to the selected body (F)");
@@ -256,16 +253,20 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         renderGroupSeparator();
 
         // --- Group 4: Settings / Save / Load -----------------------------
-        if (ImGui::Button("Settings")) uiManager.settingsRequested = true;
+        if (ImGui::Button("Settings"))
+            uiManager.settingsRequested = true;
         ImGui::SetItemTooltip("Sensitivity, FOV, GUI scale, VSync");
         ImGui::SameLine();
-        if (ImGui::Button("Save"))     uiManager.saveRequested     = true;
+        if (ImGui::Button("Save"))
+            uiManager.saveRequested = true;
         ImGui::SetItemTooltip("Write the current state to a save file");
         ImGui::SameLine();
-        if (ImGui::Button("Load"))     uiManager.loadRequested     = true;
+        if (ImGui::Button("Load"))
+            uiManager.loadRequested = true;
         ImGui::SetItemTooltip("Load a previously saved state");
         ImGui::SameLine();
-        if (ImGui::Button("?"))        uiManager.helpRequested     = true;
+        if (ImGui::Button("?"))
+            uiManager.helpRequested = true;
         ImGui::SetItemTooltip("Re-open the tutorial");
     }
     else
@@ -290,15 +291,16 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
             ImGui::TextDisabled("Time");
             ImGui::Checkbox("Paused", &physics.paused);
             ImGui::SetNextItemWidth(-1.0f);
-            ImGui::SliderFloat("##timescale_overflow", &physics.timeScale,
-                               1000.0f, 5.0e6f, "%.0fx", ImGuiSliderFlags_Logarithmic);
+            ImGui::SliderFloat("##timescale_overflow", &physics.timeScale, 1000.0f, 5.0e6f, "%.0fx",
+                               ImGuiSliderFlags_Logarithmic);
             for (size_t i = 0; i < IM_ARRAYSIZE(kTimeScalePresets); ++i)
             {
                 if (ImGui::SmallButton(kTimeScalePresets[i].label))
                 {
                     physics.timeScale = kTimeScalePresets[i].value;
                 }
-                if (i + 1 < IM_ARRAYSIZE(kTimeScalePresets)) ImGui::SameLine();
+                if (i + 1 < IM_ARRAYSIZE(kTimeScalePresets))
+                    ImGui::SameLine();
             }
 
             ImGui::Separator();
@@ -311,15 +313,13 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
             if (drawSegmentedToggle("Orbital", currentMode == CameraMode::ORBITAL,
                                     /*disabled=*/!hasSelection))
             {
-                camera.flyToOrbital(selectedIdx,
-                                    bodies[selectedIdx].renderPosition(),
+                camera.flyToOrbital(selectedIdx, bodies[selectedIdx].renderPosition(),
                                     bodies[selectedIdx].focusDistance());
             }
             ImGui::BeginDisabled(!hasSelection);
             if (ImGui::Button("Focus", ImVec2(-1, 0)) && hasSelection)
             {
-                camera.flyToOrbital(selectedIdx,
-                                    bodies[selectedIdx].renderPosition(),
+                camera.flyToOrbital(selectedIdx, bodies[selectedIdx].renderPosition(),
                                     bodies[selectedIdx].focusDistance());
             }
             ImGui::EndDisabled();
@@ -359,8 +359,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
                 uiManager.helpRequested = true;
                 ImGui::CloseCurrentPopup();
             }
-            if (ImGui::Button(uiManager.demoModeActive ? "Exit Demo Mode" : "Demo Mode",
-                              ImVec2(-1, 0)))
+            if (ImGui::Button(uiManager.demoModeActive ? "Exit Demo Mode" : "Demo Mode", ImVec2(-1, 0)))
             {
                 uiManager.demoModeActive = !uiManager.demoModeActive;
                 ImGui::CloseCurrentPopup();
@@ -375,10 +374,10 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
             // viewports (it doesn't fit), so its checkboxes live here instead.
             ImGui::Separator();
             ImGui::TextDisabled("Show");
-            ImGui::Checkbox("Trails",      &uiManager.showTrails);
-            ImGui::Checkbox("Labels",      &uiManager.showBodyLabels);
-            ImGui::Checkbox("Bloom",       &uiManager.showBloom);
-            ImGui::Checkbox("Grid",        &gridSettings.visible);
+            ImGui::Checkbox("Trails", &uiManager.showTrails);
+            ImGui::Checkbox("Labels", &uiManager.showBodyLabels);
+            ImGui::Checkbox("Bloom", &uiManager.showBloom);
+            ImGui::Checkbox("Grid", &gridSettings.visible);
             ImGui::Checkbox("Diagnostics", &uiManager.showDiagnostics);
             if (ImGui::Checkbox("VSync", &uiManager.vsync))
             {
@@ -403,8 +402,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::End();
 }
 
-void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
-                                GridSettings& gridSettings)
+void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager, GridSettings& gridSettings)
 {
     // On compact viewports the six toggles don't fit on one row; they're
     // surfaced in the top bar's "More..." overflow instead, so skip the
@@ -414,11 +412,8 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
         return;
     }
 
-    if (!ImGui::BeginViewportSideBar("##actionbar_bottom",
-                                     ImGui::GetMainViewport(),
-                                     ImGuiDir_Down,
-                                     kBottomBarHeight,
-                                     kBarFlags))
+    if (!ImGui::BeginViewportSideBar("##actionbar_bottom", ImGui::GetMainViewport(), ImGuiDir_Down,
+                                     kBottomBarHeight, kBarFlags))
     {
         ImGui::End();
         return;
@@ -427,16 +422,16 @@ void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
     // Bottom bar holds only system-wide toggles. Per-body visualisations
     // (Prediction, Lagrange) live inside the Planet Info panel since they
     // require a selection to mean anything.
-    ImGui::Checkbox("Trails",      &uiManager.showTrails);
+    ImGui::Checkbox("Trails", &uiManager.showTrails);
     ImGui::SetItemTooltip("Render orbit trails as line strips");
     ImGui::SameLine();
-    ImGui::Checkbox("Labels",      &uiManager.showBodyLabels);
+    ImGui::Checkbox("Labels", &uiManager.showBodyLabels);
     ImGui::SetItemTooltip("Persistent name labels above every body (off by default; hover always works)");
     ImGui::SameLine();
-    ImGui::Checkbox("Bloom",       &uiManager.showBloom);
+    ImGui::Checkbox("Bloom", &uiManager.showBloom);
     ImGui::SetItemTooltip("Render emissive bloom for stars");
     ImGui::SameLine();
-    ImGui::Checkbox("Grid",        &gridSettings.visible);
+    ImGui::Checkbox("Grid", &gridSettings.visible);
     ImGui::SetItemTooltip("Render the spacetime distortion grid");
     ImGui::SameLine();
     ImGui::Checkbox("Diagnostics", &uiManager.showDiagnostics);

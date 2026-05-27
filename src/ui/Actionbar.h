@@ -31,7 +31,7 @@ class Actionbar
 {
 public:
     /// Pixel height of the top side-bar. Exposed so panels can offset below it.
-    static constexpr float kTopBarHeight    = 40.0f;
+    static constexpr float kTopBarHeight = 40.0f;
 
     /// Pixel height of the bottom side-bar.
     static constexpr float kBottomBarHeight = 32.0f;
@@ -42,8 +42,8 @@ public:
      * Must be called between ImGui::NewFrame and ImGui::Render.
      */
     void renderTopBar(Window& window, Camera& camera, PhysicsSystem& physics,
-                      std::vector<CelestialBody>& bodies, UIManager& uiManager,
-                      GridSettings& gridSettings, float deltaTime);
+                      std::vector<CelestialBody>& bodies, UIManager& uiManager, GridSettings& gridSettings,
+                      float deltaTime);
 
     /**
      * @brief Render the bottom side-bar for the current frame.

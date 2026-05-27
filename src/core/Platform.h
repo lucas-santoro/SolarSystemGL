@@ -9,16 +9,16 @@
  */
 namespace platform
 {
-    /**
-     * @brief Best-effort detection of "is this a mobile device?".
-     *
-     * Web: tries `navigator.userAgentData.mobile` first (a Client Hint that
-     * recent Chromium browsers expose), and falls back to a viewport-width
-     * heuristic + `'ontouchstart' in window`.
-     *
-     * Desktop: always returns `false`.
-     *
-     * Call once during startup to pick defaults — do not poll it per frame.
-     */
-    bool isMobileDevice();
-}
+/**
+ * @brief Best-effort detection of "is this a mobile device?".
+ *
+ * Web: tries `navigator.userAgentData.mobile` first (a Client Hint that
+ * recent Chromium browsers expose), and falls back to a viewport-width
+ * heuristic + `'ontouchstart' in window`.
+ *
+ * Desktop: always returns `false`.
+ *
+ * Call once during startup to pick defaults — do not poll it per frame.
+ */
+bool isMobileDevice();
+} // namespace platform

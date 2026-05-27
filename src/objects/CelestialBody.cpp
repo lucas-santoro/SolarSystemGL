@@ -12,11 +12,10 @@ glm::vec3 CelestialBody::renderPosition() const
     return glm::vec3(pos_m / METERS_PER_WU);
 }
 
-bool CelestialBody::intersectsRay(const glm::vec3& rayOrigin,
-                                  const glm::vec3& rayDirection) const
+bool CelestialBody::intersectsRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) const
 {
-    float pickRadius = std::max(radius, MIN_PICK_RADIUS);
-    glm::vec3 worldPos = renderPosition();
+    float pickRadius      = std::max(radius, MIN_PICK_RADIUS);
+    glm::vec3 worldPos    = renderPosition();
     glm::vec3 originToCtr = rayOrigin - worldPos;
 
     float dirLenSq     = glm::dot(rayDirection, rayDirection);
@@ -38,7 +37,7 @@ float CelestialBody::focusDistance() const
 void CelestialBody::recalculateGeometry()
 {
     constexpr float scaleFactor = 1e-7f;
-    const float massF = static_cast<float>(mass_kg);
+    const float massF           = static_cast<float>(mass_kg);
     radius = std::cbrt((3.0f * massF) / (4.0f * static_cast<float>(M_PI) * density)) * scaleFactor;
     mesh.rebuild(radius);
 }
@@ -52,7 +51,7 @@ void CelestialBody::render(Shader& shader) const
 #endif
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), renderPosition());
-    model = glm::scale(model, glm::vec3(displayScale));
+    model           = glm::scale(model, glm::vec3(displayScale));
     shader.setMat4("model", model);
     shader.setVec3("planetColor", color);
     shader.setFloat("emissive", emissive);
@@ -62,8 +61,10 @@ void CelestialBody::render(Shader& shader) const
 
 BodyType CelestialBody::classify() const
 {
-    if (emissive >= 0.5f)         return BodyType::Star;
-    if (mass_kg  >= 1.0e22)       return BodyType::Planet;
+    if (emissive >= 0.5f)
+        return BodyType::Star;
+    if (mass_kg >= 1.0e22)
+        return BodyType::Planet;
     return BodyType::Asteroid;
 }
 
@@ -71,9 +72,12 @@ const char* bodyTypeLabel(BodyType type)
 {
     switch (type)
     {
-        case BodyType::Star:     return "Star";
-        case BodyType::Planet:   return "Planet";
-        case BodyType::Asteroid: return "Asteroid";
+    case BodyType::Star:
+        return "Star";
+    case BodyType::Planet:
+        return "Planet";
+    case BodyType::Asteroid:
+        return "Asteroid";
     }
     return "?";
 }
@@ -82,9 +86,12 @@ glm::vec3 bodyTypeColor(BodyType type)
 {
     switch (type)
     {
-        case BodyType::Star:     return glm::vec3(1.00f, 0.90f, 0.30f);  // warm yellow
-        case BodyType::Planet:   return glm::vec3(0.40f, 0.75f, 1.00f);  // cyan-blue
-        case BodyType::Asteroid: return glm::vec3(0.70f, 0.70f, 0.70f);  // neutral grey
+    case BodyType::Star:
+        return glm::vec3(1.00f, 0.90f, 0.30f); // warm yellow
+    case BodyType::Planet:
+        return glm::vec3(0.40f, 0.75f, 1.00f); // cyan-blue
+    case BodyType::Asteroid:
+        return glm::vec3(0.70f, 0.70f, 0.70f); // neutral grey
     }
     return glm::vec3(1.0f);
 }

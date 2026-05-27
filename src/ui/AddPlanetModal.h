@@ -28,11 +28,14 @@ public:
     void render(std::vector<CelestialBody>& bodies, UIManager& uiManager);
 
     /// Mark the popup as pending-open. The next #render call issues OpenPopup.
-    void requestOpen() { pendingOpen_ = true; }
+    void requestOpen()
+    {
+        pendingOpen_ = true;
+    }
 
 private:
-    bool      pendingOpen_           = false;
-    char      newPlanetName_[128]    = "New Planet";
-    glm::vec3 newPlanetColor_{ 0.8f, 0.8f, 0.9f };
-    float     newPlanetMass_         = 1.0e24f;
+    bool pendingOpen_        = false;
+    char newPlanetName_[128] = "New Planet";
+    glm::vec3 newPlanetColor_{0.8f, 0.8f, 0.9f};
+    float newPlanetMass_ = 1.0e24f;
 };

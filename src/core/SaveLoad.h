@@ -26,8 +26,7 @@
  * @param physics Physics system — only `timeScale` is written.
  * @return        `true` on success; `false` if the file cannot be opened for writing.
  */
-bool saveSimulation(const std::string& path,
-                    const std::vector<CelestialBody>& bodies,
+bool saveSimulation(const std::string& path, const std::vector<CelestialBody>& bodies,
                     const PhysicsSystem& physics);
 
 /**
@@ -42,6 +41,4 @@ bool saveSimulation(const std::string& path,
  * @param physics Physics system — only `timeScale` is overwritten.
  * @return        `true` on success; `false` if the file cannot be opened or contains no bodies.
  */
-bool loadSimulation(const std::string& path,
-                    std::vector<CelestialBody>& bodies,
-                    PhysicsSystem& physics);
+bool loadSimulation(const std::string& path, std::vector<CelestialBody>& bodies, PhysicsSystem& physics);

@@ -20,13 +20,14 @@ struct CelestialBody;
  *   ahead / behind the secondary, taken to be the XZ plane).
  */
 
-namespace lagrange {
+namespace lagrange
+{
 
 /// Five Lagrange-point positions in world units, plus a validity flag.
 struct Points
 {
-    std::array<glm::vec3, 5> positions{};  ///< L1, L2, L3, L4, L5
-    bool                     valid = false;
+    std::array<glm::vec3, 5> positions{}; ///< L1, L2, L3, L4, L5
+    bool valid = false;
 };
 
 /**
@@ -38,4 +39,4 @@ struct Points
  */
 Points compute(const CelestialBody& primary, const CelestialBody& secondary);
 
-}  // namespace lagrange
+} // namespace lagrange

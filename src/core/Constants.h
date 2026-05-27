@@ -14,7 +14,7 @@
 inline constexpr double METERS_PER_WU = 1.0e9;
 
 /** @brief One astronomical unit in meters (IAU 2012 definition). */
-inline constexpr double AU            = 1.495978707e11;
+inline constexpr double AU = 1.495978707e11;
 
 /** @brief One astronomical unit expressed in world units (~149.6). */
-inline constexpr float  AU_WU         = static_cast<float>(AU / METERS_PER_WU);
+inline constexpr float AU_WU = static_cast<float>(AU / METERS_PER_WU);

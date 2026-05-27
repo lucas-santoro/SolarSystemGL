@@ -69,27 +69,39 @@ public:
     void blitColorTo(const Framebuffer& dst) const;
 
     /// @return GL handle of the color texture, or 0 if this FBO is multisample.
-    GLuint colorTexture() const { return colorTexture_; }
+    GLuint colorTexture() const
+    {
+        return colorTexture_;
+    }
 
     /// @return The pixel width of the color attachment.
-    int width() const  { return width_;  }
+    int width() const
+    {
+        return width_;
+    }
 
     /// @return The pixel height of the color attachment.
-    int height() const { return height_; }
+    int height() const
+    {
+        return height_;
+    }
 
     /// @return Sample count (1 = single-sample, >1 = MSAA renderbuffer).
-    int samples() const { return samples_; }
+    int samples() const
+    {
+        return samples_;
+    }
 
 private:
     void create();
     void destroy();
 
     GLuint fbo_               = 0;
-    GLuint colorTexture_      = 0;  ///< Used when samples_ == 1.
-    GLuint colorRenderbuffer_ = 0;  ///< Used when samples_ > 1.
+    GLuint colorTexture_      = 0; ///< Used when samples_ == 1.
+    GLuint colorRenderbuffer_ = 0; ///< Used when samples_ > 1.
     GLuint depthRenderbuffer_ = 0;
-    int    width_             = 0;
-    int    height_            = 0;
-    int    samples_           = 1;
-    bool   hasDepth_          = false;
+    int width_                = 0;
+    int height_               = 0;
+    int samples_              = 1;
+    bool hasDepth_            = false;
 };

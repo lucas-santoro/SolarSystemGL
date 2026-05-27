@@ -66,10 +66,9 @@ public:
     void setInt(const std::string& name, int value);
 
 private:
-    unsigned int                           ID = 0;
-    std::unordered_map<std::string, int>   uniformLocations;
+    unsigned int ID = 0;
+    std::unordered_map<std::string, int> uniformLocations;
 
-    int  uniformLocation(const std::string& name);
-    void compileAndLink(const std::string& vertexCode,
-                        const std::string& fragmentCode);
+    int uniformLocation(const std::string& name);
+    void compileAndLink(const std::string& vertexCode, const std::string& fragmentCode);
 };

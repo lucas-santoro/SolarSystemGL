@@ -7,32 +7,31 @@
 namespace
 {
 #ifdef SOLARSYSTEM_BUILD_WEB
-    /// Rewrite a desktop GLSL 3.30 core source into something WebGL2 accepts.
-    /// WebGL2 only takes GLSL ES 3.00 shaders, so we swap the version pragma
-    /// and inject default precision qualifiers — required for fragment shaders,
-    /// harmless for vertex shaders. The body of the shader is otherwise
-    /// `in/out`-flavoured already and stays compatible.
-    std::string toWebGL2GLSL(const std::string& src)
+/// Rewrite a desktop GLSL 3.30 core source into something WebGL2 accepts.
+/// WebGL2 only takes GLSL ES 3.00 shaders, so we swap the version pragma
+/// and inject default precision qualifiers — required for fragment shaders,
+/// harmless for vertex shaders. The body of the shader is otherwise
+/// `in/out`-flavoured already and stays compatible.
+std::string toWebGL2GLSL(const std::string& src)
+{
+    const std::string desktopVersion = "#version 330 core";
+    const std::string webglPreamble  = "#version 300 es\n"
+                                       "precision highp float;\n"
+                                       "precision highp int;\n"
+                                       "precision mediump sampler2D;\n";
+
+    std::string result = src;
+    const auto pos     = result.find(desktopVersion);
+    if (pos != std::string::npos)
     {
-        const std::string desktopVersion = "#version 330 core";
-        const std::string webglPreamble =
-            "#version 300 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "precision mediump sampler2D;\n";
-
-        std::string result = src;
-        const auto pos = result.find(desktopVersion);
-        if (pos != std::string::npos)
-        {
-            result.replace(pos, desktopVersion.length(), webglPreamble);
-        }
-        return result;
+        result.replace(pos, desktopVersion.length(), webglPreamble);
     }
-#endif
+    return result;
 }
+#endif
+} // namespace
 
-Shader::Shader(const std::string &vertexSource, const std::string &fragmentSource)
+Shader::Shader(const std::string& vertexSource, const std::string& fragmentSource)
 {
 #ifdef SOLARSYSTEM_BUILD_WEB
     compileAndLink(toWebGL2GLSL(vertexSource), toWebGL2GLSL(fragmentSource));
@@ -43,11 +42,11 @@ Shader::Shader(const std::string &vertexSource, const std::string &fragmentSourc
 
 Shader::~Shader()
 {
-    if (ID) glDeleteProgram(ID);
+    if (ID)
+        glDeleteProgram(ID);
 }
 
-Shader::Shader(Shader&& other) noexcept
-    : ID(other.ID), uniformLocations(std::move(other.uniformLocations))
+Shader::Shader(Shader&& other) noexcept : ID(other.ID), uniformLocations(std::move(other.uniformLocations))
 {
     other.ID = 0;
 }
@@ -56,10 +55,11 @@ Shader& Shader::operator=(Shader&& other) noexcept
 {
     if (this != &other)
     {
-        if (ID) glDeleteProgram(ID);
-        ID = other.ID;
+        if (ID)
+            glDeleteProgram(ID);
+        ID               = other.ID;
         uniformLocations = std::move(other.uniformLocations);
-        other.ID = 0;
+        other.ID         = 0;
     }
     return *this;
 }
@@ -74,8 +74,7 @@ unsigned int Shader::getID() const
     return ID;
 }
 
-void Shader::compileAndLink(const std::string &vertexCode,
-                            const std::string &fragmentCode)
+void Shader::compileAndLink(const std::string& vertexCode, const std::string& fragmentCode)
 {
     auto compileStage = [](GLenum type, const char* src, const char* label) -> GLuint
     {
@@ -94,7 +93,7 @@ void Shader::compileAndLink(const std::string &vertexCode,
         return shader;
     };
 
-    GLuint vertex   = compileStage(GL_VERTEX_SHADER,   vertexCode.c_str(),   "vertex shader");
+    GLuint vertex   = compileStage(GL_VERTEX_SHADER, vertexCode.c_str(), "vertex shader");
     GLuint fragment = compileStage(GL_FRAGMENT_SHADER, fragmentCode.c_str(), "fragment shader");
 
     ID = glCreateProgram();
@@ -119,10 +118,11 @@ void Shader::compileAndLink(const std::string &vertexCode,
     glDeleteShader(fragment);
 }
 
-int Shader::uniformLocation(const std::string &name)
+int Shader::uniformLocation(const std::string& name)
 {
     auto it = uniformLocations.find(name);
-    if (it != uniformLocations.end()) return it->second;
+    if (it != uniformLocations.end())
+        return it->second;
 
     const int location = glGetUniformLocation(ID, name.c_str());
     uniformLocations.emplace(name, location);
@@ -136,32 +136,32 @@ int Shader::uniformLocation(const std::string &name)
     return location;
 }
 
-void Shader::setMat4(const std::string &name, const glm::mat4 &mat)
+void Shader::setMat4(const std::string& name, const glm::mat4& mat)
 {
     glUniformMatrix4fv(uniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
-void Shader::setVec3(const std::string &name, const glm::vec3 &value)
+void Shader::setVec3(const std::string& name, const glm::vec3& value)
 {
     glUniform3fv(uniformLocation(name), 1, &value[0]);
 }
 
-void Shader::setVec3Array(const std::string &name, const std::vector<glm::vec3> &values)
+void Shader::setVec3Array(const std::string& name, const std::vector<glm::vec3>& values)
 {
     glUniform3fv(uniformLocation(name), static_cast<GLsizei>(values.size()), glm::value_ptr(values[0]));
 }
 
-void Shader::setFloat(const std::string &name, float value)
+void Shader::setFloat(const std::string& name, float value)
 {
     glUniform1f(uniformLocation(name), value);
 }
 
-void Shader::setFloatArray(const std::string &name, const std::vector<float> &values)
+void Shader::setFloatArray(const std::string& name, const std::vector<float>& values)
 {
     glUniform1fv(uniformLocation(name), static_cast<GLsizei>(values.size()), values.data());
 }
 
-void Shader::setInt(const std::string &name, int value)
+void Shader::setInt(const std::string& name, int value)
 {
     glUniform1i(uniformLocation(name), value);
 }

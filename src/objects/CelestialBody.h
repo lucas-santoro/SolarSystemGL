@@ -21,9 +21,9 @@
  */
 enum class BodyType
 {
-    Star,      ///< emissive >= 0.5
-    Planet,    ///< mass >= 1e22 kg, non-emissive
-    Asteroid   ///< mass <  1e22 kg, non-emissive
+    Star,    ///< emissive >= 0.5
+    Planet,  ///< mass >= 1e22 kg, non-emissive
+    Asteroid ///< mass <  1e22 kg, non-emissive
 };
 
 /**
@@ -42,10 +42,10 @@ enum class BodyType
 struct CelestialBody
 {
     /** @brief Position in meters (world coordinates). Source of truth for physics. */
-    glm::dvec3 pos_m{ 0.0 };
+    glm::dvec3 pos_m{0.0};
 
     /** @brief Velocity in meters per second. */
-    glm::dvec3 vel_m{ 0.0 };
+    glm::dvec3 vel_m{0.0};
 
     /** @brief Mass in kilograms. `double` because the Sun is ~2 × 10^30 kg. */
     double mass_kg = 0.0;
@@ -54,7 +54,7 @@ struct CelestialBody
     std::string name;
 
     /** @brief Diffuse base color in linear RGB, components in `[0, 1]`. */
-    glm::vec3 color{ 1.0f };
+    glm::vec3 color{1.0f};
 
     /** @brief Density in kg/m^3 — drives @ref radius via #recalculateGeometry. */
     float density = 1000.0f;
@@ -78,13 +78,13 @@ struct CelestialBody
     float atmosphereHeight = 0.05f;
 
     /** @brief Linear-RGB tint of the atmosphere shell (Rayleigh-flavored, e.g. blue for Earth). */
-    glm::vec3 atmosphereColor{ 0.40f, 0.60f, 1.00f };
+    glm::vec3 atmosphereColor{0.40f, 0.60f, 1.00f};
 
     /** @brief Multiplier applied to the atmosphere shell's overall intensity. */
     float atmosphereDensity = 1.0f;
 
     /** @brief GL state for this body's subdivided icosahedron mesh. */
-    PlanetMesh mesh{ 3 };
+    PlanetMesh mesh{3};
 
     /** @brief Orbit history — last N render-space positions, oldest at front. */
     std::deque<glm::vec3> trailPoints;
@@ -125,4 +125,4 @@ struct CelestialBody
 const char* bodyTypeLabel(BodyType type);
 
 /// @return Tint used to colour the chip in the System dropdown / Planet Info.
-glm::vec3   bodyTypeColor(BodyType type);
+glm::vec3 bodyTypeColor(BodyType type);

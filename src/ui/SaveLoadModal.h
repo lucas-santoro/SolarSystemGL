@@ -34,24 +34,30 @@ public:
 
     /// Renders both popups (only one is open at a time). Call between NewFrame
     /// and Render.
-    void render(std::vector<CelestialBody>& bodies, PhysicsSystem& physics,
-                Camera& camera, UIManager& uiManager);
+    void render(std::vector<CelestialBody>& bodies, PhysicsSystem& physics, Camera& camera,
+                UIManager& uiManager);
 
     /// Mark the Save popup as pending-open.
-    void requestOpenSave() { pendingOpenSave_ = true; }
+    void requestOpenSave()
+    {
+        pendingOpenSave_ = true;
+    }
 
     /// Mark the Load popup as pending-open.
-    void requestOpenLoad() { pendingOpenLoad_ = true; }
+    void requestOpenLoad()
+    {
+        pendingOpenLoad_ = true;
+    }
 
 private:
     /// One save in the Load modal — either a user-writable file or a
     /// read-only shipped preset.
     struct SaveEntry
     {
-        std::filesystem::path           path;          ///< Full path used by SaveLoad I/O.
-        std::string                     displayName;   ///< Filename only, e.g. "trappist-1.txt".
-        std::filesystem::file_time_type mtime{};       ///< Last-modified — used for sort on user saves.
-        bool                            isBuiltIn = false;
+        std::filesystem::path path;              ///< Full path used by SaveLoad I/O.
+        std::string displayName;                 ///< Filename only, e.g. "trappist-1.txt".
+        std::filesystem::file_time_type mtime{}; ///< Last-modified — used for sort on user saves.
+        bool isBuiltIn = false;
     };
 
     /// Rescan both directories and rebuild @ref userSaves_ + @ref builtInPresets_.
@@ -67,8 +73,8 @@ private:
     /// so it's safe to use as a file basename.
     static std::string sanitizeBasename(std::string name);
 
-    bool pendingOpenSave_ = false;
-    bool pendingOpenLoad_ = false;
+    bool pendingOpenSave_     = false;
+    bool pendingOpenLoad_     = false;
     char filenameBuffer_[256] = "savefile.txt";
 
     std::vector<SaveEntry> userSaves_;
@@ -81,8 +87,8 @@ private:
         std::string path;
         std::string displayName;
     };
-    std::optional<PendingPath> pendingOverwrite_;  ///< Save: target already exists.
-    std::optional<PendingPath> pendingDelete_;     ///< Load: user clicked delete on a user save.
+    std::optional<PendingPath> pendingOverwrite_; ///< Save: target already exists.
+    std::optional<PendingPath> pendingDelete_;    ///< Load: user clicked delete on a user save.
 
     /// Set inside the overwrite-confirm popup so the Save popup beneath it
     /// closes on the next render frame — ImGui::CloseCurrentPopup only closes

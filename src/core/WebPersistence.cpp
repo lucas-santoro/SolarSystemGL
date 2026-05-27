@@ -1,8 +1,8 @@
 #include "core/WebPersistence.h"
 
 #ifdef SOLARSYSTEM_BUILD_WEB
-#  include <emscripten.h>
-#  include <cstdlib>
+#include <emscripten.h>
+#include <cstdlib>
 #endif
 
 namespace web
@@ -12,6 +12,9 @@ namespace web
 
 namespace
 {
+// clang-format off
+// The bodies below are JavaScript, not C++. clang-format mangles JS (it splits
+// `=>` into `= >`), so the directive above tells it to skip this whole region.
     // Mount IDBFS at /user and pull existing IDB contents into the in-memory
     // FS. Returns 1 on success, 0 on any failure (private browsing, IDB
     // disabled, etc.). EM_ASYNC_JS requires -sASYNCIFY at link time.
@@ -100,7 +103,8 @@ namespace
             input.click();
         });
     });
-}
+// clang-format on
+} // namespace
 
 bool initPersistence()
 {
@@ -120,13 +124,15 @@ void downloadBlob(const std::string& filename, const std::string& contents)
 bool pickFile(std::string& outFilename, std::string& outContents)
 {
     char* raw = jsPickFile();
-    if (raw == nullptr) return false;
+    if (raw == nullptr)
+        return false;
 
     const std::string payload(raw);
     std::free(raw);
 
     const auto sep = payload.find('\n');
-    if (sep == std::string::npos) return false;
+    if (sep == std::string::npos)
+        return false;
 
     outFilename = payload.substr(0, sep);
     outContents = payload.substr(sep + 1);
@@ -150,12 +156,18 @@ const std::string& builtInPresetsDir()
     return kDir;
 }
 
-#else  // !SOLARSYSTEM_BUILD_WEB — desktop no-ops
+#else // !SOLARSYSTEM_BUILD_WEB — desktop no-ops
 
-bool initPersistence() { return true; }
+bool initPersistence()
+{
+    return true;
+}
 void syncToIDB() {}
 void downloadBlob(const std::string&, const std::string&) {}
-bool pickFile(std::string&, std::string&) { return false; }
+bool pickFile(std::string&, std::string&)
+{
+    return false;
+}
 
 const std::string& userSaveDir()
 {
@@ -163,7 +175,10 @@ const std::string& userSaveDir()
     return kDir;
 }
 
-bool hasSeparateBuiltIns() { return false; }
+bool hasSeparateBuiltIns()
+{
+    return false;
+}
 
 const std::string& builtInPresetsDir()
 {

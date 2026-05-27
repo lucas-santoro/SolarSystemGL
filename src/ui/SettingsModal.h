@@ -32,11 +32,14 @@ public:
      * @param uiManager    Read/write — VSync state (and vsyncDirty flag).
      * @param gridSettings Read/write — full grid configuration (visual + physics + geometry).
      */
-    void render(Camera& camera, float& fieldOfView, float& guiScale,
-                UIManager& uiManager, GridSettings& gridSettings);
+    void render(Camera& camera, float& fieldOfView, float& guiScale, UIManager& uiManager,
+                GridSettings& gridSettings);
 
     /// Mark the popup as pending-open. The next #render call will issue OpenPopup.
-    void requestOpen() { pendingOpen_ = true; }
+    void requestOpen()
+    {
+        pendingOpen_ = true;
+    }
 
 private:
     bool pendingOpen_ = false;

@@ -47,18 +47,23 @@ public:
      * @param grid       Grid (currently passed through for future grid controls).
      * @param physics    Physics system — `paused` and `timeScale` are bound to UI widgets.
      */
-    void render(Window& window, Camera& camera, float deltaTime,
-                std::vector<CelestialBody>& bodies, Grid& grid, PhysicsSystem& physics,
-                GridSettings& gridSettings);
+    void render(Window& window, Camera& camera, float deltaTime, std::vector<CelestialBody>& bodies,
+                Grid& grid, PhysicsSystem& physics, GridSettings& gridSettings);
 
     /** @return `true` if the right mouse button is held and ImGui is not capturing the mouse. */
     bool isRightMousePressed(GLFWwindow* window);
 
     /** @return `true` if the body at index @p i is the current hover target. */
-    bool isHovered(size_t i) const { return static_cast<int>(i) == hoveredIndex; }
+    bool isHovered(size_t i) const
+    {
+        return static_cast<int>(i) == hoveredIndex;
+    }
 
     /** @return Index of the currently selected body, or -1 if none. */
-    int getSelectedPlanetIndex() const { return selectedPlanetIndex; }
+    int getSelectedPlanetIndex() const
+    {
+        return selectedPlanetIndex;
+    }
 
     /** @brief Clear the current selection (no Planet Info panel will draw next frame). */
     void clearSelection()
@@ -69,19 +74,34 @@ public:
     }
 
     /** @brief Programmatically select the body at index @p i (or clear with -1). */
-    void setSelected(int i) { selectedPlanetIndex = i; }
+    void setSelected(int i)
+    {
+        selectedPlanetIndex = i;
+    }
 
     /** @brief Push a toast notification onto the in-game notification stack. */
-    ToastQueue& toasts() { return toasts_; }
+    ToastQueue& toasts()
+    {
+        return toasts_;
+    }
 
     /** @return `true` while the user is mid-drag placing a new body. */
-    bool isPlacingBody() const { return placementActive_; }
+    bool isPlacingBody() const
+    {
+        return placementActive_;
+    }
 
     /** @return Start position of the active drag-to-place in world units. */
-    glm::vec3 getPlacementStart() const { return placementStartPosWU_; }
+    glm::vec3 getPlacementStart() const
+    {
+        return placementStartPosWU_;
+    }
 
     /** @return Current cursor world-unit position during an active drag-to-place. */
-    glm::vec3 getPlacementEnd() const { return placementEndPosWU_; }
+    glm::vec3 getPlacementEnd() const
+    {
+        return placementEndPosWU_;
+    }
 
     /** @brief VSync state — toggled by the main-panel checkbox. */
     bool vsync = true;
@@ -101,13 +121,15 @@ public:
     /** @brief Render-toggle for the selected body's predicted future trajectory. */
     bool showPathPrediction = false;
 
-    /** @brief Render-toggle for the five Lagrange-point markers between the most massive body and the selection. */
+    /** @brief Render-toggle for the five Lagrange-point markers between the most massive body and the
+     * selection. */
     bool showLagrange = false;
 
     /** @brief Persistent name-labels above every body (off by default; hover label always works). */
     bool showBodyLabels = false;
 
-    /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar). */
+    /** @brief Visibility flag for the diagnostics floating panel (bound to a toggle in the bottom actionbar).
+     */
     bool showDiagnostics = false;
 
     /** @brief Output flag set when the actionbar's "Menu" button is pressed; host loop reads and clears. */
@@ -160,11 +182,11 @@ public:
     int viewPresetRequested = -1;
 
 private:
-    int   selectedPlanetIndex = -1;
-    int   hoveredIndex        = -1;
-    int   lastSelectedIndex   = -1;
-    bool  isMouseMoving       = false;
-    float smoothedFps         = 60.0f;
+    int selectedPlanetIndex = -1;
+    int hoveredIndex        = -1;
+    int lastSelectedIndex   = -1;
+    bool isMouseMoving      = false;
+    float smoothedFps       = 60.0f;
 
     ToastQueue toasts_;
 
@@ -173,21 +195,21 @@ private:
     // Drag-to-place state. LMB-click in empty 3D space starts a drag; the
     // release point + drag vector determine the new body's position and
     // initial velocity.
-    bool      placementActive_     = false;
-    glm::vec3 placementStartPosWU_{ 0.0f };
-    glm::vec3 placementEndPosWU_  { 0.0f };
+    bool placementActive_ = false;
+    glm::vec3 placementStartPosWU_{0.0f};
+    glm::vec3 placementEndPosWU_{0.0f};
 
     // Left-click body selection state. The fly-to is deferred from press to
     // release so a touch-drag that *starts* on a planet doesn't fire the
     // select+fly intent — matches the RMB context-menu pattern below.
-    int  lmbPressedTargetIdx_   = -1;  ///< Body hovered when LMB was first pressed.
+    int lmbPressedTargetIdx_ = -1; ///< Body hovered when LMB was first pressed.
 
     // Right-click context menu state.
-    int  rmbPressedTargetIdx_   = -1;  ///< Body hovered when RMB was first pressed.
-    int  contextMenuTargetIdx_  = -1;  ///< Body the popup is acting on.
-    bool openContextMenuPopup_  = false;
+    int rmbPressedTargetIdx_   = -1; ///< Body hovered when RMB was first pressed.
+    int contextMenuTargetIdx_  = -1; ///< Body the popup is acting on.
+    bool openContextMenuPopup_ = false;
 
-    bool   diagBaselineSet  = false;
+    bool diagBaselineSet    = false;
     double diagBaselineE    = 0.0;
     double diagBaselinePmag = 0.0;
     double diagBaselineLmag = 0.0;
@@ -195,23 +217,21 @@ private:
     /** @brief Snapshot of the selected body's fields shown in the Planet Info panel. */
     struct PlanetEditBuffer
     {
-        char      name[128];
-        float     mass;
-        float     density;
-        float     radius;
+        char name[128];
+        float mass;
+        float density;
+        float radius;
         glm::vec3 position;
         glm::vec3 velocity;
     } editBuffer;
 
     Actionbar actionbar_;
 
-    void renderPlanetPopup(Window& window, Camera& camera,
-                           const glm::mat4& view, const glm::mat4& projection,
+    void renderPlanetPopup(Window& window, Camera& camera, const glm::mat4& view, const glm::mat4& projection,
                            std::vector<CelestialBody>& bodies);
     void renderPlanetInfo(CelestialBody& body);
-    void renderPersistentBodyLabels(Window& window, Camera& camera,
-                                    const glm::mat4& view, const glm::mat4& projection,
-                                    const std::vector<CelestialBody>& bodies);
+    void renderPersistentBodyLabels(Window& window, Camera& camera, const glm::mat4& view,
+                                    const glm::mat4& projection, const std::vector<CelestialBody>& bodies);
     void renderDiagnostics(const std::vector<CelestialBody>& bodies);
     void renderBodyContextMenu(std::vector<CelestialBody>& bodies, Camera& camera);
 

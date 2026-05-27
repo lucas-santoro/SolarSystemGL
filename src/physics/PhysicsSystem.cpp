@@ -12,11 +12,12 @@ void PhysicsSystem::computeAccelerations(const std::vector<CelestialBody>& bodie
     {
         for (size_t j = 0; j < bodies.size(); ++j)
         {
-            if (i == j) continue;
+            if (i == j)
+                continue;
 
-            glm::dvec3 r     = bodies[j].pos_m - bodies[i].pos_m;
-            double     dist2 = glm::dot(r, r) + SOFTEN;
-            double     invD  = 1.0 / std::sqrt(dist2);
+            glm::dvec3 r = bodies[j].pos_m - bodies[i].pos_m;
+            double dist2 = glm::dot(r, r) + SOFTEN;
+            double invD  = 1.0 / std::sqrt(dist2);
 
             out[i] += (G * bodies[j].mass_kg * invD * invD) * r * invD;
         }
@@ -48,7 +49,8 @@ void PhysicsSystem::stepOnce(std::vector<CelestialBody>& bodies, double dtReal)
 
 void PhysicsSystem::update(std::vector<CelestialBody>& bodies, double dtReal)
 {
-    if (paused) return;
+    if (paused)
+        return;
 
     accumulator = std::min(accumulator + dtReal, MAX_ACCUM);
 
@@ -56,7 +58,7 @@ void PhysicsSystem::update(std::vector<CelestialBody>& bodies, double dtReal)
     {
         stepOnce(bodies, FIXED_DT_REAL);
         simulatedTime_ += FIXED_DT_REAL * static_cast<double>(timeScale);
-        accumulator    -= FIXED_DT_REAL;
+        accumulator -= FIXED_DT_REAL;
     }
 }
 

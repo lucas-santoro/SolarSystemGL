@@ -40,10 +40,10 @@ public:
     GLFWwindow* getGLFWwindow();
 
 private:
-    int          width;
-    int          height;
-    std::string  title;
-    GLFWwindow*  window;
+    int width;
+    int height;
+    std::string title;
+    GLFWwindow* window;
 
     bool init();
 };

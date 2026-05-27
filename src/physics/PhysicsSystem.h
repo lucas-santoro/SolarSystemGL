@@ -31,7 +31,7 @@ public:
     float timeScale = 864'000.0f;
 
     /** @brief When true, #update returns immediately without integrating. */
-    bool  paused = false;
+    bool paused = false;
 
     /** @brief Newton's gravitational constant in SI units (m^3 / (kg * s^2)). */
     static constexpr double G = 6.67430e-11;
@@ -57,7 +57,10 @@ public:
     void update(std::vector<CelestialBody>& bodies, double dtReal);
 
     /// @return Total simulated seconds advanced since the last #reset call.
-    double getSimulatedTimeSeconds() const { return simulatedTime_; }
+    double getSimulatedTimeSeconds() const
+    {
+        return simulatedTime_;
+    }
 
     /// Reset the accumulator and the simulated-time counter (Application calls
     /// this when starting a new simulation or returning to the menu).
@@ -70,6 +73,5 @@ private:
     std::vector<glm::dvec3> accBuffer1;
 
     void stepOnce(std::vector<CelestialBody>& bodies, double dtReal);
-    void computeAccelerations(const std::vector<CelestialBody>& bodies,
-                              std::vector<glm::dvec3>& out) const;
+    void computeAccelerations(const std::vector<CelestialBody>& bodies, std::vector<glm::dvec3>& out) const;
 };
