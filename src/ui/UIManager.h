@@ -128,9 +128,29 @@ public:
     /** @brief Output flag set when the actionbar's "?" Help button is pressed. */
     bool helpRequested = false;
 
+    /** @brief Output flag set when the mobile overflow's "Screenshot" item is
+     *         tapped (mirrors the F12 hotkey path for touch-only devices).
+     *         The host loop captures the framebuffer and clears the flag. */
+    bool screenshotRequested = false;
+
     /** @brief When true, the host loop hides every UI panel and drives the
      *         camera in a slow cinematic orbit ("Demo Mode"). F11 toggles. */
     bool demoModeActive = false;
+
+    /** @brief When true, the scene FBO is constructed with MSAA samples > 1.
+     *         Defaults to true on desktop and false on mobile (set by
+     *         `Application::Application` based on `platform::isMobileDevice`).
+     *         Settings modal exposes this as a checkbox; flipping it sets
+     *         `msaaDirty` so the host loop can rebuild the FBO between frames.
+     *
+     *         Note: bloom toggle lives on the bottom actionbar (`showBloom`) —
+     *         Settings only owns the more expensive MSAA switch. */
+    bool msaaEnabled = true;
+
+    /** @brief Set by the Settings modal whenever `msaaEnabled` changes. The
+     *         host loop reads it after each render, calls `rebuildSceneFbo`,
+     *         then clears the flag. */
+    bool msaaDirty = false;
 
     /**
      * @brief Set by the actionbar's View combo: 0 = Default, 1 = Top-down,
@@ -156,6 +176,11 @@ private:
     bool      placementActive_     = false;
     glm::vec3 placementStartPosWU_{ 0.0f };
     glm::vec3 placementEndPosWU_  { 0.0f };
+
+    // Left-click body selection state. The fly-to is deferred from press to
+    // release so a touch-drag that *starts* on a planet doesn't fire the
+    // select+fly intent — matches the RMB context-menu pattern below.
+    int  lmbPressedTargetIdx_   = -1;  ///< Body hovered when LMB was first pressed.
 
     // Right-click context menu state.
     int  rmbPressedTargetIdx_   = -1;  ///< Body hovered when RMB was first pressed.

@@ -1,6 +1,7 @@
 #include "AddPlanetModal.h"
 
 #include "ui/UIManager.h"  // pulls glad before any GLFW header
+#include "ui/UI.h"
 #include "core/Constants.h"
 #include "objects/CelestialBody.h"
 #include "physics/PhysicsSystem.h"
@@ -30,7 +31,7 @@ void AddPlanetModal::render(std::vector<CelestialBody>& bodies, UIManager& uiMan
     constexpr ImVec2 kButtonSize(120.0f, 0.0f);
 
     ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(360.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ui::modalSize(360.0f, 0.0f), ImGuiCond_Appearing);
 
     if (!ImGui::BeginPopupModal(kPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {

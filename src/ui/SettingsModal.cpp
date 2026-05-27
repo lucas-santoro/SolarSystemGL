@@ -1,6 +1,7 @@
 #include "SettingsModal.h"
 
 #include "ui/UIManager.h"  // pulls glad before any GLFW header
+#include "ui/UI.h"
 #include "core/Camera.h"
 #include "core/Grid.h"
 
@@ -28,6 +29,17 @@ namespace
         {
             uiManager.vsyncDirty = true;
         }
+
+        ImGui::Spacing();
+        ImGui::TextDisabled("Rendering quality");
+        if (ImGui::Checkbox("MSAA 4x", &uiManager.msaaEnabled))
+        {
+            uiManager.msaaDirty = true;
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Multisample anti-aliasing. Disabling reduces GPU load — useful on mobile.");
     }
 
     void renderGridSection(GridSettings& grid)
@@ -110,7 +122,7 @@ void SettingsModal::render(Camera& camera, float& fieldOfView, float& guiScale,
 
     const ImVec2 viewportCenter = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ui::modalSize(420.0f, 0.0f), ImGuiCond_Appearing);
 
     if (!ImGui::BeginPopupModal(kPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {

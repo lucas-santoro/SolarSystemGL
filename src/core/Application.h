@@ -103,7 +103,54 @@ private:
     /// Static thunk used by `emscripten_set_main_loop_arg` so we can pass
     /// `this` through `void*` and still reach private members.
     static void emscriptenTick(void* arg);
+
+    /// Match the GLFW framebuffer to the live canvas size (CSS px × DPR).
+    /// The browser controls the canvas dimensions via CSS; without this poll
+    /// the C++ side keeps rendering at the constructor's 800×600 and the
+    /// browser stretches the result. Cheap (a single DOM query per frame).
+    void syncWebCanvasSize();
+
+    /// One active finger on the canvas. We track up to two — additional touches
+    /// are ignored. `startX/Y` and `startTimeMs` are used to discriminate taps
+    /// from drags; `lastX/Y` is the last seen position (updated on each move).
+    struct TouchPoint
+    {
+        int   id            = -1;     ///< Emscripten touch identifier, -1 == slot free.
+        float startX        = 0.0f;
+        float startY        = 0.0f;
+        float lastX         = 0.0f;
+        float lastY         = 0.0f;
+        float maxMovementPx = 0.0f;   ///< Max displacement from start over the gesture's life.
+        double startTimeMs  = 0.0;
+    };
+
+    /// Up to 2 active fingers. Slot 0/1 are filled in arrival order; cleared on touchend.
+    std::array<TouchPoint, 2> activeTouches_{};
+
+    /// Cached pinch distance from the previous touchmove with 2 fingers; used
+    /// to compute incremental zoom deltas.
+    float lastPinchDistance_ = 0.0f;
+
+    /// Static thunks for Emscripten touch events. They look up `this` via the
+    /// `userData` pointer passed at registration and dispatch to instance
+    /// methods below. Return value matches `em_touch_callback_func` (bool —
+    /// `true` = `preventDefault()` the event; we always return `false`).
+    static bool touchStartCallback (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchMoveCallback  (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchEndCallback   (int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+    static bool touchCancelCallback(int eventType, const struct EmscriptenTouchEvent* e, void* userData);
+
+    /// Instance handlers — manipulate `activeTouches_` and feed the Camera.
+    void handleTouchStart (const struct EmscriptenTouchEvent& e);
+    void handleTouchMove  (const struct EmscriptenTouchEvent& e);
+    void handleTouchEnd   (const struct EmscriptenTouchEvent& e);
+    void handleTouchCancel(const struct EmscriptenTouchEvent& e);
 #endif
+
+    /// Tear down and rebuild `sceneFbo_` with the current `uiManager_.msaaEnabled`
+    /// preference. Brief stutter while GL handles are recreated; cheap enough
+    /// to call interactively from the Settings checkbox.
+    void rebuildSceneFbo();
 
     /// Draw the menu screen for one frame (skybox rotation + StartMenu modal).
     void renderMenuFrame(float deltaTime);
@@ -175,8 +222,8 @@ private:
     void renderBloomPasses(const glm::mat4& view, const glm::mat4& projection,
                            GLuint& outBlurredTexture);
 
-    /// Fullscreen quad pass: composite `sceneFbo_.colorTexture()` with the
-    /// blurred bloom result onto the default framebuffer.
+    /// Fullscreen quad pass: composite `sceneResolveFbo_.colorTexture()` with
+    /// the blurred bloom result onto the default framebuffer.
     void renderComposite(GLuint blurredBloomTexture, int viewportWidth, int viewportHeight);
 
     /// GLFW cursor-position callback — dispatches to the Application instance
@@ -217,7 +264,8 @@ private:
     Shader        bloomBlurShader_;
     Shader        bloomCompositeShader_;
     Shader        atmosphereShader_;
-    Framebuffer   sceneFbo_;
+    Framebuffer   sceneFbo_;          ///< Multisample target for the 3D scene pass.
+    Framebuffer   sceneResolveFbo_;   ///< Single-sample resolve of sceneFbo_, sampled by the composite.
     Framebuffer   bloomPingFbo_;
     Framebuffer   bloomPongFbo_;
     PhysicsSystem physics_;
@@ -242,6 +290,7 @@ private:
     bool     wasAutoPaused_             = false;  ///< Set when the window-focus callback auto-pauses physics.
     bool     openReturnToMenuPopup_     = false;  ///< Pending "Return to Menu?" modal open request.
     bool     openQuitPopup_             = false;  ///< Pending "Quit application?" modal open request.
+    bool     persistenceWarningPending_ = false;  ///< Web: IDBFS init failed; surface as a warning on the first frame.
 
     // Auxiliary GL resources directly owned by Application.
     GLuint  trailVAO_            = 0;
@@ -292,4 +341,11 @@ private:
 
     // Path-prediction throttle: only recompute every N frames.
     int   framesSinceLastPrediction_ = 0;
+
+    // Cached horizon for the live prediction. Frozen on enable / selection
+    // change — recomputing it every refresh let `estimateOrbitalPeriod`'s
+    // dependency on the instantaneous radius drag the path tip back and forth
+    // (the "teleporting tip" bug visible in the orbital camera).
+    double predictionHorizonSeconds_ = 0.0;
+    int    lastPredictionSelected_   = -1;
 };

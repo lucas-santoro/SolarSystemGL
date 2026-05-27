@@ -19,12 +19,17 @@ class Framebuffer
 public:
     /**
      * @brief Allocate the FBO with the requested dimensions.
-     * @param width      Initial color-texture width in pixels.
-     * @param height     Initial color-texture height in pixels.
+     * @param width      Initial color-attachment width in pixels.
+     * @param height     Initial color-attachment height in pixels.
      * @param withDepth  When true, also allocate a `GL_DEPTH_COMPONENT24`
      *                   renderbuffer attached at `GL_DEPTH_ATTACHMENT`.
+     * @param samples    `1` for a single-sample color texture (default).
+     *                   `>1` switches the color (and depth, if present) to a
+     *                   multisample renderbuffer — the FBO can be rendered to
+     *                   but `colorTexture()` returns 0; resolve via
+     *                   `blitColorTo` into a single-sample peer first.
      */
-    Framebuffer(int width, int height, bool withDepth);
+    Framebuffer(int width, int height, bool withDepth, int samples = 1);
 
     /// Release the FBO and any GL handles it owns.
     ~Framebuffer();
@@ -46,23 +51,45 @@ public:
      */
     void resize(int width, int height);
 
-    /// @return The GL handle of the color texture (for sampling in shaders).
+    /**
+     * @brief Tear down and recreate at a new sample count, preserving the
+     *        current dimensions. Used when the user toggles MSAA at runtime.
+     *
+     * No-op if @p samples matches the current count.
+     */
+    void setSamples(int samples);
+
+    /**
+     * @brief Resolve this FBO's color into @p dst via `glBlitFramebuffer`.
+     *
+     * Intended use: render multisample into this FBO, then resolve to a
+     * single-sample peer that can be sampled as a texture by a subsequent
+     * fullscreen pass.
+     */
+    void blitColorTo(const Framebuffer& dst) const;
+
+    /// @return GL handle of the color texture, or 0 if this FBO is multisample.
     GLuint colorTexture() const { return colorTexture_; }
 
-    /// @return The pixel width of the color texture.
+    /// @return The pixel width of the color attachment.
     int width() const  { return width_;  }
 
-    /// @return The pixel height of the color texture.
+    /// @return The pixel height of the color attachment.
     int height() const { return height_; }
+
+    /// @return Sample count (1 = single-sample, >1 = MSAA renderbuffer).
+    int samples() const { return samples_; }
 
 private:
     void create();
     void destroy();
 
     GLuint fbo_               = 0;
-    GLuint colorTexture_      = 0;
+    GLuint colorTexture_      = 0;  ///< Used when samples_ == 1.
+    GLuint colorRenderbuffer_ = 0;  ///< Used when samples_ > 1.
     GLuint depthRenderbuffer_ = 0;
     int    width_             = 0;
     int    height_            = 0;
+    int    samples_           = 1;
     bool   hasDepth_          = false;
 };

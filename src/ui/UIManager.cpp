@@ -129,22 +129,18 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
         }
     }
 
-    // LMB click handling. On a body: select / fly to it (single-fire via
-    // IsMouseClicked). On empty space: start a drag-to-place that finishes
-    // when the user releases LMB.
+    // LMB press → either remember the hovered body (fire on release if it was
+    // a true click, not a drag) or begin a drag-to-place on empty space.
+    //
+    // The fly-to is deferred to release because synthetic touch→mouse events
+    // fire mousedown the instant a finger lands — without this guard, any
+    // camera-rotation drag that starts on top of a planet would immediately
+    // teleport the camera to that planet before the drag could play out.
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
     {
         if (hoveredIndex >= 0)
         {
-            selectedPlanetIndex = hoveredIndex;
-            auto& selected = bodies[hoveredIndex];
-            const float distance = selected.focusDistance();
-            if (camera.getMode() == CameraMode::ORBITAL) {
-                camera.flyToOrbital(hoveredIndex, selected.renderPosition(), distance);
-            }
-            else {
-                camera.startSmoothMove(selected.renderPosition(), distance);
-            }
+            lmbPressedTargetIdx_ = hoveredIndex;
         }
         else if (!placementActive_)
         {
@@ -152,6 +148,31 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
             placementEndPosWU_   = placementStartPosWU_;
             placementActive_     = true;
         }
+    }
+
+    constexpr float kClickThresholdSq = 16.0f;  // 4 px — shared between LMB and RMB.
+
+    // LMB release on a body — only treat as a select+fly if the cursor barely
+    // moved between press and release (genuine click, not the tail of a drag).
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && lmbPressedTargetIdx_ != -1)
+    {
+        const ImVec2 drag      = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        const float  dragLenSq = drag.x * drag.x + drag.y * drag.y;
+        if (dragLenSq < kClickThresholdSq
+            && lmbPressedTargetIdx_ < static_cast<int>(bodies.size()))
+        {
+            selectedPlanetIndex = lmbPressedTargetIdx_;
+            auto& selected = bodies[lmbPressedTargetIdx_];
+            const float distance = selected.focusDistance();
+            if (camera.getMode() == CameraMode::ORBITAL) {
+                camera.flyToOrbital(lmbPressedTargetIdx_, selected.renderPosition(), distance);
+            }
+            else {
+                camera.startSmoothMove(selected.renderPosition(), distance);
+            }
+        }
+        lmbPressedTargetIdx_ = -1;
+        ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
     }
 
     // Right-click on a body opens the context menu — but right-drag is also
@@ -165,7 +186,6 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera,
     {
         const ImVec2 drag       = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
         const float  dragLenSq  = drag.x * drag.x + drag.y * drag.y;
-        constexpr float kClickThresholdSq = 16.0f;  // 4 px
         if (rmbPressedTargetIdx_ != -1 && dragLenSq < kClickThresholdSq)
         {
             contextMenuTargetIdx_  = rmbPressedTargetIdx_;

@@ -84,6 +84,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/core/Camera.cpp
     ${SRC_DIR}/core/Framebuffer.cpp
     ${SRC_DIR}/core/Grid.cpp
+    ${SRC_DIR}/core/Platform.cpp
     ${SRC_DIR}/core/SaveLoad.cpp
     ${SRC_DIR}/core/Screenshot.cpp
     ${SRC_DIR}/core/Shader.cpp
@@ -101,6 +102,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/ui/StartMenu.cpp
     ${SRC_DIR}/ui/Toast.cpp
     ${SRC_DIR}/ui/Tutorial.cpp
+    ${SRC_DIR}/ui/UI.cpp
     ${SRC_DIR}/ui/UIManager.cpp
 )
 

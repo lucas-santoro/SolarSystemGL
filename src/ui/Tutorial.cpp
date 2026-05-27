@@ -1,5 +1,7 @@
 #include "Tutorial.h"
 
+#include "ui/UI.h"
+
 #include <imgui.h>
 
 #include <filesystem>
@@ -85,9 +87,13 @@ void Tutorial::render()
         pendingOpen_ = false;
     }
 
+    // ImGuiCond_Always — the popup recenters every frame so that web canvas
+    // resizes (initial GLFW 800x600 → real CSS size handshake) and any step
+    // change that grows the popup don't leave it stuck off-center. Modal
+    // popups don't accept user drag, so always-recentering is safe.
     const ImVec2 viewportCenter = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(560.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ui::modalSize(560.0f, 0.0f), ImGuiCond_Appearing);
 
     if (!ImGui::BeginPopupModal(kPopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {

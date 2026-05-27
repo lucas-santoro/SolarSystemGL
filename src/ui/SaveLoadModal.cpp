@@ -1,6 +1,7 @@
 #include "SaveLoadModal.h"
 
 #include "ui/UIManager.h"  // pulls glad before any GLFW header
+#include "ui/UI.h"
 #include "core/Camera.h"
 #include "core/SaveLoad.h"
 #include "core/WebPersistence.h"
@@ -162,7 +163,7 @@ void SaveLoadModal::render(std::vector<CelestialBody>& bodies, PhysicsSystem& ph
     // Save popup
     // ------------------------------------------------------------------
     ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ui::modalSize(420.0f, 0.0f), ImGuiCond_Appearing);
     if (ImGui::BeginPopupModal(kSavePopupId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         if (closeSavePopupRequested_)
@@ -241,7 +242,7 @@ void SaveLoadModal::render(std::vector<CelestialBody>& bodies, PhysicsSystem& ph
     // Load popup
     // ------------------------------------------------------------------
     ImGui::SetNextWindowPos(viewportCenter, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(520.0f, 400.0f), ImGuiCond_Appearing);
+    ImGui::SetNextWindowSize(ui::modalSize(520.0f, 400.0f), ImGuiCond_Appearing);
     if (ImGui::BeginPopupModal(kLoadPopupId, nullptr, 0))
     {
 #ifdef SOLARSYSTEM_BUILD_WEB
