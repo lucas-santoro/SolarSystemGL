@@ -7,7 +7,9 @@ A real-time 3D Newtonian N-body solar-system simulator — runs natively (OpenGL
 **▶ Live demo:** _deployed on Vercel — update this link with your production URL_
 **📖 API docs:** _Doxygen reference served at `/docs` on the live site_
 
-<!-- TODO: add a hero screenshot/GIF here once captured (also used as the GitHub social preview). -->
+![SolarSystemGL — the Sun bending the spacetime-curvature grid, with orbit trails](docs/assets/hero.png)
+
+> Tip: use `docs/assets/hero.png` as the repo's **social preview** image (Settings → Social preview).
 
 ## What it does
 
@@ -16,8 +18,10 @@ A real-time 3D Newtonian N-body solar-system simulator — runs natively (OpenGL
 - **Interactive editing**: click a body to inspect/edit mass, density, position, velocity; add bodies on the fly (drag-to-place or a form) and watch orbits respond from the next physics step.
 - **Visualisation**: spacetime-curvature grid, orbit trails, path prediction, Lagrange points, procedural rings & atmospheres, emissive bloom, MSAA, procedural starfield.
 - **Save / load** simulations to a human-readable text format. On the web build, saves **persist in the browser** (IndexedDB via IDBFS) and can be **exported / imported** as files.
-- **Runs on phones**: touch gestures (drag to orbit, pinch to zoom), a responsive UI that reflows into an overflow menu on small screens, and a quality toggle (MSAA) for weaker GPUs.
+- **Runs on phones**: touch gestures (drag to orbit, pinch to zoom), a responsive UI that reflows into a `More…` overflow menu on small screens, and a quality toggle (MSAA) for weaker GPUs.
 - **Screenshots**: `F12` saves a BMP (downloaded in the browser, written to `screenshots/` natively).
+
+<p align="center"><img src="docs/assets/mobile.png" alt="Responsive mobile layout with the overflow menu" width="280"></p>
 
 ## Try it
 
