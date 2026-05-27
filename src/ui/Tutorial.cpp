@@ -1,11 +1,27 @@
 #include "Tutorial.h"
 
 #include "ui/UI.h"
+#include "core/WebPersistence.h"
 
 #include <imgui.h>
 
 #include <filesystem>
 #include <fstream>
+
+namespace
+{
+    // Where the "tutorial already seen" marker lives. On web it must sit under
+    // the IDBFS mount (/user) so it survives a reload — the MEMFS root does
+    // not persist. On desktop it stays in the working directory.
+    std::string seenMarkerPath()
+    {
+#ifdef SOLARSYSTEM_BUILD_WEB
+        return web::userSaveDir() + ".tutorial_seen";
+#else
+        return ".tutorial_seen";
+#endif
+    }
+}
 
 namespace
 {
@@ -70,13 +86,17 @@ namespace
 bool Tutorial::isFirstRun()
 {
     std::error_code ec;
-    return !std::filesystem::exists(".tutorial_seen", ec);
+    return !std::filesystem::exists(seenMarkerPath(), ec);
 }
 
 void Tutorial::markSeen()
 {
-    std::ofstream out(".tutorial_seen");
+    std::ofstream out(seenMarkerPath());
     if (out) out << "done\n";
+    out.close();
+    // Persist to IndexedDB on web (no-op on desktop) so the marker — and any
+    // pending user saves — survive the next reload.
+    web::syncToIDB();
 }
 
 void Tutorial::render()
