@@ -16,7 +16,7 @@ void UIManager::render(Window& window, Camera& camera, float deltaTime,
     float aspect = static_cast<float>(width) / static_cast<float>(std::max(height, 1));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 20000.0f);
 
-    actionbar_.renderTopBar(window, camera, physics, bodies, *this, deltaTime);
+    actionbar_.renderTopBar(window, camera, physics, bodies, *this, gridSettings, deltaTime);
     renderPlanetPopup(window, camera, view, projection, bodies);
     renderBodyContextMenu(bodies, camera);
 

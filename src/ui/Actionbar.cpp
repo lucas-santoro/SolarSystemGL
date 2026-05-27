@@ -61,7 +61,7 @@ namespace
 
 void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& physics,
                              std::vector<CelestialBody>& bodies, UIManager& uiManager,
-                             float deltaTime)
+                             GridSettings& gridSettings, float deltaTime)
 {
     (void)window;  // size is taken from the main viewport directly
 
@@ -371,6 +371,20 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
                 ImGui::CloseCurrentPopup();
             }
 
+            // Visual toggles — the bottom action bar is hidden on compact
+            // viewports (it doesn't fit), so its checkboxes live here instead.
+            ImGui::Separator();
+            ImGui::TextDisabled("Show");
+            ImGui::Checkbox("Trails",      &uiManager.showTrails);
+            ImGui::Checkbox("Labels",      &uiManager.showBodyLabels);
+            ImGui::Checkbox("Bloom",       &uiManager.showBloom);
+            ImGui::Checkbox("Grid",        &gridSettings.visible);
+            ImGui::Checkbox("Diagnostics", &uiManager.showDiagnostics);
+            if (ImGui::Checkbox("VSync", &uiManager.vsync))
+            {
+                uiManager.vsyncDirty = true;
+            }
+
             ImGui::EndPopup();
         }
     }
@@ -392,6 +406,14 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
 void Actionbar::renderBottomBar(Window& /*window*/, UIManager& uiManager,
                                 GridSettings& gridSettings)
 {
+    // On compact viewports the six toggles don't fit on one row; they're
+    // surfaced in the top bar's "More..." overflow instead, so skip the
+    // bottom bar entirely and give the canvas the extra height.
+    if (ui::isCompactViewport())
+    {
+        return;
+    }
+
     if (!ImGui::BeginViewportSideBar("##actionbar_bottom",
                                      ImGui::GetMainViewport(),
                                      ImGuiDir_Down,

@@ -43,7 +43,7 @@ public:
      */
     void renderTopBar(Window& window, Camera& camera, PhysicsSystem& physics,
                       std::vector<CelestialBody>& bodies, UIManager& uiManager,
-                      float deltaTime);
+                      GridSettings& gridSettings, float deltaTime);
 
     /**
      * @brief Render the bottom side-bar for the current frame.
