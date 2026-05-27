@@ -87,6 +87,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/core/SaveLoad.cpp
     ${SRC_DIR}/core/Screenshot.cpp
     ${SRC_DIR}/core/Shader.cpp
+    ${SRC_DIR}/core/WebPersistence.cpp
     ${SRC_DIR}/core/Window.cpp
     ${SRC_DIR}/objects/CelestialBody.cpp
     ${SRC_DIR}/objects/PlanetMesh.cpp
@@ -146,13 +147,25 @@ if (EMSCRIPTEN)
         "-sALLOW_MEMORY_GROWTH=1"
         "-sINITIAL_MEMORY=64MB"
         "-sSTACK_SIZE=4MB"
+        # IDBFS: persistent filesystem backed by IndexedDB. Mounted at /user
+        # in WebPersistence.cpp so the user can keep saves across reloads.
+        "-lidbfs.js"
+        # ASYNCIFY lets EM_ASYNC_JS suspend the C++ stack while awaiting
+        # FS.syncfs() and the file picker promise. Adds ~5 KB to the wasm.
+        "-sASYNCIFY"
+        # Exports needed for the WebPersistence file picker JS to allocate
+        # and write a UTF-8 payload back into the wasm heap.
+        "-sEXPORTED_RUNTIME_METHODS=['UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU8']"
+        "-sEXPORTED_FUNCTIONS=['_main','_malloc','_free']"
         # Preload the runtime data files (presets + Inter font) into the
         # virtual filesystem at "/presets" and "/fonts" so std::ifstream
         # paths in the C++ code resolve identically to the native build.
         "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/presets@/presets"
         "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/third_party/fonts@/fonts"
-        # Use Emscripten's own minimal shell as the HTML wrapper. A
-        # custom shell can be slotted in later via --shell-file.
+        # Custom HTML shell with a fullscreen canvas, dark background, no
+        # emscripten branding, and a loading overlay that follows the
+        # .data download progress + the runtime-init handshake.
+        "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html"
     )
     # SOLARSYSTEM_BUILD_WEB         — our own switch for code branches.
     # IMGUI_IMPL_OPENGL_ES3         — tells imgui_impl_opengl3.cpp to emit
