@@ -1,0 +1,79 @@
+name: Deploy (Vercel)
+
+# Builds the wasm bundle + Doxygen site in CI (Vercel can't run Emscripten),
+# then publishes them to Vercel as a prebuilt static deployment.
+#   - pull_request -> master : preview deployment (URL in the job summary)
+#   - push         -> master : production deployment
+#
+# Requires three repo secrets (Settings -> Secrets and variables -> Actions):
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Create the Vercel project once (dashboard or `vercel link`) to obtain the IDs.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy:
+    name: build + deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- Build the wasm bundle ----
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+      - name: Build web
+        run: |
+          emcmake cmake -S . -B build-web -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-web
+
+      # ---- Build the Doxygen site ----
+      - name: Install Doxygen + Graphviz
+        run: sudo apt-get install -y doxygen graphviz
+      - name: Fetch doxygen-awesome-css theme
+        run: git clone --depth 1 --branch v2.3.4 https://github.com/jothepro/doxygen-awesome-css.git doxygen-awesome-css
+      - name: Generate docs
+        run: doxygen Doxyfile
+
+      # ---- Assemble the Vercel Build Output (app at /, docs at /docs) ----
+      - name: Assemble static output
+        run: |
+          mkdir -p .vercel/output/static/docs
+          cp build-web/SolarSystemGL.html .vercel/output/static/index.html
+          cp build-web/SolarSystemGL.js   .vercel/output/static/
+          cp build-web/SolarSystemGL.wasm .vercel/output/static/
+          cp build-web/SolarSystemGL.data .vercel/output/static/
+          cp -r build-docs/html/* .vercel/output/static/docs/
+          echo '{"version":3}' > .vercel/output/config.json
+          ls -R .vercel/output/static | head -40
+
+      # ---- Deploy ----
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+      - name: Deploy (preview)
+        if: github.ref != 'refs/heads/master'
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Deploy (production)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Production: $url" >> "$GITHUB_STEP_SUMMARY"
