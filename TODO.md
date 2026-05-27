@@ -51,7 +51,7 @@
 - [x] `Shader`: fail loud on compile error — throws `std::runtime_error` with shader log
 - [x] Rule of 5 on `Grid` and `Shader` — both delete copy, define move; handles transferred safely
 - [x] Eliminate `main.cpp` globals — `struct App` + `glfwSetWindowUserPointer`; callbacks fetch via `appFromWindow(w)`. Resolves C4459 warnings.
-- [ ] CI matrix (Windows + Linux) via GitHub Actions
+- [x] CI via GitHub Actions — Windows (MSVC desktop) + Linux (Emscripten web) builds, clang-format check, Doxygen. See `.github/workflows/ci.yml`.
 - [x] `.clang-format` at root — Allman braces, left-aligned pointers/refs, 4-space indent, 110-col limit. Intended for format-on-save; no bulk reformatting yet.
 - [ ] Optional pre-commit hook (deferred — `.clang-format` alone is enough to start)
 
@@ -126,7 +126,11 @@
 - [ ] GPU compute shader for integration step
 
 ### Platform
-- [ ] WebAssembly build via emscripten (run in browser)
+- [x] **WebAssembly build via emscripten** (run in browser) — WebGL2/GLES3, GLFW3 port, rAF loop, preloaded assets, custom HTML shell.
+- [x] **Browser-persistent saves (IDBFS)** + export/import. `src/core/WebPersistence.{h,cpp}`.
+- [x] **Mobile / touch support** — touch gestures, responsive UI (`src/ui/UI.{h,cpp}`), action-bar overflow, MSAA quality toggle.
+- [x] **CI/CD** — `ci.yml` (lint + desktop + web + doxygen) and `deploy.yml` (Vercel prebuilt). Replaces the gh-pages workflow.
+- [x] **Doxygen API reference** served at `/docs`.
 - [ ] Linux build validated end-to-end
 - [ ] macOS build (glfw3 + OpenGL 3.3 still supported)
 

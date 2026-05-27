@@ -91,11 +91,19 @@ python -m http.server -d build-web 8080
 
 ## Differences from the native build
 
-- **No screenshot persistence.** F12 still captures to MEMFS, but the BMP is
-  written to the virtual filesystem and disappears at tab close. Right-click
-  → "Save image as…" works on the canvas itself as a fallback.
-- **Saves don't persist across sessions** (same reason — MEMFS only). Adding
-  IDBFS-backed persistence is a future step.
+- **Screenshots download instead of saving to disk.** `F12` (or the mobile
+  overflow menu) encodes the framebuffer to a BMP in memory and triggers a
+  browser download via `web::downloadBlob` — nothing is written to the
+  virtual FS.
+- **Saves persist in the browser.** User saves are written to an IDBFS mount
+  at `/user` and synced to IndexedDB (`web::initPersistence` / `syncToIDB`),
+  so they survive a reload. They can also be exported/imported as `.txt`
+  files from the Load modal. Built-in presets stay read-only under `/presets`.
+  Private-browsing or unsupported browsers fall back to in-memory saves with a
+  warning toast.
+- **Touch + responsive UI.** One-finger drag orbits, two-finger pinch zooms;
+  the action bar collapses into a `⋯` overflow menu and the UI scales up on
+  small viewports. MSAA defaults off on mobile and is toggleable in Settings.
 - **Shaders run as OpenGL ES 3 / WebGL2.** `Shader::Shader` rewrites the
   `#version 330 core` line to `#version 300 es` + default precision
   qualifiers when `SOLARSYSTEM_BUILD_WEB` is defined.
@@ -106,13 +114,16 @@ python -m http.server -d build-web 8080
 
 ## Deploying
 
-The companion workflow at `.github/workflows/web-deploy.yml` rebuilds the wasm
-artifacts on every push to `master` and publishes `build-web/` to the
-`gh-pages` branch, served at:
+Hosting is on **Vercel**. Because Vercel can't run Emscripten, the build
+happens in GitHub Actions and the result is published as a *prebuilt* static
+deployment:
 
-```
-https://<your-github-username>.github.io/SolarSystemGL/
-```
+- `.github/workflows/ci.yml` — builds desktop + web and generates Doxygen on
+  every push/PR.
+- `.github/workflows/deploy.yml` — rebuilds the wasm bundle + Doxygen,
+  assembles `app at / · docs at /docs`, and runs `vercel deploy --prebuilt`
+  (preview on PRs to `master`, production on push to `master`).
 
-To enable: in GitHub repo settings → Pages → set the source to the `gh-pages`
-branch root.
+One-time setup: create a Vercel project (dashboard or `vercel link`) and add
+`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as GitHub Actions secrets.
+Then update the live-demo link in [`README.md`](README.md).

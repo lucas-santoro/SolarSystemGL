@@ -24,6 +24,23 @@ There are two modes:
 
 Switch modes from the radio buttons inside Planet Info, or via hotkeys (see below).
 
+### Touch (web / mobile)
+
+| Gesture | Action |
+|---|---|
+| One-finger drag | Look around (Free) / orbit the target (Orbital) |
+| Two-finger pinch | Zoom in / out |
+| Tap a planet | Select / focus it |
+| Tap a control | Same as a click |
+
+On narrow screens the top action bar collapses to **Menu · System · + · Save · Load · ⋯**; the `⋯` button opens an overflow menu with time, camera, view presets, settings, Demo Mode, and Screenshot. There's no keyboard, so the keyboard-only hotkeys (bookmarks `F5`–`F8`) aren't available on touch.
+
+## Saving (and the web build)
+
+Save/Load writes the whole simulation to a human-readable `.txt`. On **desktop** these live under `presets/`. On the **web build** your saves persist in the browser (IndexedDB) and survive a reload; the Load modal shows *Built-in presets* and *My saves* separately, with per-save **Export** (download) and **Delete**, plus **Import** to load a `.txt` from disk. In private-browsing mode persistence is unavailable and you'll get a warning that saves won't survive a reload.
+
+**Rendering quality:** Settings has an **MSAA** toggle (anti-aliasing). It defaults off on mobile to save GPU; turn it on for crisper edges on a capable device.
+
 ## Hotkeys
 
 Edge-detected: one press = one action. Suppressed while a text field has keyboard focus (so typing into Mass / Position / Name doesn't fire shortcuts).

@@ -31,6 +31,27 @@ SolarSystemGL is a single-threaded OpenGL 3.3 application. Each frame it does fo
                                 └──────────┘
 ```
 
+## Platform layer (native & web)
+
+The same source builds to a native OpenGL 3.3 executable and to WebGL2/WASM via
+Emscripten. `Application` owns the window, GL resources, and the main loop —
+which is a blocking `while` loop natively and a `requestAnimationFrame` callback
+on the web (`emscripten_set_main_loop_arg`). A handful of small modules isolate
+the platform differences so the rest of the code stays portable:
+
+- **`core/Platform`** — runtime probes (e.g. `isMobileDevice`) used to pick
+  defaults. No-ops to sensible values on desktop.
+- **`core/WebPersistence`** — the only file that knows about IDBFS / IndexedDB
+  and browser file I/O (blob download, file picker). Every function compiles to
+  a no-op on desktop, so `SaveLoad` and the UI call it unconditionally.
+- **`core/Screenshot`** — `encodeFramebufferAsBMP` (pure) feeds either a file
+  write (desktop) or a browser download (web).
+- **`ui/UI`** — viewport-breakpoint helpers driving responsive modal sizing,
+  font scaling, and the action-bar overflow menu.
+
+Touch input is handled in `Application` via the Emscripten touch callbacks and
+mapped onto the same `Camera` methods the mouse uses.
+
 ## The unification
 
 The pre-`CelestialBody` codebase carried two parallel vectors: a visual `std::vector<std::shared_ptr<Planet>>` and a physics `std::vector<BodyState>`. They were kept in sync by a one-way loop in `main.cpp`. UI edits hit the visual side only, and the sync loop silently overwrote them every frame — Apply Changes did nothing.

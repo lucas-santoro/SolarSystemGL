@@ -5,6 +5,14 @@ All notable changes to this project will be documented here. Format follows [Kee
 ## [Unreleased]
 
 ### Added
+- **WebAssembly build** via Emscripten — runs in any WebGL2 browser. GLFW3 port, WebGL2/GLES3 shaders, rAF main loop, live canvas sizing, preloaded presets/fonts, custom HTML shell.
+- **Browser-persistent saves (IDBFS).** `src/core/WebPersistence.{h,cpp}` mounts IDBFS at `/user` and syncs to IndexedDB so user saves survive a reload. The web Load modal lists built-in presets and user saves in two sections with per-row export/delete and an import button; overwrite is confirmed. Falls back to in-memory with a warning when IndexedDB is unavailable. No-op on desktop.
+- **Mobile & touch support.** Emscripten touch callbacks (one-finger drag = orbit, two-finger pinch = zoom, tap = select); responsive UI helpers in `src/ui/UI.{h,cpp}` (viewport breakpoints, font/padding scaling, viewport-clamped modal sizing); the action bar collapses into a `⋯` overflow menu (with Demo Mode and Screenshot entries) on narrow viewports.
+- **Runtime quality toggle.** `Framebuffer::setSamples` rebuilds the scene FBO so MSAA can be switched from Settings; `Platform::isMobileDevice` defaults MSAA off on phones.
+- **Web screenshots.** `Screenshot` split into a pure `encodeFramebufferAsBMP` + file writer; the web build downloads the BMP via the browser instead of writing to the throwaway virtual FS.
+- **Offscreen MSAA resolve** (4× multisample scene FBO blitted to a single-sample target for the composite) and **path-prediction horizon freeze** for a stable predicted trajectory in orbital camera.
+- **CI/CD pipeline.** `.github/workflows/ci.yml` (clang-format check, MSVC desktop build, Emscripten web build, Doxygen) and `deploy.yml` (prebuilt static deploy to Vercel — app at `/`, Doxygen at `/docs`).
+- **Doxygen API reference** (`Doxyfile`, doxygen-awesome theme) generated in CI and served at `/docs`.
 - `CelestialBody.emissive` flag and matching uniform in the fragment shader. Stars skip lighting calculation and emit at brightness > 1.0.
 - `CelestialBody.displayScale` field — visual-only model-matrix multiplier (Sun = 0.4 so it doesn't engulf inner orbits). Replaces the `(name == "Sun")` string-compare branch.
 - Lambertian + Blinn-Phong lighting in `FragmentShader.glsl`. `lightPos` and `viewPos` uniforms set per frame from `bodies[0]` (Sun) and `camera.getPosition()`.
