@@ -78,6 +78,12 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         return;
     }
 
+    // Actionbar reflow uses the "compact" threshold (~960px) — the full
+    // desktop layout doesn't fit below that, so the secondary groups move
+    // into a "..." overflow menu and the right-anchored FPS readout is
+    // dropped (it collides with the buttons once the font scales up).
+    const bool mobile = ui::isCompactViewport();
+
     // --- Group 1: Menu + System dropdown ---------------------------------
     if (ImGui::Button("Menu"))
     {
@@ -90,7 +96,7 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     const char* systemPreview  = (selectedIdx >= 0 && selectedIdx < static_cast<int>(bodies.size()))
                                      ? bodies[selectedIdx].name.c_str()
                                      : "System";
-    ImGui::SetNextItemWidth(160.0f);
+    ImGui::SetNextItemWidth(mobile ? 110.0f : 160.0f);
     if (ImGui::BeginCombo("##system", systemPreview))
     {
         for (size_t i = 0; i < bodies.size(); ++i)
@@ -125,10 +131,6 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     ImGui::SetItemTooltip("Add a new planet");
     renderGroupSeparator();
 
-    // Actionbar reflow uses the wider "compact" threshold (~960px) — the
-    // desktop layout doesn't fit cleanly below that even on tablet widths,
-    // so it truncates and overlaps the right-anchored FPS readout.
-    const bool mobile = ui::isCompactViewport();
     const CameraMode currentMode = camera.getMode();
     const bool       hasSelection = (selectedIdx >= 0
                                      && selectedIdx < static_cast<int>(bodies.size()));
@@ -269,13 +271,12 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
     else
     {
         // =========================== Mobile layout ===========================
-        // Save / Load stay primary — they're the most frequent destinations.
-        // Everything else lands in the "⋯" overflow popup.
-        if (ImGui::Button("Save"))  uiManager.saveRequested = true;
-        ImGui::SameLine();
-        if (ImGui::Button("Load"))  uiManager.loadRequested = true;
-        ImGui::SameLine();
-        if (ImGui::Button("\xE2\x8B\xAF"))  // "⋯" (U+22EF MIDLINE HORIZONTAL ELLIPSIS)
+        // Only the "⋯" trigger fits beside Menu/System/+ at phone widths once
+        // the font scales up — everything else lives in the overflow popup.
+        // Plain ASCII "More..." — the Inter atlas is loaded with the default
+        // Latin range only, so non-ASCII glyphs (U+22EF, U+2026) would render
+        // as missing-glyph boxes.
+        if (ImGui::Button("More..."))
         {
             ImGui::OpenPopup("##overflow");
         }
@@ -334,6 +335,19 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
             }
 
             ImGui::Separator();
+            ImGui::TextDisabled("File");
+            if (ImGui::Button("Save", ImVec2(-1, 0)))
+            {
+                uiManager.saveRequested = true;
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::Button("Load", ImVec2(-1, 0)))
+            {
+                uiManager.loadRequested = true;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::Separator();
             ImGui::TextDisabled("Tools");
             if (ImGui::Button("Settings", ImVec2(-1, 0)))
             {
@@ -361,12 +375,16 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         }
     }
 
-    // --- Group 5: FPS (right-anchored) -----------------------------------
-    const float windowWidth  = ImGui::GetWindowSize().x;
-    const float fpsTextWidth = ImGui::CalcTextSize("FPS: 9999.9").x;
-    ImGui::SameLine(windowWidth - fpsTextWidth - 12.0f);
-    ImGui::Text("FPS: %.1f", smoothedFps_);
-    ImGui::SetItemTooltip("Frames per second (smoothed)");
+    // --- Group 5: FPS (right-anchored) — desktop only; on compact viewports
+    // the buttons would otherwise collide with the right-anchored readout.
+    if (!mobile)
+    {
+        const float windowWidth  = ImGui::GetWindowSize().x;
+        const float fpsTextWidth = ImGui::CalcTextSize("FPS: 9999.9").x;
+        ImGui::SameLine(windowWidth - fpsTextWidth - 12.0f);
+        ImGui::Text("FPS: %.1f", smoothedFps_);
+        ImGui::SetItemTooltip("Frames per second (smoothed)");
+    }
 
     ImGui::End();
 }
