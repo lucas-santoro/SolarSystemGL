@@ -14,18 +14,22 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Formatting check. Advisory for now (continue-on-error) because the existing
-  # baseline was never bulk-formatted. To make it a hard gate: run
-  # `clang-format -i` across src/ once, commit, then drop continue-on-error.
+  # Formatting gate. Pinned to clang-format 18.1.8 (via pip) so the CI result
+  # matches what contributors get locally — different clang-format versions
+  # disagree on edge cases, which would make this flaky. The src tree was
+  # bulk-formatted with this exact version. EM_JS/EM_ASYNC_JS bodies are
+  # JavaScript and are wrapped in `// clang-format off` so they're left alone.
   # ---------------------------------------------------------------------------
   lint:
     name: clang-format
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
       - name: Install clang-format
-        run: sudo apt-get update && sudo apt-get install -y clang-format
+        run: pip install "clang-format==18.1.8"
       - name: Check formatting
         run: |
           find src -name '*.h' -o -name '*.cpp' | xargs clang-format --dry-run --Werror
