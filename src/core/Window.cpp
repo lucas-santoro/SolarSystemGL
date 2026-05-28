@@ -1,6 +1,6 @@
 #include "core/Window.h"
 
-Window::Window(int width, int height, const std::string &title)
+Window::Window(int width, int height, const std::string& title)
     : width(width), height(height), title(title), window(nullptr)
 {
     if (!init())
@@ -32,32 +32,17 @@ bool Window::init()
     }
 
     glfwMakeContextCurrent(window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+#ifndef SOLARSYSTEM_BUILD_WEB
+    // Emscripten resolves WebGL calls via its JS glue layer — no loader
+    // needed. Desktop builds still pull function pointers through glad.
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
     {
         std::cerr << "Err - GLAD" << std::endl;
         return false;
     }
+#endif
 
     return true;
-}
-
-void Window::processInput()
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
-void Window::run()
-{
-    while (!glfwWindowShouldClose(window))
-    {
-        processInput();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
 }
 
 GLFWwindow* Window::getGLFWwindow()

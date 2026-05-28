@@ -1,0 +1,13 @@
+# SolarSystemGL preset: blank slate — just the Sun. Build your own system from here.
+version = 1
+timeScale = 864000
+
+[body]
+name = Sun
+pos_m = 0 0 0
+vel_m = 0 0 0
+mass_kg = 1.989e30
+color = 1.0 0.9 0.3
+density = 1408
+emissive = 1.0
+displayScale = 0.4

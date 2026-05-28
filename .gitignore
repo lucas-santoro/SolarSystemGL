@@ -45,8 +45,16 @@ Makefile
 *.tmp
 bin/
 build/
+build-*/
 Debug/
 Release/
 x64/
 imgui.ini
 include/
+screenshots/
+
+# Local Claude Code agent state — not part of the project
+.claude/
+
+# Promotion drafts scratch space
+promo/

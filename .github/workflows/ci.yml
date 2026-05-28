@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+    branches: [develop, master]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Formatting gate. Pinned to clang-format 18.1.8 (via pip) so the CI result
+  # matches what contributors get locally — different clang-format versions
+  # disagree on edge cases, which would make this flaky. The src tree was
+  # bulk-formatted with this exact version. EM_JS/EM_ASYNC_JS bodies are
+  # JavaScript and are wrapped in `// clang-format off` so they're left alone.
+  # ---------------------------------------------------------------------------
+  lint:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install clang-format
+        run: pip install "clang-format==18.1.8"
+      - name: Check formatting
+        run: |
+          find src -name '*.h' -o -name '*.cpp' | xargs clang-format --dry-run --Werror
+
+  # ---------------------------------------------------------------------------
+  # Native build (Windows / MSVC) — compile-only gate against the vendored
+  # VC2022 GLFW. Catches desktop regressions early.
+  # ---------------------------------------------------------------------------
+  build-desktop:
+    name: build (windows / msvc)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+
+  # ---------------------------------------------------------------------------
+  # Web build (Emscripten / WebGL2). Uploads the wasm bundle as an artifact so
+  # it can be inspected; the Deploy workflow rebuilds independently.
+  # ---------------------------------------------------------------------------
+  build-web:
+    name: build (emscripten / wasm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+      - name: Configure
+        run: emcmake cmake -S . -B build-web -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-web
+      - name: Upload wasm bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-bundle
+          path: |
+            build-web/SolarSystemGL.html
+            build-web/SolarSystemGL.js
+            build-web/SolarSystemGL.wasm
+            build-web/SolarSystemGL.data
+
+  # ---------------------------------------------------------------------------
+  # Doxygen API docs (doxygen-awesome theme). Uploads HTML as an artifact.
+  # ---------------------------------------------------------------------------
+  doxygen:
+    name: doxygen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen + Graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      - name: Fetch doxygen-awesome-css theme
+        run: git clone --depth 1 --branch v2.3.4 https://github.com/jothepro/doxygen-awesome-css.git doxygen-awesome-css
+      - name: Generate docs
+        run: doxygen Doxyfile
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-html
+          path: build-docs/html

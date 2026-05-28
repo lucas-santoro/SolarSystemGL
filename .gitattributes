@@ -1,0 +1,20 @@
+# Normalize line endings: store text as LF in the repo, check out native.
+# Keeps the Windows-developed sources consistent with the Linux CI runners.
+* text=auto
+
+# Explicit text types
+*.cpp   text
+*.h     text
+*.glsl  text
+*.md    text
+*.txt   text
+*.html  text
+*.yml   text
+*.json  text
+
+# Binary assets — never normalize
+*.ttf   binary
+*.png   binary
+*.jpg   binary
+*.bmp   binary
+*.ico   binary

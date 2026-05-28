@@ -1,0 +1,485 @@
+# Asteroid Belt preset — Sun + inner & outer planets + main-belt asteroids.
+# Generated programmatically (Kepler circular orbits).
+version = 1
+timeScale = 864000
+
+[body]
+name = Sun
+pos_m = 0 0 0
+vel_m = 0 0 0
+mass_kg = 1.989e30
+color = 1.0 0.9 0.3
+density = 1408
+emissive = 1
+displayScale = 0.4
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Earth
+pos_m = 1.495978707000000e+11 0 0
+vel_m = 0 0 2.978000000000000e+04
+mass_kg = 5.972000000000000e+24
+color = 0.20 0.40 1.00
+density = 5514.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.050
+atmosphereColor = 0.40 0.60 1.00
+atmosphereDensity = 1.00
+
+[body]
+name = Mars
+pos_m = 2.279871549468000e+11 0 0
+vel_m = 0 0 2.410000000000000e+04
+mass_kg = 6.417100000000000e+23
+color = 0.80 0.30 0.10
+density = 3933.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.030
+atmosphereColor = 0.95 0.50 0.35
+atmosphereDensity = 0.50
+
+[body]
+name = Jupiter
+pos_m = 7.783577212521001e+11 0 0
+vel_m = 0 0 1.307000000000000e+04
+mass_kg = 1.898000000000000e+27
+color = 0.90 0.70 0.40
+density = 1326.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.080
+atmosphereColor = 0.95 0.78 0.50
+atmosphereDensity = 1.40
+
+[body]
+name = Saturn
+pos_m = 1.426714892865900e+12 0 0
+vel_m = 0 0 9.680000000000000e+03
+mass_kg = 5.683400000000000e+26
+color = 0.95 0.85 0.50
+density = 687.0
+emissive = 0
+displayScale = 1
+hasRings = 1
+hasAtmosphere = 1
+atmosphereHeight = 0.070
+atmosphereColor = 0.95 0.85 0.60
+atmosphereDensity = 1.20
+
+[body]
+name = Uranus
+pos_m = 2.870932736603700e+12 0 0
+vel_m = 0 0 6.800000000000000e+03
+mass_kg = 8.681000000000001e+25
+color = 0.60 0.85 0.90
+density = 1271.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.060
+atmosphereColor = 0.45 0.85 0.90
+atmosphereDensity = 1.10
+
+[body]
+name = Neptune
+pos_m = 4.498407971949000e+12 0 0
+vel_m = 0 0 5.430000000000000e+03
+mass_kg = 1.024000000000000e+26
+color = 0.30 0.40 0.85
+density = 1638.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 1
+atmosphereHeight = 0.070
+atmosphereColor = 0.25 0.40 0.95
+atmosphereDensity = 1.20
+
+[body]
+name = Mercury
+pos_m = 5.789437596090000e+10 0 0
+vel_m = 0 0 4.790000000000000e+04
+mass_kg = 3.301100000000000e+23
+color = 0.50 0.50 0.50
+density = 5427.0
+emissive = 0
+displayScale = 1
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0.000
+atmosphereColor = 0 0 0
+atmosphereDensity = 0.00
+
+[body]
+name = Asteroid-01
+pos_m = 3.141555e+11 0 0.000000e+00
+vel_m = -0.000000e+00 0 2.055644e+04
+mass_kg = 1.000000e+18
+color = 0.70 0.45 0.45
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-02
+pos_m = -2.374038e+11 0 2.174813e+11
+vel_m = -1.371633e+04 0 -1.497282e+04
+mass_kg = 1.350314e+18
+color = 0.63 0.55 0.43
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-03
+pos_m = 2.883001e+10 0 -3.285031e+11
+vel_m = 1.998717e+04 0 1.754110e+03
+mass_kg = 1.823348e+18
+color = 0.49 0.42 0.37
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-04
+pos_m = 2.053912e+11 0 2.678965e+11
+vel_m = -1.573765e+04 0 1.206576e+04
+mass_kg = 2.462092e+18
+color = 0.40 0.36 0.30
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-05
+pos_m = -3.400964e+11 0 -6.015826e+10
+vel_m = 3.414895e+03 0 -1.930563e+04
+mass_kg = 3.324598e+18
+color = 0.45 0.50 0.26
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-06
+pos_m = 2.979984e+11 0 -1.895622e+11
+vel_m = 1.040581e+04 0 1.635830e+04
+mass_kg = 4.489251e+18
+color = 0.59 0.53 0.26
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-07
+pos_m = -9.371356e+10 0 3.486098e+11
+vel_m = -1.851928e+04 0 -4.978366e+03
+mass_kg = 6.061899e+18
+color = 0.69 0.38 0.30
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-08
+pos_m = -1.699785e+11 0 -3.272832e+11
+vel_m = 1.683732e+04 0 -8.744667e+03
+mass_kg = 8.185467e+18
+color = 0.66 0.39 0.37
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-09
+pos_m = 3.537450e+11 0 1.291871e+11
+vel_m = -6.440583e+03 0 1.763585e+04
+mass_kg = 1.105295e+19
+color = 0.53 0.54 0.43
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-10
+pos_m = -3.553198e+11 0 1.466709e+11
+vel_m = -7.090657e+03 0 -1.717758e+04
+mass_kg = 1.492496e+19
+color = 0.41 0.49 0.45
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-11
+pos_m = 1.662352e+11 0 -3.552350e+11
+vel_m = 1.666340e+04 0 7.797778e+03
+mass_kg = 2.015338e+19
+color = 0.42 0.35 0.43
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-12
+pos_m = 1.197170e+11 0 3.816768e+11
+vel_m = -1.738229e+04 0 5.452143e+03
+mass_kg = 2.721339e+19
+color = 0.55 0.44 0.37
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-13
+pos_m = -3.528477e+11 0 -2.044824e+11
+vel_m = 9.046458e+03 0 -1.561025e+04
+mass_kg = 3.674662e+19
+color = 0.68 0.55 0.30
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-14
+pos_m = 4.059279e+11 0 -8.924210e+10
+vel_m = 3.837447e+03 0 1.745506e+04
+mass_kg = 4.961948e+19
+color = 0.69 0.44 0.26
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-15
+pos_m = -2.435253e+11 0 3.463897e+11
+vel_m = -1.448496e+04 0 -1.018349e+04
+mass_kg = 6.700188e+19
+color = 0.57 0.35 0.26
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-16
+pos_m = -5.541794e+10 0 -4.276564e+11
+vel_m = 1.739997e+04 0 -2.254779e+03
+mass_kg = 9.047357e+19
+color = 0.44 0.49 0.30
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-17
+pos_m = 3.357094e+11 0 2.829362e+11
+vel_m = -1.120616e+04 0 1.329633e+04
+mass_kg = 1.221677e+20
+color = 0.41 0.54 0.37
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-18
+pos_m = -4.464608e+11 0 1.846255e+10
+vel_m = -7.121649e+02 0 -1.722154e+04
+mass_kg = 1.649648e+20
+color = 0.51 0.39 0.43
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-19
+pos_m = 3.222675e+11 0 -3.206992e+11
+vel_m = 1.205330e+04 0 1.211224e+04
+mass_kg = 2.227543e+20
+color = 0.65 0.38 0.45
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-20
+pos_m = -2.136135e+10 0 4.619589e+11
+vel_m = -1.692477e+04 0 -7.826151e+02
+mass_kg = 3.007883e+20
+color = 0.70 0.53 0.42
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-21
+pos_m = -3.012984e+11 0 -3.610562e+11
+vel_m = 1.290004e+04 0 -1.076498e+04
+mass_kg = 4.061586e+20
+color = 0.61 0.50 0.36
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-22
+pos_m = 4.737934e+11 0 6.374823e+10
+vel_m = -2.222087e+03 0 1.651513e+04
+mass_kg = 5.484417e+20
+color = 0.47 0.36 0.30
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-23
+pos_m = -3.988287e+11 0 2.774946e+11
+vel_m = -9.440555e+03 0 -1.356842e+04
+mass_kg = 7.405685e+20
+color = 0.40 0.42 0.25
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
+[body]
+name = Asteroid-24
+pos_m = 1.083520e+11 0 -4.816356e+11
+vel_m = 1.599852e+04 0 3.599136e+03
+mass_kg = 1.000000e+21
+color = 0.47 0.55 0.26
+density = 2500
+emissive = 0
+displayScale = 0.3
+hasRings = 0
+hasAtmosphere = 0
+atmosphereHeight = 0
+atmosphereColor = 0 0 0
+atmosphereDensity = 0
+
