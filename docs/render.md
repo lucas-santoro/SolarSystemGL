@@ -78,6 +78,33 @@ It's a visual approximation — not a physically derived metric — but cheap an
 
 The 10-body cap is enforced both client-side (`Grid::draw`'s `std::min(...,10)`) and shader-side (`GridVertexShader.glsl` `MAX_PLANETS = 10`). Increasing it requires editing both.
 
+## Starfield pipeline
+
+The night sky is drawn first each frame (depth test disabled) by the
+`core/Starfield` renderer — a self-contained class owning the sky program and
+its own fullscreen quad. `Application::renderSky` is a thin wrapper that calls
+`starfield_.render(view, projection, time, quality)`.
+
+It's a single fullscreen pass; all the structure lives in
+`shaders/SkyFragmentShader.glsl`:
+
+- The view ray is reconstructed from `invView`/`invProj`, then mapped to a
+  per-cube-face UV (`dirToFaceUV`) to avoid pole pinching.
+- `starLayer(...)` tiles that UV, places one jittered point per cell, and splats
+  a soft power-law dot. It sums the 3×3 neighborhood so points never clip at
+  cell borders, and an `fwidth`-derived (clamped) radius keeps sub-pixel stars
+  from sparkling. Brightness is `pow(t, k)` — many faint stars, few brilliant.
+- `blackbody(t)` tints each star by temperature (cool orange-white → white →
+  hot blue-white). `vnoise` drives a tilted Milky Way dust band.
+
+The `uQuality` uniform (0 Off / 1 Low / 2 Medium / 3 High, from
+`StarfieldQuality`) gates the layers: Low = bright foreground only, Medium adds
+the mid field, High adds the faint dust layer + Milky Way band + twinkle (the
+`uTime` uniform). It's just a uniform read, so the Settings "Starfield" combo
+switches tiers live with no FBO rebuild. The same desktop GLSL compiles on
+WebGL2 — `Shader.cpp` rewrites the version + precision, and `fwidth` is core in
+GLSL ES 3.00.
+
 ## State management
 
 Each frame, before drawing planets:

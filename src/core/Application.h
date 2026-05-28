@@ -7,6 +7,7 @@
 #include "core/Framebuffer.h"
 #include "core/Grid.h"
 #include "core/Shader.h"
+#include "core/Starfield.h"
 #include "core/Window.h"
 #include "objects/CelestialBody.h"
 #include "objects/PlanetMesh.h"
@@ -263,7 +264,7 @@ private:
     Shader bodyShader_;
     Shader gridShader_;
     Shader trailShader_;
-    Shader skyShader_;
+    Starfield starfield_;
     Shader ringShader_;
     Shader bloomBlurShader_;
     Shader bloomCompositeShader_;

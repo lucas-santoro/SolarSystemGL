@@ -229,7 +229,7 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
       bodyShader_(embedded_shaders::VertexShader, embedded_shaders::FragmentShader),
       gridShader_(embedded_shaders::GridVertexShader, embedded_shaders::GridFragmentShader),
       trailShader_(embedded_shaders::TrailVertexShader, embedded_shaders::TrailFragmentShader),
-      skyShader_(embedded_shaders::SkyVertexShader, embedded_shaders::SkyFragmentShader),
+      starfield_(embedded_shaders::SkyVertexShader, embedded_shaders::SkyFragmentShader),
       ringShader_(embedded_shaders::RingVertexShader, embedded_shaders::RingFragmentShader),
       bloomBlurShader_(embedded_shaders::FullscreenQuadVertexShader,
                        embedded_shaders::BloomBlurFragmentShader),
@@ -314,6 +314,9 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
     {
         uiManager_.msaaEnabled = false;
         uiManager_.msaaDirty   = true;
+        // Drop the faint dust layer + Milky Way + twinkle on touch devices; the
+        // mid-field tier still looks rich but is much cheaper to shade.
+        uiManager_.starfieldQuality = StarfieldQuality::Medium;
     }
 
 #ifdef SOLARSYSTEM_BUILD_WEB
@@ -1460,13 +1463,10 @@ void Application::sampleOrbitTrails()
 
 void Application::renderSky(const glm::mat4& view, const glm::mat4& projection)
 {
-    skyShader_.use();
-    skyShader_.setMat4("invView", glm::inverse(view));
-    skyShader_.setMat4("invProj", glm::inverse(projection));
-    glDisable(GL_DEPTH_TEST);
-    glBindVertexArray(fullscreenQuadVAO_);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glEnable(GL_DEPTH_TEST);
+    // Thin wrapper: the Starfield owns the program, quad, and pass state. The
+    // monotonic clock drives the High-tier twinkle; quality is device-defaulted
+    // and user-adjustable in Settings.
+    starfield_.render(view, projection, static_cast<float>(glfwGetTime()), uiManager_.starfieldQuality);
 }
 
 void Application::renderBodies(const glm::mat4& view, const glm::mat4& projection)

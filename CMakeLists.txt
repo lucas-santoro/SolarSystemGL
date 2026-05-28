@@ -88,6 +88,7 @@ set(PROJECT_SOURCES
     ${SRC_DIR}/core/SaveLoad.cpp
     ${SRC_DIR}/core/Screenshot.cpp
     ${SRC_DIR}/core/Shader.cpp
+    ${SRC_DIR}/core/Starfield.cpp
     ${SRC_DIR}/core/WebPersistence.cpp
     ${SRC_DIR}/core/Window.cpp
     ${SRC_DIR}/objects/CelestialBody.cpp

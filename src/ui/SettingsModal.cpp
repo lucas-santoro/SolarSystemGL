@@ -39,6 +39,20 @@ void renderGeneralSection(Camera& camera, float& fieldOfView, float& guiScale, U
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Multisample anti-aliasing. Disabling reduces GPU load — useful on mobile.");
+
+    // Starfield layer tier. Ordered to match StarfieldQuality; selecting an
+    // entry writes the enum straight through (no FBO rebuild — it's a uniform).
+    const char* starfieldLabels[] = {"Off", "Low", "Medium", "High"};
+    int starfieldIdx              = static_cast<int>(uiManager.starfieldQuality);
+    if (ImGui::Combo("Starfield", &starfieldIdx, starfieldLabels, IM_ARRAYSIZE(starfieldLabels)))
+    {
+        uiManager.starfieldQuality = static_cast<StarfieldQuality>(starfieldIdx);
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Procedural night sky. High adds a faint dust layer, the Milky Way band, and "
+                          "twinkle; lower tiers shade fewer layers — useful on mobile.");
 }
 
 void renderGridSection(GridSettings& grid)

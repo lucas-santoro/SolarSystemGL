@@ -6,6 +6,7 @@
 #include "core/Window.h"
 #include "core/Camera.h"
 #include "core/Grid.h"
+#include "core/Starfield.h"
 #include "physics/PhysicsSystem.h"
 #include "ui/Actionbar.h"
 #include "ui/Toast.h"
@@ -173,6 +174,13 @@ public:
      *         host loop reads it after each render, calls `rebuildSceneFbo`,
      *         then clears the flag. */
     bool msaaDirty = false;
+
+    /** @brief Starfield layer tier, bound to the Settings "Starfield" combo and
+     *         passed straight to `Starfield::render`. Unlike MSAA this needs no
+     *         FBO rebuild — it's just a shader uniform read each frame. Defaults
+     *         to High on desktop and a lower tier on mobile (set by
+     *         `Application::Application` via `platform::isMobileDevice`). */
+    StarfieldQuality starfieldQuality = StarfieldQuality::High;
 
     /**
      * @brief Set by the actionbar's View combo: 0 = Default, 1 = Top-down,
