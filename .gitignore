@@ -56,5 +56,8 @@ screenshots/
 # Local Claude Code agent state — not part of the project
 .claude/
 
+# Throwaway screenshot captures used during local debugging
+.screenshots/
+
 # Promotion drafts scratch space
 promo/

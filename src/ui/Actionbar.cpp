@@ -30,7 +30,10 @@ void renderGroupSeparator()
     ImGui::SameLine(0.0f, kSeparatorIndent);
 }
 
-/// Format simulated seconds since startup as "Day N HH:MM".
+/// Format simulated seconds since startup as "Day NNNN HH:MM". The day field
+/// is right-padded to 4 characters with leading spaces so the string length
+/// stays constant for day counts under 10000 — this lets the tabular renderer
+/// below produce a pixel-stable width frame to frame.
 void formatSimulatedDate(double simulatedSeconds, char* out, size_t outSize)
 {
     constexpr double kSecondsPerDay  = 86400.0;
@@ -43,7 +46,44 @@ void formatSimulatedDate(double simulatedSeconds, char* out, size_t outSize)
     const int minuteOfHour =
         static_cast<int>(std::floor((timeOfDay - hourOfDay * kSecondsPerHour) / kSecondsPerMin));
 
-    std::snprintf(out, outSize, "Day %.0f %02d:%02d", dayCount, hourOfDay, minuteOfHour);
+    std::snprintf(out, outSize, "Day %4.0f %02d:%02d", dayCount, hourOfDay, minuteOfHour);
+}
+
+/// Render `text` with disabled-text colour, using "tabular" digit slots: every
+/// digit (and every space, so the format-string padding pads to the same
+/// width) occupies the advance of '0', and the glyph is right-aligned inside
+/// its slot. Letters and punctuation use their natural Inter advances.
+///
+/// Inter is a proportional font (`1` is narrower than `0`, `9` narrower than
+/// `8`, etc.), so a default `ImGui::TextDisabled("Day 168 05:00")` and
+/// `ImGui::TextDisabled("Day 259 19:00")` rendered the date at slightly
+/// different widths every frame — the readout wobbled visibly even though
+/// the layout to the right of it stayed put. Forcing equal-advance digit
+/// slots makes the date readout pixel-stable across frames.
+///
+/// Layout-wise this behaves like a single `Text` item: the size is reported
+/// back through `ImGui::Dummy`, so `SameLine` / `SetItemTooltip` work as
+/// expected against it.
+void renderTabularDisabledText(const char* text)
+{
+    ImFont* font       = ImGui::GetFont();
+    const float digitW = font->GetCharAdvance('0');
+    const ImU32 col    = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+    const ImVec2 start = ImGui::GetCursorScreenPos();
+    ImDrawList* dl     = ImGui::GetWindowDrawList();
+    float x            = start.x;
+    for (const char* p = text; *p != '\0'; ++p)
+    {
+        const unsigned char c = static_cast<unsigned char>(*p);
+        const bool tabular    = (c >= '0' && c <= '9') || c == ' ';
+        const float natural   = font->GetCharAdvance(static_cast<ImWchar>(c));
+        const float advance   = tabular ? digitW : natural;
+        // Right-align glyph inside the digit slot (typical tabular look).
+        const float drawX = tabular ? (x + (advance - natural)) : x;
+        dl->AddText(ImVec2(drawX, start.y), col, p, p + 1);
+        x += advance;
+    }
+    ImGui::Dummy(ImVec2(x - start.x, ImGui::GetFontSize()));
 }
 
 struct TimeScalePreset
@@ -192,14 +232,15 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
 
         char simDateBuffer[32];
         formatSimulatedDate(physics.getSimulatedTimeSeconds(), simDateBuffer, sizeof(simDateBuffer));
-        ImGui::TextDisabled("%s", simDateBuffer);
+        renderTabularDisabledText(simDateBuffer);
         ImGui::SetItemTooltip("Simulated time elapsed since Start Simulation");
 
-        // The date text width grows / shrinks as digits roll over (e.g. "Day 9"
-        // vs "Day 92") and Inter is a proportional font, so without padding the
-        // controls to the right would jitter. Reserve a fixed slot by padding
-        // a Dummy out to the worst-case width of "Day 9999 23:59" so the next
-        // group always starts at the same X regardless of the current date.
+        // Tabular rendering above pins the date width frame-to-frame for any
+        // day < 10000 (the `%4.0f` format keeps the digit-slot count constant).
+        // This Dummy is the safety net for the edge case where the day count
+        // crosses 10000 (~27 years at 1×) and the readout grows one digit
+        // beyond the worst case below — at that point the next group shifts
+        // once, and stays put afterwards.
         const float widestDateWidth  = ImGui::CalcTextSize("Day 9999 23:59").x + 10.0f;
         const float currentDateWidth = ImGui::GetItemRectSize().x;
         if (currentDateWidth < widestDateWidth)
