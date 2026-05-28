@@ -42,12 +42,20 @@ void main() {
             // matches the renderer's typical body display radius).
             float r = sqrt(dist2);
             depth = gridStrength * planetMasses[i] / max(r, 0.5);
+            depth = clamp(depth, 0.0, maxWellDepth);
         } else {
-            depth = gridStrength * planetMasses[i]
-                  / (1.0 + dist2 / (falloffRadius * falloffRadius));
+            // Smooth "rubber-sheet" well. The peak depth saturates with mass
+            // through 1 - exp(-k·m), so it approaches maxWellDepth without a
+            // hard clamp — the bottom is a rounded Lorentzian apex, never a
+            // flat plateau. The well also widens with that depth, so massive
+            // bodies carve a broad, gentle bowl that crosses many grid lines
+            // (instead of a narrow, faceted spike).
+            float m      = planetMasses[i];
+            float peak   = maxWellDepth * (1.0 - exp(-gridStrength * m));
+            float radius = falloffRadius + peak * 2.0;
+            depth        = peak / (1.0 + dist2 / (radius * radius));
         }
 
-        depth = clamp(depth, 0.0, maxWellDepth);
         distortedPos.y -= depth;
 
         weightedColor += planetColors[i] * depth;
