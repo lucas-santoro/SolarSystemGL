@@ -111,6 +111,22 @@
     </div>
 
     <script>
+        // iOS Safari (and some other touch browsers) don't implement the
+        // Pointer Lock API. Emscripten's GLFW port and ImGui's GLFW backend
+        // call document.exitPointerLock() / Element.requestPointerLock()
+        // unconditionally whenever the cursor mode changes — on iOS that throws
+        // "exitPointerLock is not a function" and aborts startup before the
+        // first frame. Install no-op shims so those cursor-mode calls are
+        // silently ignored. Pointer lock is meaningless on touch anyway: every
+        // gesture is handled in C++.
+        if (typeof document.exitPointerLock !== 'function') {
+            document.exitPointerLock = function () {};
+        }
+        if (typeof Element.prototype.requestPointerLock !== 'function') {
+            Element.prototype.requestPointerLock = function () {};
+        }
+    </script>
+    <script>
         (function() {
             var statusBox       = document.getElementById('status');
             var statusMessage   = document.getElementById('status-message');
