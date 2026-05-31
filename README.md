@@ -4,8 +4,8 @@ A real-time 3D Newtonian N-body solar-system simulator — runs natively (OpenGL
 
 ![C++](https://img.shields.io/badge/C%2B%2B-17-green) ![OpenGL](https://img.shields.io/badge/OpenGL-3.3-blue) ![WebGL2](https://img.shields.io/badge/WebGL2-WASM-orange) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Web-lightgrey) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-**▶ Live demo:** _deployed on Vercel — update this link with your production URL_
-**📖 API docs:** _Doxygen reference served at `/docs` on the live site_
+**▶ Live demo:** **https://solar-system-gl.vercel.app**
+**📖 API docs:** [Doxygen reference](https://solar-system-gl.vercel.app/docs) (served at `/docs` on the live site)
 
 ![SolarSystemGL — the Sun bending the spacetime-curvature grid, with orbit trails](docs/assets/hero.png)
 
@@ -78,7 +78,7 @@ docs/           Architecture, build, physics, render, user guide, API refs, ADRs
 ## Documentation
 
 - Hand-written guides: [`docs/`](docs/) — architecture, physics, rendering, user guide, ADRs.
-- Generated API reference: Doxygen, served at `/docs` on the live site (`doxygen Doxyfile` locally).
+- Generated API reference: [Doxygen](https://solar-system-gl.vercel.app/docs), served at `/docs` on the live site (`doxygen Doxyfile` locally).
 
 ## License
 

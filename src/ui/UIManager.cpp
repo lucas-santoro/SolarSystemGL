@@ -149,7 +149,11 @@ void UIManager::renderPlanetPopup(Window& window, Camera& camera, const glm::mat
         {
             lmbPressedTargetIdx_ = hoveredIndex;
         }
-        else if (!placementActive_)
+        // On touch devices the single finger is reserved for camera rotation,
+        // so only begin a drag-to-place when the user has explicitly enabled
+        // placement mode. Desktop keeps the unconditional LMB-in-empty-space
+        // gesture (camera there is a separate button).
+        else if (!placementActive_ && (!touchDevice || placementModeActive))
         {
             placementStartPosWU_ = castToEclipticPlane();
             placementEndPosWU_   = placementStartPosWU_;

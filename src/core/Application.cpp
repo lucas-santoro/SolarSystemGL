@@ -317,6 +317,10 @@ Application::Application(int windowWidth, int windowHeight, const char* title)
         // Drop the faint dust layer + Milky Way + twinkle on touch devices; the
         // mid-field tier still looks rich but is much cheaper to shade.
         uiManager_.starfieldQuality = StarfieldQuality::Medium;
+        // Single finger is the only pointer here, so the desktop LMB drag-to-place
+        // gesture collides with camera rotation — gate it behind a placement-mode
+        // toggle instead. See UIManager::placementModeActive.
+        uiManager_.touchDevice = true;
     }
 
 #ifdef SOLARSYSTEM_BUILD_WEB
@@ -527,7 +531,12 @@ void Application::handleTouchMove(const EmscriptenTouchEvent& e)
     {
         // 1-finger drag → camera rotation. processMouseMovement convention:
         // xOffset = newX - lastX, yOffset = lastY - newY  (Y is flipped).
-        camera_.processMouseMovement(dx[firstSlot], -dy[firstSlot]);
+        //
+        // In placement mode the finger instead drags out a new body, driven by
+        // the synthetic LMB events in UIManager::renderPlanetPopup — so we must
+        // NOT also rotate the camera here, or both would fire at once.
+        if (!uiManager_.placementModeActive)
+            camera_.processMouseMovement(dx[firstSlot], -dy[firstSlot]);
     }
     else if (activeCount == 2)
     {
