@@ -164,6 +164,35 @@ void Actionbar::renderTopBar(Window& window, Camera& camera, PhysicsSystem& phys
         uiManager.addPlanetRequested = true;
     }
     ImGui::SetItemTooltip("Add a new planet");
+
+    // Touch-only "Place" toggle. On phones the single finger both rotates the
+    // camera and (via synthetic LMB) would drag-to-place a body — so placement
+    // is gated behind this toggle. Highlighted blue while active, mirroring the
+    // segmented-control palette below. Hidden on desktop, where camera (RMB)
+    // and placement (LMB) already use distinct buttons.
+    if (uiManager.touchDevice)
+    {
+        const bool placing = uiManager.placementModeActive;
+        const ImVec4 activeFill(0.22f, 0.44f, 0.78f, 1.00f);
+        const ImVec4 activeHover(0.28f, 0.52f, 0.88f, 1.00f);
+        const ImVec4 inactiveFill(0.07f, 0.11f, 0.18f, 0.85f);
+        const ImVec4 inactiveHover(0.14f, 0.22f, 0.34f, 1.00f);
+
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Button, placing ? activeFill : inactiveFill);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, placing ? activeHover : inactiveHover);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeFill);
+        if (ImGui::Button(placing ? "Placing..." : "Place"))
+        {
+            uiManager.placementModeActive = !placing;
+            uiManager.toasts().info(uiManager.placementModeActive
+                                        ? "Placement mode on - drag to launch a body"
+                                        : "Placement mode off");
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::SetItemTooltip("Drag in empty space to create a body (camera stays locked while active)");
+    }
+
     renderGroupSeparator();
 
     const CameraMode currentMode = camera.getMode();

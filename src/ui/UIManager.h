@@ -160,6 +160,24 @@ public:
      *         camera in a slow cinematic orbit ("Demo Mode"). F11 toggles. */
     bool demoModeActive = false;
 
+    /** @brief Touch-only "placement mode" toggle (action bar, mobile only).
+     *
+     *         On touch devices a single finger is the only pointer, and the
+     *         browser synthesizes a left-mouse button from it — so the desktop
+     *         "left-drag in empty space = place a body" gesture collides with
+     *         camera rotation. While this is false (default) a one-finger drag
+     *         only rotates the camera; while true it places a body (and the
+     *         C++ touch handler stops driving camera rotation). Sticky: stays
+     *         on so several bodies can be placed in a row. No effect on desktop,
+     *         where camera (RMB) and placement (LMB) already use distinct
+     *         buttons. */
+    bool placementModeActive = false;
+
+    /** @brief Set once at startup from `platform::isMobileDevice()`. Gates the
+     *         touch-only placement-mode behaviour (and the toggle button's
+     *         visibility) so desktop keeps the unconditional LMB drag-to-place. */
+    bool touchDevice = false;
+
     /** @brief When true, the scene FBO is constructed with MSAA samples > 1.
      *         Defaults to true on desktop and false on mobile (set by
      *         `Application::Application` based on `platform::isMobileDevice`).
